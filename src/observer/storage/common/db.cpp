@@ -78,6 +78,21 @@ Table *Db::find_table(const char *table_name) const {
   }
   return nullptr;
 }
+RC Db::drop_table(const char *table_name){
+    RC rc = RC::SUCCESS;
+    Table *table = find_table(table_name);
+    if (table == nullptr){
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    rc = table->drop(path_.c_str(),table_name);
+    if (rc != RC::SUCCESS) {
+        return rc;
+    }
+    opened_tables_.erase(table_name);
+    delete table;
+    LOG_INFO("Drop table success. table name=%s", table_name);
+    return RC::SUCCESS;
+}
 
 RC Db::open_all_tables() {
   std::vector<std::string> table_meta_files;

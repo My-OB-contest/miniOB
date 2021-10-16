@@ -193,7 +193,14 @@ void DefaultStorageStage::handle_event(StageEvent *event) {
       snprintf(response, sizeof(response), "%s\n", rc == RC::SUCCESS ? "SUCCESS" : "FAILURE");
     }
     break;
-  case SCF_CREATE_INDEX: {
+  case SCF_DROP_TABLE: {
+      const DropTable &dropTable = sql->sstr.drop_table;
+      rc = handler_->drop_table(current_db,dropTable.relation_name);
+      snprintf(response, sizeof(response), "%s\n", strrc(rc));
+    }
+    break;
+
+      case SCF_CREATE_INDEX: {
       const CreateIndex &create_index = sql->sstr.create_index;
       rc = handler_->create_index(current_trx, current_db, create_index.relation_name, 
                                   create_index.index_name, create_index.attribute_name);
