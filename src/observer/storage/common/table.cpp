@@ -110,6 +110,33 @@ RC Table::create(const char *path, const char *name, const char *base_dir, int a
   LOG_INFO("Successfully create table %s:%s", base_dir, name);
   return rc;
 }
+RC Table::drop(const char *path, const char *name){
+    RC rc = RC::SUCCESS;
+    std::string table_meta_path = table_meta_file(path, name);
+    std::string table_data_path = table_data_file(path, name);
+    if (::access(table_data_path.c_str(),F_OK)==-1&&::access(table_meta_path.c_str(),F_OK)==-1){
+        LOG_ERROR("Table file not exist. filename=%s, errmsg=%d:%s",
+                  path, errno, strerror(errno));
+        return RC::IOERR;
+    }
+    if (::access(table_data_path.c_str(),F_OK) == 0){
+        if(::remove(table_data_path.c_str()) == -1){
+            LOG_ERROR("Table file remove fail. filename=%s, errmsg=%d:%s",
+                      table_data_path.c_str(), errno, strerror(errno));
+            return RC::IOERR;
+        }
+    }
+    if (::access(table_meta_path.c_str(),F_OK) == 0){
+        if(::remove(table_meta_path.c_str()) == -1){
+            LOG_ERROR("Table file remove fail. filename=%s, errmsg=%d:%s",
+                      table_meta_path.c_str(), errno, strerror(errno));
+            return RC::IOERR;
+        }
+    }
+    return rc;
+
+}
+
 
 RC Table::open(const char *meta_file, const char *base_dir) {
   // 加载元数据文件
