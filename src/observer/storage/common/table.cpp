@@ -574,7 +574,21 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
     const FieldMeta *fieldMeta = table_meta_.field(attribute_name);
     int fieldlen=fieldMeta->len();
     int fieldoffset=fieldMeta->offset();
-    memcpy(record+fieldoffset,value->data,fieldlen);
+    char *dest = record->data+fieldoffset;
+//    memcpy(record+fieldoffset,value->data,fieldlen);
+    switch (value->type) {
+        case CHARS:{
+            memcpy(dest,(const char *)value->data,fieldlen);
+        }
+        break;
+        case INTS:{
+            *(int *)(dest) = *(int *)value->data;
+        }
+        break;
+        case FLOATS:{
+            *(float *)(dest) = *(float *)value->data;
+        }
+    }
     rc = record_handler_->update_record(record);
     return rc;
 }
