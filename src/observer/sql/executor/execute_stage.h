@@ -71,6 +71,7 @@ protected:
 
   void handle_request(common::StageEvent *event);
   RC do_select(const char *db, Query *sql, SessionEvent *session_event);
+  RC select_check(const char *db, const Selects &selects);
 protected:
   /*
    * @author: huahui

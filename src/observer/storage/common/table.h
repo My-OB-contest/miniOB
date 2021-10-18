@@ -26,6 +26,7 @@ struct RID;
 class Index;
 class IndexScanner;
 class RecordDeleter;
+class RecordUpdater;
 class Trx;
 
 class Table {
@@ -81,6 +82,7 @@ private:
 
   RC insert_record(Trx *trx, Record *record);
   RC delete_record(Trx *trx, Record *record);
+  RC update_record(Record *record,const Value *value,const char *attribute_name);
 
 private:
   friend class RecordUpdater;

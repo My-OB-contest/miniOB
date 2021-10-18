@@ -545,9 +545,68 @@ RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_n
 
   return rc;
 }
+class RecordUpdater {
+public:
+    RecordUpdater(Table &table,const Value *value,const char *attribute_name) : table_(table) ,value(value),attribute_name(attribute_name){
+    }
+
+    RC update_record(Record *record) {
+        RC rc = RC::SUCCESS;
+        rc = table_.update_record(record,value,attribute_name);
+        if (rc == RC::SUCCESS) {
+            updated_count_++;
+        }
+        return rc;
+    }
+
+    int updated_count() const {
+        return updated_count_;
+    }
+
+private:
+    int updated_count_ = 0;
+    Table & table_;
+    const Value *value;
+    const char *attribute_name;
+};
+RC Table::update_record(Record *record,const Value *value,const char *attribute_name){
+    RC rc = RC::SUCCESS;
+    const FieldMeta *fieldMeta = table_meta_.field(attribute_name);
+    int fieldlen=fieldMeta->len();
+    int fieldoffset=fieldMeta->offset();
+    char *dest = record->data+fieldoffset;
+//    memcpy(record+fieldoffset,value->data,fieldlen);
+    switch (value->type) {
+        case CHARS:{
+            memcpy(dest,(const char *)value->data,fieldlen);
+        }
+        break;
+        case INTS:{
+            *(int *)(dest) = *(int *)value->data;
+        }
+        break;
+        case FLOATS:{
+            *(float *)(dest) = *(float *)value->data;
+        }
+    }
+    rc = record_handler_->update_record(record);
+    return rc;
+}
+static RC record_reader_update_adapter(Record *record, void *context) {
+    RecordUpdater &record_updater = *(RecordUpdater *)context;
+    return record_updater.update_record(record);
+}
 
 RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num, const Condition conditions[], int *updated_count) {
-  return RC::GENERIC_ERROR;
+  RC rc = RC::SUCCESS;
+  CompositeConditionFilter filter;
+  filter.init(*this,conditions,condition_num);
+  RecordUpdater updater(*this,value,attribute_name);
+  rc = scan_record(trx, &filter, -1, &updater, record_reader_update_adapter);
+  if (updated_count != nullptr) {
+      *updated_count = updater.updated_count();
+  }
+  return rc;
 }
 
 class RecordDeleter {
