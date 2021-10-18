@@ -32,6 +32,13 @@ See the Mulan PSL v2 for more details. */
 #include "storage/default/default_handler.h"
 #include "storage/common/condition_filter.h"
 #include "storage/trx/trx.h"
+/*
+ * @author: huahui
+ * @what for: 必做题，查询元数据校验
+ * begin -------------------------------------------------------------------------------------------
+ */
+#include "sql/parser/parse_defs.h"
+/* end ---------------------------------------------------------------------------------------------*/
 
 using namespace common;
 
@@ -123,15 +130,33 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
 
   switch (sql->flag) {
     case SCF_SELECT: { // select
-      RC rc = do_select(current_db, sql, exe_event->sql_event()->session_event());
-      if( rc != RC::SUCCESS){
-          session_event->set_response("FAILURE\n");
-      }
+      do_select(current_db, sql, exe_event->sql_event()->session_event());
       exe_event->done_immediate();
     }
     break;
+    /*
+     * @author: huahui
+     * @what for: 必做题，查询元数据校验
+     * begin -------------------------------------------------------------------------------------------
+     */
+    case SCF_INSERT: {
+      RC rc = check_insert_stat(sql->sstr.insertion, session_event);
+      if(rc != RC::SUCCESS){
+        event->done_immediate();
+        return;
+      }
 
-    case SCF_INSERT:
+      StorageEvent *storage_event = new (std::nothrow) StorageEvent(exe_event);
+      if (storage_event == nullptr) {
+        LOG_ERROR("Failed to new StorageEvent");
+        event->done_immediate();
+        return;
+      }
+
+      default_storage_stage_->handle_event(storage_event);
+    }
+    break;
+    /*end ----------------------------------------------------------------------------------------------*/
     case SCF_UPDATE:
     case SCF_DELETE:
     case SCF_CREATE_TABLE:
@@ -215,41 +240,6 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
     }
   }
 }
-RC ExecuteStage::select_check (const char *db,const Selects &selects){
-    RC rc = RC::SUCCESS;
-    for (size_t i = 0; i < selects.relation_num; i++){
-        const char *table_name = selects.relations[i];
-        Table * table = DefaultHandler::get_default().find_table(db, table_name);
-        if (table== nullptr){
-            return RC::SCHEMA_TABLE_NOT_EXIST;
-        }
-        for (size_t j = 0; j < selects.attr_num ; ++j) {
-            if (0 == strcmp("*", selects.attributes[j].attribute_name)){
-                continue;
-            }
-            const FieldMeta * fieldMeta = table->table_meta().field(selects.attributes[j].attribute_name);
-            if (fieldMeta == nullptr){
-                return RC::SCHEMA_FIELD_NOT_EXIST;
-            }
-        }
-        for (size_t j = 0; j < selects.condition_num ; ++j) {
-            if (selects.conditions[j].left_is_attr){
-                const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].left_attr.attribute_name);
-                if (fieldMeta == nullptr){
-                    return RC::SCHEMA_FIELD_NOT_EXIST;
-                }
-            }
-            if (selects.conditions[j].right_is_attr){
-                const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].right_attr.attribute_name);
-                if (fieldMeta == nullptr){
-                    return RC::SCHEMA_FIELD_NOT_EXIST;
-                }
-            }
-        }
-    }
-    return rc;
-}
-
 
 // 这里没有对输入的某些信息做合法性校验，比如查询的列名、where条件中的列名等，没有做必要的合法性校验
 // 需要补充上这一部分. 校验部分也可以放在resolve，不过跟execution放一起也没有关系
@@ -259,11 +249,6 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
   const Selects &selects = sql->sstr.selection;
-  rc = select_check(db,selects);
-  if ( rc != RC::SUCCESS){
-      LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
-      return rc;
-  }
   // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
   std::vector<SelectExeNode *> select_nodes;
   for (size_t i = 0; i < selects.relation_num; i++) {
@@ -317,6 +302,65 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   end_trx_if_need(session, trx, true);
   return rc;
 }
+
+/*
+ * @author: huahui
+ * @what for: 必做题，查询元数据校验
+ * begin -------------------------------------------------------------------------------------------
+ */
+RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session_event){
+  // 校验insert语句中的date字段是否符合要求，即满足日期小于2038年2月，以及满足闰年平年的要求
+  int days[13]={0,31,28,31,30,31,30,31,31,30,31,30,31};
+  for(int i=0; i<inserts.value_num; i++) {
+    const Value &value = inserts.values[i];
+    if(value.type != DATES) continue;
+    unsigned char *scratch = (unsigned char *)(value.data);
+    int year, month, day;
+    year = ((int)(scratch[0]))*256 + (int)(scratch[1]);
+    month = (int)(scratch[2]);
+    day = (int)(scratch[3]);
+    if((year == 2038 && month > 2) || (year > 2038)) {
+      LOG_ERROR("The date should not exceed February 2038");
+      char err[207];
+      sprintf(err, "FAILURE\n");
+      session_event->set_response(err);
+      return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+    }
+
+    bool leap;
+    if((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)){
+      leap = true;
+    }else{
+      leap = false;
+    }
+    bool match = true;
+    if(month == 2){
+      if(leap){
+        if(day > 29){
+          match = false;
+        }
+      }else{
+        if(day > 28){
+          match = false;
+        }
+      }
+    }else{
+      if(day > days[month]){
+        match = false;
+      }
+    }
+    if(!match){
+      LOG_WARN("The date is invalid");
+      char err[207];
+      sprintf(err, "FAILURE\n");
+      session_event->set_response(err);
+      return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+    }
+  }
+
+  return RC::SUCCESS;
+}
+/*end ----------------------------------------------------------------------------------------------*/
 
 bool match_table(const Selects &selects, const char *table_name_in_condition, const char *table_name_to_match) {
   if (table_name_in_condition != nullptr) {

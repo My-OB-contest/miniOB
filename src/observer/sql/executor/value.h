@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <string>
 #include <ostream>
+#include <sstream>
 
 class TupleValue {
 public:
@@ -91,5 +92,50 @@ private:
   std::string value_;
 };
 
+/*
+ * @author: huahui
+ * @what for: 必做题，增加date字段
+ * begin -------------------------------------------------------------------------------------------
+ */
+class DateValue : public TupleValue {
+public:
+  DateValue(const unsigned char *value){
+    year = (int)value[0]*256 + (int)value[1];
+    month = (int)value[2];
+    day = (int)value[3];
+  }
+  void to_string(std::ostream &os) const override {
+    if(year / 1000 == 0){
+      os << "0";
+    }
+    if(year / 100 == 0){
+      os << "0";
+    }
+    if(year / 10 == 0){
+      os << "0";
+    }
+    os << year << "-";
+    if(month / 10 == 0){
+      os << "0";
+    }
+    os << month << "-";
+    if(day / 10 == 0){
+      os << "0";
+    }
+    os << day;
+  }
+  int compare(const TupleValue &other) const override {
+    std::stringstream ss;
+    to_string(ss);
+    std::string s1 = ss.str();
+    ss.str("");
+    other.to_string(ss);
+    std::string s2 = ss.str();
+    return strcmp(s1.c_str(), s2.c_str());
+  }
+private:
+  int year, month, day; // 从字节数组中解析出的year, month, day
+};
+/*end ----------------------------------------------------------------------------------------------*/
 
 #endif //__OBSERVER_SQL_EXECUTOR_VALUE_H_

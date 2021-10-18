@@ -234,6 +234,18 @@ void TupleRecordConverter::add_record(const char *record) {
         tuple.add(s, strlen(s));
       }
       break;
+      /*
+       * @author: huahui
+       * @what for: 必做题，增加date字段
+       * begin -------------------------------------------------------------------------------------------
+       */
+      case DATES: {
+        const unsigned char *s = (const unsigned char *)(record + field_meta->offset());
+        std::shared_ptr<DateValue> p(new DateValue(s));
+        tuple.add(p);
+      }
+      break;
+      /*end ----------------------------------------------------------------------------------------------*/
       default: {
         LOG_PANIC("Unsupported field type. type=%d", field_meta->type());
       }

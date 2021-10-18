@@ -18,6 +18,38 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/stage.h"
 #include "sql/parser/parse.h"
 #include "rc.h"
+/*
+ * @author: huahui
+ * @what for: 必做题，查询元数据校验
+ * begin -------------------------------------------------------------------------------------------
+ */
+#include "storage/common/table.h"
+
+#include <unordered_map>
+/* end ---------------------------------------------------------------------------------------------*/
+
+/*
+ * @author: huahui
+ * @what for: 必做题，查询元数据校验
+ * begin -------------------------------------------------------------------------------------------
+ */
+struct hash_string { 
+    size_t operator()(const char *str) const{ 
+      int num = 10;
+      int hash = strlen(str);
+      while(*(++str)){
+        hash = num * 10 + (*str);
+      }
+      return hash & (0x7FFFFFFF); 
+    } 
+}; 
+
+struct equal_string {
+       bool operator()(const char* a,const char* b) const {
+           return strcmp(a,b)==0;
+     }
+};
+/* end ---------------------------------------------------------------------------------------------*/
 
 class SessionEvent;
 
@@ -39,12 +71,17 @@ protected:
 
   void handle_request(common::StageEvent *event);
   RC do_select(const char *db, Query *sql, SessionEvent *session_event);
-  RC select_check(const char *db, const Selects &selects);
 protected:
+  /*
+   * @author: huahui
+   * @what for: 必做题，查询元数据校验
+   * begin -------------------------------------------------------------------------------------------
+   */
+  RC check_insert_stat(const Inserts &inserts, SessionEvent *session_event);
+  /*end ----------------------------------------------------------------------------------------------*/
 private:
   Stage *default_storage_stage_ = nullptr;
   Stage *mem_storage_stage_ = nullptr;
-
 };
 
 #endif //__OBSERVER_SQL_EXECUTE_STAGE_H__
