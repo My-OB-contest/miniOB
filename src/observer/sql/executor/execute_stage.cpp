@@ -123,7 +123,10 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
 
   switch (sql->flag) {
     case SCF_SELECT: { // select
-      do_select(current_db, sql, exe_event->sql_event()->session_event());
+      RC rc = do_select(current_db, sql, exe_event->sql_event()->session_event());
+      if( rc != RC::SUCCESS){
+          session_event->set_response("FAILURE\n");
+      }
       exe_event->done_immediate();
     }
     break;
@@ -212,6 +215,41 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
     }
   }
 }
+RC ExecuteStage::select_check (const char *db,const Selects &selects){
+    RC rc = RC::SUCCESS;
+    for (size_t i = 0; i < selects.relation_num; i++){
+        const char *table_name = selects.relations[i];
+        Table * table = DefaultHandler::get_default().find_table(db, table_name);
+        if (table== nullptr){
+            return RC::SCHEMA_TABLE_NOT_EXIST;
+        }
+        for (size_t j = 0; j < selects.attr_num ; ++j) {
+            if (0 == strcmp("*", selects.attributes[j].attribute_name)){
+                continue;
+            }
+            const FieldMeta * fieldMeta = table->table_meta().field(selects.attributes[j].attribute_name);
+            if (fieldMeta == nullptr){
+                return RC::SCHEMA_FIELD_NOT_EXIST;
+            }
+        }
+        for (size_t j = 0; j < selects.condition_num ; ++j) {
+            if (selects.conditions[j].left_is_attr){
+                const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].left_attr.attribute_name);
+                if (fieldMeta == nullptr){
+                    return RC::SCHEMA_FIELD_NOT_EXIST;
+                }
+            }
+            if (selects.conditions[j].right_is_attr){
+                const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].right_attr.attribute_name);
+                if (fieldMeta == nullptr){
+                    return RC::SCHEMA_FIELD_NOT_EXIST;
+                }
+            }
+        }
+    }
+    return rc;
+}
+
 
 // 这里没有对输入的某些信息做合法性校验，比如查询的列名、where条件中的列名等，没有做必要的合法性校验
 // 需要补充上这一部分. 校验部分也可以放在resolve，不过跟execution放一起也没有关系
@@ -221,6 +259,11 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
   const Selects &selects = sql->sstr.selection;
+  rc = select_check(db,selects);
+  if ( rc != RC::SUCCESS){
+      LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
+      return rc;
+  }
   // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
   std::vector<SelectExeNode *> select_nodes;
   for (size_t i = 0; i < selects.relation_num; i++) {

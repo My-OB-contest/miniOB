@@ -39,10 +39,12 @@ protected:
 
   void handle_request(common::StageEvent *event);
   RC do_select(const char *db, Query *sql, SessionEvent *session_event);
+  RC select_check(const char *db, const Selects &selects);
 protected:
 private:
   Stage *default_storage_stage_ = nullptr;
   Stage *mem_storage_stage_ = nullptr;
+
 };
 
 #endif //__OBSERVER_SQL_EXECUTE_STAGE_H__
