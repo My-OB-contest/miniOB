@@ -588,6 +588,15 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
         case FLOATS:{
             *(float *)(dest) = *(float *)value->data;
         }
+        break;
+        case DATES:{
+            memcpy(dest,(const unsigned char*)value->data,fieldlen);
+        }
+        break;
+        default:{
+            rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
+            return rc;
+        }
     }
     rc = record_handler_->update_record(record);
     return rc;

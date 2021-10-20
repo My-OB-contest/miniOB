@@ -13,6 +13,7 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include <stddef.h>
+#include <sql/executor/value.h>
 #include "condition_filter.h"
 #include "record_manager.h"
 #include "common/log/log.h"
@@ -40,7 +41,8 @@ DefaultConditionFilter::~DefaultConditionFilter()
 
 RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrType attr_type, CompOp comp_op)
 {
-  if (attr_type < CHARS || attr_type > FLOATS) {
+    //fzh改，添加新可比较属性需要更改
+    if (attr_type < CHARS || attr_type > DATES ) {
     LOG_ERROR("Invalid condition with unsupported attribute type: %d", attr_type);
     return RC::INVALID_ARGUMENT;
   }
@@ -141,6 +143,8 @@ bool DefaultConditionFilter::filter(const Record &rec) const
   }
 
   int cmp_result = 0;
+
+  //增加属性字段需要修改
   switch (attr_type_) {
     case CHARS: {  // 字符串都是定长的，直接比较
       // 按照C字符串风格来定
@@ -158,6 +162,13 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       float right = *(float *)right_value;
       cmp_result = (int)(left - right);
     } break;
+    case DATES: {
+      unsigned char *left_value2 = (unsigned char *)left_value;
+      unsigned char *right_value2 = (unsigned char *)right_value;
+      DateValue left_dv = DateValue(left_value2);
+      DateValue right_dv = DateValue(right_value2);
+      cmp_result = left_dv.compare(right_dv);
+    }
     default: {
     }
   }
