@@ -26,6 +26,9 @@ RC parse(char *st, Query *sqln);
 extern "C" {
 #endif // __cplusplus
 void relation_attr_init(RelAttr *relation_attr, const char *relation_name, const char *attribute_name) {
+  /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
+  relation_attr->agg_type = AggType::NOTAGG;
+  /* --------------------------------------------------------------------------------------------------*/
   if (relation_name != nullptr) {
     relation_attr->relation_name = strdup(relation_name);
   } else {
@@ -33,6 +36,17 @@ void relation_attr_init(RelAttr *relation_attr, const char *relation_name, const
   }
   relation_attr->attribute_name = strdup(attribute_name);
 }
+/* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
+void relation_agg_attr_init(RelAttr *relation_attr, AggType agg_type, const char *relation_name, const char *attribute_name); {
+  relation_attr->agg_type = agg_type;
+  if(relation_name != nullptr) {
+    relation_attr->relation_name = strdup(relation_name);
+  }else{
+    relation_attr->relation_name = nullptr;
+  }
+  relation_attr->attribute_name = strdup(attribute_name);
+}
+/* --------------------------------------------------------------------------------------------------*/
 
 void relation_attr_destroy(RelAttr *relation_attr) {
   free(relation_attr->relation_name);

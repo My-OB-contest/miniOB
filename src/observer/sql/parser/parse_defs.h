@@ -23,8 +23,15 @@ See the Mulan PSL v2 for more details. */
 #define MAX_ERROR_MESSAGE 20
 #define MAX_DATA 50
 
+/* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------*/
+typedef enum {NOTAGG, COUNT, MAX, MIN, AVG} AggType;
+/* -----------------------------------------------------------------------------------------------*/
+
 //属性结构体
 typedef struct {
+  /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
+  AggType agg_type;   // 标识是否是聚合查询以及是什么聚合查询，NOTAGG表示不是
+  /* --------------------------------------------------------------------------------------------------*/
   char *relation_name;   // relation name (may be NULL) 表名
   char *attribute_name;  // attribute name              属性名
 } RelAttr;
@@ -180,6 +187,9 @@ extern "C" {
 #endif  // __cplusplus
 
 void relation_attr_init(RelAttr *relation_attr, const char *relation_name, const char *attribute_name);
+/* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
+void relation_agg_attr_init(RelAttr *relation_attr, AggType agg_type, const char *relation_name, const char *attribute_name);
+/* --------------------------------------------------------------------------------------------------*/
 void relation_attr_destroy(RelAttr *relation_attr);
 
 void value_init_integer(Value *value, int v);

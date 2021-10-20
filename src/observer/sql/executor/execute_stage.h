@@ -18,38 +18,14 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/stage.h"
 #include "sql/parser/parse.h"
 #include "rc.h"
-/*
- * @author: huahui
- * @what for: 必做题，查询元数据校验
- * begin -------------------------------------------------------------------------------------------
+/* @author: huahui 
+ * @what for: 必做题，聚合查询 
+ * -----------------------------------------------------------------------------------------------------------------
  */
-#include "storage/common/table.h"
-
-#include <unordered_map>
-/* end ---------------------------------------------------------------------------------------------*/
-
-/*
- * @author: huahui
- * @what for: 必做题，查询元数据校验
- * begin -------------------------------------------------------------------------------------------
+#include "sql/executor/tuple.h"
+/* ------------------------------------------------------------------------------------------------------------
  */
-struct hash_string { 
-    size_t operator()(const char *str) const{ 
-      int num = 10;
-      int hash = strlen(str);
-      while(*(++str)){
-        hash = num * 10 + (*str);
-      }
-      return hash & (0x7FFFFFFF); 
-    } 
-}; 
 
-struct equal_string {
-       bool operator()(const char* a,const char* b) const {
-           return strcmp(a,b)==0;
-     }
-};
-/* end ---------------------------------------------------------------------------------------------*/
 
 class SessionEvent;
 
@@ -78,8 +54,20 @@ protected:
    * @what for: 必做题，查询元数据校验
    * begin -------------------------------------------------------------------------------------------
    */
+  // 从长度为value_num的values中，判断有没有date属性
+  // 若有，则判断date是否合法
+  RC check_date_from_values(int value_num, Value *values);
   RC check_insert_stat(const Inserts &inserts, SessionEvent *session_event);
   /*end ----------------------------------------------------------------------------------------------*/
+
+  /* @author: huahui 
+	 * @what for: 必做题，聚合查询 
+   * tuple_sets是多个单表查询的结果
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+  RC agg_select_from_tupleset(TupleSet &tuple_set, TupleSet &agg_res); 
+  /* ------------------------------------------------------------------------------------------------------------
+	 */
 private:
   Stage *default_storage_stage_ = nullptr;
   Stage *mem_storage_stage_ = nullptr;

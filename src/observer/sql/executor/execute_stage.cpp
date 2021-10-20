@@ -244,40 +244,72 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
   }
 }
 
+ /* @author: zihao
+  * @what for: 必做题，元数据校验（单表，多表） 
+  * 检查表是否存在，如果是单表，检查每个属性是否存在于这个表中；
+  * 如果是多表，检查每个属性是否有表和属性名两个部分，以及属性是否在对应的表中。
+  * 比如t.col中，若t中没有col属性，则会返回错误
+	* -----------------------------------------------------------------------------------------------------------------
+	*/
 RC ExecuteStage::select_check (const char *db,const Selects &selects){
-    RC rc = RC::SUCCESS;
-    for (size_t i = 0; i < selects.relation_num; i++){
-        const char *table_name = selects.relations[i];
-        Table * table = DefaultHandler::get_default().find_table(db, table_name);
-        if (table== nullptr){
-            return RC::SCHEMA_TABLE_NOT_EXIST;
+  RC rc = RC::SUCCESS;
+  // 单表校验
+  if(selects.relation_num == 1){
+    const char *table_name = selects.relations[0];
+    Table * table = DefaultHandler::get_default().find_table(db, table_name);
+    if (table== nullptr){
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    for (size_t j = 0; j < selects.attr_num ; ++j) {
+        if (0 == strcmp("*", selects.attributes[j].attribute_name)){
+            continue;
         }
-        for (size_t j = 0; j < selects.attr_num ; ++j) {
-            if (0 == strcmp("*", selects.attributes[j].attribute_name)){
-                continue;
-            }
-            const FieldMeta * fieldMeta = table->table_meta().field(selects.attributes[j].attribute_name);
+        const FieldMeta * fieldMeta = table->table_meta().field(selects.attributes[j].attribute_name);
+        if (fieldMeta == nullptr){
+            return RC::SCHEMA_FIELD_NOT_EXIST;
+        }
+    }
+    for (size_t j = 0; j < selects.condition_num ; ++j) {
+        if (selects.conditions[j].left_is_attr){
+            const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].left_attr.attribute_name);
             if (fieldMeta == nullptr){
                 return RC::SCHEMA_FIELD_NOT_EXIST;
             }
         }
-        for (size_t j = 0; j < selects.condition_num ; ++j) {
-            if (selects.conditions[j].left_is_attr){
-                const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].left_attr.attribute_name);
-                if (fieldMeta == nullptr){
-                    return RC::SCHEMA_FIELD_NOT_EXIST;
-                }
-            }
-            if (selects.conditions[j].right_is_attr){
-                const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].right_attr.attribute_name);
-                if (fieldMeta == nullptr){
-                    return RC::SCHEMA_FIELD_NOT_EXIST;
-                }
+        if (selects.conditions[j].right_is_attr){
+            const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].right_attr.attribute_name);
+            if (fieldMeta == nullptr){
+                return RC::SCHEMA_FIELD_NOT_EXIST;
             }
         }
     }
-    return rc;
+    return RC::SUCCESS;
+  }
+  // 多表校验
+  for(size_t i = 0; i<selects.relation_num; i++) {
+    const char *table_name = selects.relations[i];
+    Table * table = DefaultHandler::get_default().find_table(db, table_name);
+    if (table== nullptr){
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+  }
+  for(size_t j=0; j<selects.attr_num; j++) {
+    if (0 == strcmp("*", selects.attributes[j].attribute_name)){
+      continue;
+    }
+    const char *table_name = selects.attributes[j].relation_name;
+    if(table_name == nullptr) {
+      return RC::SQL_SYNTAX;
+    }
+    Table * table = DefaultHandler::get_default().find_table(db, table_name);
+    const FieldMeta * fieldMeta = table->table_meta().field(selects.attributes[j].attribute_name);
+    if (fieldMeta == nullptr){
+      return RC::SCHEMA_FIELD_NOT_EXIST;
+    }
+  }
+  return RC::SUCCESS;
 }
+/* --------------------------------------------------------------------------------------------------------------------------------*/
 
 // 这里没有对输入的某些信息做合法性校验，比如查询的列名、where条件中的列名等，没有做必要的合法性校验
 // 需要补充上这一部分. 校验部分也可以放在resolve，不过跟execution放一起也没有关系
@@ -315,6 +347,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     return RC::SQL_SYNTAX;
   }
 
+
   std::vector<TupleSet> tuple_sets;
   for (SelectExeNode *&node: select_nodes) {
     TupleSet tuple_set;
@@ -330,13 +363,25 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     }
   }
 
+  /* @author: huahui 
+	 * @what for: 必做题，聚合查询 
+   * 一旦发现了有聚合查询，那么就执行这段代码的逻辑，不用执行后面的了。
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+  TupleSet res_tupleset;
   std::stringstream ss;
   if (tuple_sets.size() > 1) {
-    // 本次查询了多张表，需要做join操作
+    // 本次查询了多张表，需要做join操作, 结果放在res_tuple_set中
   } else {
     // 当前只查询一张表，直接返回结果即可
-    tuple_sets.front().print(ss);
+    res_tupleset = tuple_sets.front();
+    // tuple_sets.front().print(ss);
   }
+
+  
+
+  /* ------------------------------------------------------------------------------------------------------------
+	 */
 
   for (SelectExeNode *& tmp_node: select_nodes) {
     delete tmp_node;
@@ -351,11 +396,12 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
  * @what for: 必做题，查询元数据校验
  * begin -------------------------------------------------------------------------------------------
  */
-RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session_event){
-  // 校验insert语句中的date字段是否符合要求，即满足日期小于2038年2月，以及满足闰年平年的要求
+// 从长度为value_num的values中，判断有没有date属性
+// 若有，则判断date是否合法
+RC check_date_from_values(int value_num, Value *values) {
   int days[13]={0,31,28,31,30,31,30,31,31,30,31,30,31};
-  for(int i=0; i<inserts.value_num; i++) {
-    const Value &value = inserts.values[i];
+  for(int i=0; i<value_num; i++) {
+    const Value &value = values[i];
     if(value.type != DATES) continue;
     unsigned char *scratch = (unsigned char *)(value.data);
     int year, month, day;
@@ -364,9 +410,6 @@ RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session
     day = (int)(scratch[3]);
     if((year == 2038 && month > 2) || (year > 2038)) {
       LOG_ERROR("The date should not exceed February 2038");
-      char err[207];
-      sprintf(err, "FAILURE\n");
-      session_event->set_response(err);
       return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
     }
 
@@ -393,17 +436,33 @@ RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session
       }
     }
     if(!match){
-      LOG_WARN("The date is invalid");
-      char err[207];
-      sprintf(err, "FAILURE\n");
-      session_event->set_response(err);
+      LOG_ERROR("The date is invalid");
       return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
     }
   }
 
   return RC::SUCCESS;
 }
+RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session_event){
+  // 校验insert语句中的date字段是否符合要求，即满足日期小于2038年2月，以及满足闰年平年的要求
+  RC rc = check_date_from_values(inserts.value_num, inserts.values);
+  if(rc == RC::SUCCESS) return rc;
+  char err[207];
+  sprintf(err, "FAILURE\n");
+  session_event->set_response(err);
+  return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+}
 /*end ----------------------------------------------------------------------------------------------*/
+
+/* @author: huahui 
+ * @what for: 必做题，聚合查询 
+ * -----------------------------------------------------------------------------------------------------------------
+ */
+RC ExecuteStage::agg_select_from_tupleset(TupleSet &tuple_set, TupleSet &agg_res) {
+
+} 
+/* ------------------------------------------------------------------------------------------------------------
+ */
 
 bool match_table(const Selects &selects, const char *table_name_in_condition, const char *table_name_to_match) {
   if (table_name_in_condition != nullptr) {
