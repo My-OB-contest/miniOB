@@ -23,15 +23,18 @@ const static Json::StaticString FIELD_OFFSET("offset");
 const static Json::StaticString FIELD_LEN("len");
 const static Json::StaticString FIELD_VISIBLE("visible");
 
+//fzh改，加新属性需要修改
 const char *ATTR_TYPE_NAME[] = {
   "undefined",
   "chars",
   "ints",
-  "floats"
+  "floats",
+  "dates"
 };
 
+//fzh改，加新属性需要修改
 const char *attr_type_to_string(AttrType type) {
-  if (type >= UNDEFINED && type <= FLOATS) {
+  if (type >= UNDEFINED && type <= DATES) {
     return ATTR_TYPE_NAME[type];
   }
   return "unknown";
