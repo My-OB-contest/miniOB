@@ -442,7 +442,10 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
       return rc;
     }
     TupleSet agg_res;
-    agg_select_from_tupleset(trx, db, selects, res_tupleset, relattrs, agg_res);
+    rc = agg_select_from_tupleset(trx, db, selects, res_tupleset, relattrs, agg_res);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
     res_tupleset = std::move(agg_res);
   }
   res_tupleset.print(ss);
@@ -587,7 +590,7 @@ RC ExecuteStage::check_agg(const char *db, const Selects &selects, std::vector<c
 RC ExecuteStage::have_agg_from_selections(const Selects &selection, bool &hagg, std::vector<const RelAttr *> &relattrs) {
   bool has_agg = false;
   bool has_attr = false;
-  for(size_t i = 0; i < selection.attr_num; i++) {
+  for(int i = selection.attr_num - 1; i >= 0; i--) {
     const RelAttr &relattr = selection.attributes[i];
     if(relattr.agg_type == AggType::NOTAGG) {
       has_attr = true;
@@ -628,7 +631,7 @@ RC ExecuteStage::agg_select_from_tupleset(Trx *trx, const char *db, const Select
   AggExeNode *agg_node = new AggExeNode;
   agg_node->init(trx, std::move(schema), std::move(tuple_set));
   // 2. 执行AggExeNode的execute函数得到结果
-  agg_node->execute(agg_res);
+  return agg_node->execute(agg_res);
 } 
 /* ------------------------------------------------------------------------------------------------------------
  */

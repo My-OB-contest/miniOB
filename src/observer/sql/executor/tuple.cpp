@@ -102,6 +102,9 @@ void TupleSchema::from_table(const Table *table, TupleSchema &schema, bool have_
 }
 /* ---------------------------------------------------------------------------------------------*/
 
+void TupleSchema::add(AttrType type, const char *table_name, const char *field_name) {
+  fields_.emplace_back(type, table_name, field_name);
+}
 /* @author: huahui @what for: 聚合查询, 多表查询  ---------------------------------------------------------------------------------------
  * have_table_name表示加入到schema中的TupleField在输出时应该不应该带表名
  */
@@ -116,6 +119,16 @@ void TupleSchema::add(AttrType type, const char *table_name, const char *field_n
 }
 /* ------------------------------------------------------------------------------------------------------------------------------------*/
 
+void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const char *field_name) {
+  for (const auto &field: fields_) {
+    if (0 == strcmp(field.table_name(), table_name) &&
+        0 == strcmp(field.field_name(), field_name)) {
+      return;
+    }
+  }
+
+  add(type, table_name, field_name);
+}
 /* @author: huahui @what for: 聚合查询, 多表查询  --------------------------------------------------------------------------
  * have_table_name表示加入到schema中的TupleField在输出时应该不应该带表名
  */

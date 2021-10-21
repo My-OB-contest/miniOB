@@ -117,8 +117,10 @@ public:
   /* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------------------
    * have_table_name表示加入到schema中的TupleField在输出时应该不应该带表名
    */
+  void add(AttrType type, const char *table_name, const char *field_name);
   void add(AttrType type, const char *table_name, const char *field_name, bool have_table_name);
   void add(AttrType type, const char *table_name, const char *field_name, bool have_table_name, AggType aggtype);
+  void add_if_not_exists(AttrType type, const char *table_name, const char *field_name);
   void add_if_not_exists(AttrType type, const char *table_name, const char *field_name, bool have_table_name);
   /* ---------------------------------------------------------------------------------------------------------------*/
 
