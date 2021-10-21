@@ -82,6 +82,10 @@ void TupleField::print(std::ostream &os) const {
     }
   }
 }
+
+AggType TupleField::getAggtype() const {
+  return aggtype_;
+}
 /* ---------------------------------------------------------------------------------------------*/
 
 

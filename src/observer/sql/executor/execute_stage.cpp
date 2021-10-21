@@ -302,7 +302,12 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
         }
     }
     for (size_t j = 0; j < selects.condition_num ; ++j) {
+        AttrType left_at, right_at;
         if (selects.conditions[j].left_is_attr){
+            // 条件中不能带*
+            if(strcmp("*", selects.conditions[j].left_attr.attribute_name) == 0) {
+                return RC::SQL_SYNTAX;
+            }
             if(selects.conditions[j].left_attr.relation_name != nullptr && strcmp(selects.conditions[j].left_attr.relation_name, selects.relations[0])!=0) {
                 return RC::SQL_SYNTAX;
             }
@@ -310,8 +315,23 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
             if (fieldMeta == nullptr){
                 return RC::SCHEMA_FIELD_NOT_EXIST;
             }
+            left_at = fieldMeta->type();
+        } else { 
+          // 检查date是否符合要求
+          if(selects.conditions[j].left_value.type == AttrType::DATES) {
+            const Value *values = (const Value *)(&(selects.conditions[j].left_value));
+            rc = check_date_from_values(1, values);
+            if(rc != RC::SUCCESS) {
+              return rc;
+            }
+          }
+
+          left_at = selects.conditions[j].left_value.type;
         }
         if (selects.conditions[j].right_is_attr){
+            if(strcmp("*", selects.conditions[j].right_attr.attribute_name) == 0) {
+                return RC::SQL_SYNTAX;
+            }
             if(selects.conditions[j].right_attr.relation_name != nullptr && strcmp(selects.conditions[j].right_attr.relation_name, selects.relations[0])!=0) {
                 return RC::SQL_SYNTAX;
             }
@@ -319,7 +339,24 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
             if (fieldMeta == nullptr){
                 return RC::SCHEMA_FIELD_NOT_EXIST;
             }
+            right_at = fieldMeta->type();
+        }else {
+          // 检查date是否符合要求
+          if(selects.conditions[j].right_value.type == AttrType::DATES) {
+            const Value *values = (const Value *)(&(selects.conditions[j].right_value));
+            rc = check_date_from_values(1, values);
+            if(rc != RC::SUCCESS) {
+              return rc;
+            }
+          }
+
+          right_at = selects.conditions[j].right_value.type;
         }
+        // 检查左右两边的类型是否相符
+        if(left_at != right_at) {
+          return RC::SQL_SYNTAX;
+        }
+
     }
     return RC::SUCCESS;
   }
@@ -566,16 +603,19 @@ RC ExecuteStage::check_agg(const char *db, const Selects &selects, std::vector<c
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
     const FieldMeta * fieldMeta = table->table_meta().field(relattrs[i]->attribute_name);
-    if(!fieldMeta) {
-      return RC::SCHEMA_FIELD_MISSING;
+    if(strcmp(relattrs[i]->attribute_name,"*") != 0){
+      if(!fieldMeta) {
+        return RC::SCHEMA_FIELD_MISSING;
+      }
     }
+    
     // AVG(*)  AVG(birthday)是错的
-    if((relattrs[i]->attribute_name=="*" || !fieldMeta->addable()) && relattrs[i]->agg_type==AggType::AGGAVG) {
+    if((strcmp(relattrs[i]->attribute_name,"*")==0 || !fieldMeta->addable()) && relattrs[i]->agg_type==AggType::AGGAVG) {
       return RC::SQL_SYNTAX;
     }
     // MAX(*) MIN(*) AVG(*)是错误的
     if((relattrs[i]->agg_type==AggType::AGGMAX || relattrs[i]->agg_type==AggType::AGGMIN || relattrs[i]->agg_type==AggType::AGGAVG) 
-        && relattrs[i]->attribute_name=="*") {
+        && strcmp(relattrs[i]->attribute_name,"*")==0) {
       return RC::SQL_SYNTAX;
     }
   }

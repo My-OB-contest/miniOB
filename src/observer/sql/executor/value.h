@@ -20,6 +20,9 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 #include <ostream>
 #include <sstream>
+#include <memory>
+
+#include "sql/parser/parse_defs.h"
 
 class TupleValue {
 public:
@@ -44,7 +47,9 @@ public:
     const IntValue & int_other = (const IntValue &)other;
     return value_ - int_other.value_;
   }
-
+  int getValue() const {
+    return value_;
+  }
 private:
   int value_;
 };
@@ -68,6 +73,9 @@ public:
       return -1;
     }
     return 0;
+  }
+  double getValue() const {
+    return value_;
   }
 private:
   float value_;
@@ -136,6 +144,13 @@ public:
 private:
   int year, month, day; // 从字节数组中解析出的year, month, day
 };
+
 /*end ----------------------------------------------------------------------------------------------*/
+
+/* @author: huahui @what for: 必做题，聚合查询，
+ * -----------------------------------------------------------------------------------------------------------------
+ */
+double getNum(const std::shared_ptr<TupleValue> tv, AttrType at);
+/* --------------------------------------------------------------------------------------------------------*/
 
 #endif //__OBSERVER_SQL_EXECUTOR_VALUE_H_

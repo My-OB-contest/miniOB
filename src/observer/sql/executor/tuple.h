@@ -92,6 +92,7 @@ public:
     aggtype_ = aggtype;
   }
   void print(std::ostream &os) const;
+  AggType getAggtype() const;
   /* -----------------------------------------------------------------------------------------------------------------*/
 
   std::string to_string() const;
