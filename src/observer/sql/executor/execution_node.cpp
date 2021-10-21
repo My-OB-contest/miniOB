@@ -48,3 +48,23 @@ RC SelectExeNode::execute(TupleSet &tuple_set) {
   TupleRecordConverter converter(table_, tuple_set);
   return table_->scan_record(trx_, &condition_filter, -1, (void *)&converter, record_reader);
 }
+
+/* @author: huahui 
+ * @what for: 必做题，聚合查询 
+ * 这是一个聚合查询结点，根据多表join的结果来进行聚合查询
+ * -----------------------------------------------------------------------------------------------------------------
+ */
+AggExeNode::AggExeNode() {};
+AggExeNode::~AggExeNode() {};
+RC AggExeNode::init(Trx *trx, TupleSchema && tuple_schema, TupleSet && tuple_set) {
+  trx_ = trx;
+  tuple_schema_ = std::move(tuple_schema);
+  tuple_set_ = std::move(tuple_set);
+  return RC::SUCCESS;
+}
+RC AggExeNode::execute(TupleSet &res_tupleset) {
+  // 写的简单点
+  res_tupleset.set_schema(tuple_schema_);
+  return RC::SUCCESS;
+}
+/*end ----------------------------------------------------------------------------------------------*/

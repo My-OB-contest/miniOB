@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <string>
 #include <sstream>
+#include <string.h>
 
 #include "execute_stage.h"
 
@@ -160,7 +161,34 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
     }
     break;
     /*end ----------------------------------------------------------------------------------------------*/
-    case SCF_UPDATE:
+
+    /*
+     * @author: huahui
+     * @what for: 必做题，update。添加对date字段的校验
+     * begin -------------------------------------------------------------------------------------------
+     */
+    case SCF_UPDATE: {
+      const Value *values = (const Value *)(&(sql->sstr.update.value));
+      RC rc = check_date_from_values(1, values);
+      if(rc != RC::SUCCESS){
+        char err[207];
+        sprintf(err, "FAILURE\n");
+        session_event->set_response(err);
+        event->done_immediate();
+        return;
+      }
+
+      StorageEvent *storage_event = new (std::nothrow) StorageEvent(exe_event);
+      if (storage_event == nullptr) {
+        LOG_ERROR("Failed to new StorageEvent");
+        event->done_immediate();
+        return;
+      }
+
+      default_storage_stage_->handle_event(storage_event);
+    }
+    break;
+    /*end ----------------------------------------------------------------------------------------------*/
     case SCF_DELETE:
     case SCF_CREATE_TABLE:
     case SCF_SHOW_TABLES:
@@ -246,8 +274,9 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
 
  /* @author: zihao
   * @what for: 必做题，元数据校验（单表，多表） 
-  * 检查表是否存在，如果是单表，检查每个属性是否存在于这个表中；
-  * 如果是多表，检查每个属性是否有表和属性名两个部分，以及属性是否在对应的表中。
+  * 检查表是否存在，如果是单表，检查每个属性是否存在于这个表中；检查属性对应的表是否在查询表中出现,比如select t2.c from t 是错误的
+  * 如果是多表，检查每个属性是否有表和属性名两个部分，以及属性是否在对应的表中；查询属性对应的表是否在查询的表中；条件中的所有属性也要合法
+  * 对于condition部分也要检查
   * 比如t.col中，若t中没有col属性，则会返回错误
 	* -----------------------------------------------------------------------------------------------------------------
 	*/
@@ -261,6 +290,9 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
         return RC::SCHEMA_TABLE_NOT_EXIST;
     }
     for (size_t j = 0; j < selects.attr_num ; ++j) {
+        if(selects.attributes[j].relation_name != nullptr && strcmp(selects.attributes[j].relation_name, selects.relations[0])!=0) {
+          return RC::SQL_SYNTAX;
+        }
         if (0 == strcmp("*", selects.attributes[j].attribute_name)){
             continue;
         }
@@ -271,12 +303,18 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
     }
     for (size_t j = 0; j < selects.condition_num ; ++j) {
         if (selects.conditions[j].left_is_attr){
+            if(selects.conditions[j].left_attr.relation_name != nullptr && strcmp(selects.conditions[j].left_attr.relation_name, selects.relations[0])!=0) {
+                return RC::SQL_SYNTAX;
+            }
             const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].left_attr.attribute_name);
             if (fieldMeta == nullptr){
                 return RC::SCHEMA_FIELD_NOT_EXIST;
             }
         }
         if (selects.conditions[j].right_is_attr){
+            if(selects.conditions[j].right_attr.relation_name != nullptr && strcmp(selects.conditions[j].right_attr.relation_name, selects.relations[0])!=0) {
+                return RC::SQL_SYNTAX;
+            }
             const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].right_attr.attribute_name);
             if (fieldMeta == nullptr){
                 return RC::SCHEMA_FIELD_NOT_EXIST;
@@ -294,17 +332,29 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
     }
   }
   for(size_t j=0; j<selects.attr_num; j++) {
-    if (0 == strcmp("*", selects.attributes[j].attribute_name)){
-      continue;
+    RC rc2 = check_attr_for_multitable(db, selects, selects.attributes[j]);
+    if(rc2 != RC::SUCCESS) {
+      return rc2;
     }
-    const char *table_name = selects.attributes[j].relation_name;
-    if(table_name == nullptr) {
-      return RC::SQL_SYNTAX;
+  }
+  for(size_t j=0; j<selects.condition_num; j++) {
+    if (selects.conditions[j].left_is_attr){
+      if(strcmp("*", selects.conditions[j].left_attr.attribute_name) == 0) {
+        return RC::SQL_SYNTAX;
+      }
+      RC rc2 = check_attr_for_multitable(db, selects, selects.conditions[j].left_attr);
+      if(rc2 != RC::SUCCESS) {
+        return rc2;
+      }
     }
-    Table * table = DefaultHandler::get_default().find_table(db, table_name);
-    const FieldMeta * fieldMeta = table->table_meta().field(selects.attributes[j].attribute_name);
-    if (fieldMeta == nullptr){
-      return RC::SCHEMA_FIELD_NOT_EXIST;
+    if (selects.conditions[j].right_is_attr){
+      if(strcmp("*", selects.conditions[j].right_attr.attribute_name) == 0) {
+        return RC::SQL_SYNTAX;
+      }
+      RC rc2 = check_attr_for_multitable(db, selects, selects.conditions[j].right_attr);
+      if(rc2 != RC::SUCCESS) {
+        return rc2;
+      }
     }
   }
   return RC::SUCCESS;
@@ -364,8 +414,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   }
 
   /* @author: huahui 
-	 * @what for: 必做题，聚合查询 
-   * 一旦发现了有聚合查询，那么就执行这段代码的逻辑，不用执行后面的了。
+	 * @what for: 必做题，聚合查询和多表join
 	 * -----------------------------------------------------------------------------------------------------------------
 	 */
   TupleSet res_tupleset;
@@ -374,12 +423,29 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     // 本次查询了多张表，需要做join操作, 结果放在res_tuple_set中
   } else {
     // 当前只查询一张表，直接返回结果即可
-    res_tupleset = tuple_sets.front();
+    res_tupleset = std::move(tuple_sets.front());
     // tuple_sets.front().print(ss);
   }
 
+  bool hagg = false;
+  std::vector<const RelAttr *> relattrs;
+  rc = have_agg_from_selections(selects, hagg, relattrs);
+  if(rc != RC::SUCCESS) {
+    LOG_ERROR("In aggregated query without GROUP BY, expression of SELECT list contains must not contain nonaggregated colum\n");
+    return rc;
+  }
   
-
+  if(hagg) {
+    // 聚合查询，先做合法性校验，比如AVG(birthday)是肯定不对的
+    rc = check_agg(db, selects, relattrs);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+    TupleSet agg_res;
+    agg_select_from_tupleset(trx, db, selects, res_tupleset, relattrs, agg_res);
+    res_tupleset = std::move(agg_res);
+  }
+  res_tupleset.print(ss);
   /* ------------------------------------------------------------------------------------------------------------
 	 */
 
@@ -396,9 +462,38 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
  * @what for: 必做题，查询元数据校验
  * begin -------------------------------------------------------------------------------------------
  */
+// 检查以下错误
+// select c1 from t1, t2
+// select t100.c1 from t1,t2  t100不在t1,t2中
+// select t1.c100 from t1,t2  c100不在t1中
+RC ExecuteStage::check_attr_for_multitable(const char *db, const Selects &selects, const RelAttr &relattr) {
+  if (0 == strcmp("*", relattr.attribute_name)){
+      return RC::SUCCESS;
+  }
+  const char *table_name = relattr.relation_name;
+  if(table_name == nullptr) { // 多表查询，但是查询属性却没有表名
+    return RC::SQL_SYNTAX;
+  }
+  bool exist_in_select = false; // select t3.c1, t2.c1 from t1,t2  t3在{t1, t2}中不存在,exist_in_select==false
+  for(size_t k=0; k<selects.relation_num; k++) {
+    if(strcmp(table_name, selects.relations[k]) == 0) {
+      exist_in_select = true;
+    }
+  }
+  if(!exist_in_select) {
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+  Table * table = DefaultHandler::get_default().find_table(db, table_name);
+  const FieldMeta * fieldMeta = table->table_meta().field(relattr.attribute_name);
+  if (fieldMeta == nullptr){ // 表名.属性 表名对应的表没有对应属性
+    return RC::SCHEMA_FIELD_NOT_EXIST;
+  }
+  return RC::SUCCESS;
+}
+
 // 从长度为value_num的values中，判断有没有date属性
 // 若有，则判断date是否合法
-RC check_date_from_values(int value_num, Value *values) {
+RC ExecuteStage::check_date_from_values(int value_num, const Value *values) {
   int days[13]={0,31,28,31,30,31,30,31,31,30,31,30,31};
   for(int i=0; i<value_num; i++) {
     const Value &value = values[i];
@@ -445,7 +540,8 @@ RC check_date_from_values(int value_num, Value *values) {
 }
 RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session_event){
   // 校验insert语句中的date字段是否符合要求，即满足日期小于2038年2月，以及满足闰年平年的要求
-  RC rc = check_date_from_values(inserts.value_num, inserts.values);
+  const Value *values = (const Value *)(inserts.values);
+  RC rc = check_date_from_values(inserts.value_num, values);
   if(rc == RC::SUCCESS) return rc;
   char err[207];
   sprintf(err, "FAILURE\n");
@@ -456,10 +552,83 @@ RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session
 
 /* @author: huahui 
  * @what for: 必做题，聚合查询 
+ * relattrs中的属性肯定都存在，因为在调用这个函数之前进行了元数据校验
  * -----------------------------------------------------------------------------------------------------------------
  */
-RC ExecuteStage::agg_select_from_tupleset(TupleSet &tuple_set, TupleSet &agg_res) {
+RC ExecuteStage::check_agg(const char *db, const Selects &selects, std::vector<const RelAttr *> &relattrs) {
+  for(size_t i = 0; i < relattrs.size(); i++) {
+    const char *table_name = (relattrs[i]->relation_name == nullptr ? selects.relations[0] : relattrs[i]->relation_name);
+    Table * table = DefaultHandler::get_default().find_table(db, table_name);
+    if(!table) {
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    const FieldMeta * fieldMeta = table->table_meta().field(relattrs[i]->attribute_name);
+    if(!fieldMeta) {
+      return RC::SCHEMA_FIELD_MISSING;
+    }
+    // AVG(*)  AVG(birthday)是错的
+    if((relattrs[i]->attribute_name=="*" || !fieldMeta->addable()) && relattrs[i]->agg_type==AggType::AGGAVG) {
+      return RC::SQL_SYNTAX;
+    }
+    // MAX(*) MIN(*) AVG(*)是错误的
+    if((relattrs[i]->agg_type==AggType::AGGMAX || relattrs[i]->agg_type==AggType::AGGMIN || relattrs[i]->agg_type==AggType::AGGAVG) 
+        && relattrs[i]->attribute_name=="*") {
+      return RC::SQL_SYNTAX;
+    }
+  }
+  return RC::SUCCESS;
+}
 
+// 不支持group by
+// 检查selections中是否有聚合属性，如果有聚合属性，就不能存在其他查询属性.
+// 比如: select col, max(col2) from t; 是错误的
+// hagg: true, 表示有聚合属性，同时没有别的其他非聚合属性
+// relattrs: 如果hagg==true, 则relattrs中保存聚合属性
+RC ExecuteStage::have_agg_from_selections(const Selects &selection, bool &hagg, std::vector<const RelAttr *> &relattrs) {
+  bool has_agg = false;
+  bool has_attr = false;
+  for(size_t i = 0; i < selection.attr_num; i++) {
+    const RelAttr &relattr = selection.attributes[i];
+    if(relattr.agg_type == AggType::NOTAGG) {
+      has_attr = true;
+    }else {
+      has_agg = true;
+      relattrs.push_back(&(selection.attributes[i]));
+    }
+    if(has_agg && has_attr) {
+      return RC::SQL_SYNTAX;
+    }
+  }
+  hagg = has_agg;
+  return RC::SUCCESS;
+}
+// 不支持group by
+// 已经确保肯定是有至少一个聚合属性的，而且保证合法性校验
+// 支持多个聚合属性的查询，支持多表。
+RC ExecuteStage::agg_select_from_tupleset(Trx *trx, const char *db, const Selects &selects, TupleSet &tuple_set, std::vector<const RelAttr *> &relattrs, TupleSet &agg_res) {
+  // 1. 先创建AggExeNode
+  TupleSchema schema;
+  for(size_t i = 0; i < relattrs.size(); i++) {
+    const char *table_name = relattrs[i]->relation_name==nullptr?selects.relations[0]:relattrs[i]->relation_name;
+    Table * table = DefaultHandler::get_default().find_table(db, table_name);
+    if(!table) {
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    if(strcmp(relattrs[i]->attribute_name, "*") != 0){
+      const FieldMeta * fieldMeta = table->table_meta().field(relattrs[i]->attribute_name);
+      if(!fieldMeta) {
+        return RC::SCHEMA_FIELD_MISSING;
+      }
+      AttrType attrtype = fieldMeta->type();
+      schema.add(attrtype, table_name, relattrs[i]->attribute_name, relattrs[i]->relation_name!=nullptr, relattrs[i]->agg_type);
+    } else {
+      schema.add(AttrType::UNDEFINED, table_name, relattrs[i]->attribute_name, relattrs[i]->relation_name!=nullptr, relattrs[i]->agg_type);
+    }
+  }
+  AggExeNode *agg_node = new AggExeNode;
+  agg_node->init(trx, std::move(schema), std::move(tuple_set));
+  // 2. 执行AggExeNode的execute函数得到结果
+  agg_node->execute(agg_res);
 } 
 /* ------------------------------------------------------------------------------------------------------------
  */
@@ -472,16 +641,18 @@ bool match_table(const Selects &selects, const char *table_name_in_condition, co
   return selects.relation_num == 1;
 }
 
-static RC schema_add_field(Table *table, const char *field_name, TupleSchema &schema) {
+/* @author: huahui  @what for: 聚合查询 多表查询  --------------------------------------------------------------*/
+static RC schema_add_field(Table *table, const char *field_name, TupleSchema &schema, bool have_table_name) {
   const FieldMeta *field_meta = table->table_meta().field(field_name);
   if (nullptr == field_meta) {
     LOG_WARN("No such field. %s.%s", table->name(), field_name);
     return RC::SCHEMA_FIELD_MISSING;
   }
 
-  schema.add_if_not_exists(field_meta->type(), table->name(), field_meta->name());
+  schema.add_if_not_exists(field_meta->type(), table->name(), field_meta->name(), have_table_name);
   return RC::SUCCESS;
 }
+/* -------------------------------------------------------------------------------------------------------------*/
 
 // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
 RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node) {
@@ -497,12 +668,16 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
     const RelAttr &attr = selects.attributes[i];
     if (nullptr == attr.relation_name || 0 == strcmp(table_name, attr.relation_name)) {
       if (0 == strcmp("*", attr.attribute_name)) {
+        /* @author: huahui  @what for: 聚合查询 多表查询  -----------------------------------------------*/
         // 列出这张表所有字段
-        TupleSchema::from_table(table, schema);
+        TupleSchema::from_table(table, schema, (attr.relation_name!=nullptr));
+        /* ----------------------------------------------------------------------------------------------*/
         break; // 没有校验，给出* 之后，再写字段的错误
       } else {
+        /* @author: huahui  @what for: 聚合查询 多表查询  ---------------------------------------------------*/
         // 列出这张表相关字段
-        RC rc = schema_add_field(table, attr.attribute_name, schema);
+        RC rc = schema_add_field(table, attr.attribute_name, schema, (attr.relation_name!=nullptr));
+        /* ---------------------------------------------------------------------------------------------------*/
         if (rc != RC::SUCCESS) {
           return rc;
         }

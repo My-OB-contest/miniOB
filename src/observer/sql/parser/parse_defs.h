@@ -24,7 +24,7 @@ See the Mulan PSL v2 for more details. */
 #define MAX_DATA 50
 
 /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------*/
-typedef enum {NOTAGG, COUNT, MAX, MIN, AVG} AggType;
+typedef enum {NOTAGG, AGGCOUNT, AGGMAX, AGGMIN, AGGAVG} AggType;
 /* -----------------------------------------------------------------------------------------------*/
 
 //属性结构体
@@ -248,6 +248,10 @@ void query_init(Query *query);
 Query *query_create();  // create and init
 void query_reset(Query *query);
 void query_destroy(Query *query);  // reset and delete
+
+/* @author: huahui  @what for: 聚合查询  --------------------------------------------------------------*/
+char * aggtypeToStr(AggType aggtype);
+/* ----------------------------------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
 }

@@ -37,7 +37,7 @@ void relation_attr_init(RelAttr *relation_attr, const char *relation_name, const
   relation_attr->attribute_name = strdup(attribute_name);
 }
 /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
-void relation_agg_attr_init(RelAttr *relation_attr, AggType agg_type, const char *relation_name, const char *attribute_name); {
+void relation_agg_attr_init(RelAttr *relation_attr, AggType agg_type, const char *relation_name, const char *attribute_name) {
   relation_attr->agg_type = agg_type;
   if(relation_name != nullptr) {
     relation_attr->relation_name = strdup(relation_name);
@@ -407,6 +407,25 @@ void query_destroy(Query *query) {
   query_reset(query);
   free(query);
 }
+
+/* @author: huahui  @what for: 聚合查询  --------------------------------------------------------------*/
+char * aggtypeToStr(AggType aggtype) {
+  char res[100];
+  if(aggtype == AggType::AGGCOUNT) {
+    strcpy(res, "COUNT");
+  }else if(aggtype == AggType::AGGMAX) {
+    strcpy(res, "MAX");
+  }else if(aggtype == AggType::AGGMIN) {
+    strcpy(res, "MIN");
+  }else if(aggtype == AggType::AGGAVG) {
+    strcpy(res, "AVG");
+  }else {
+    strcpy(res, "NOTAGG");
+  }
+  return strdup(res);
+}
+/* ------------------------------------------------------------------------------------------------------ */
+
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus

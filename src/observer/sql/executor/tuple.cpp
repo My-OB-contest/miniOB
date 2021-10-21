@@ -12,6 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by Wangyunlai on 2021/5/14.
 //
 
+#include "sql/parser/parse_defs.h"
 #include "sql/executor/tuple.h"
 #include "storage/common/table.h"
 #include "common/log/log.h"
@@ -62,24 +63,63 @@ std::string TupleField::to_string() const {
   return std::string(table_name_) + "." + field_name_ + std::to_string(type_);
 }
 
+/* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------
+ */
+void TupleField::print(std::ostream &os) const {
+  if(have_table_name_) {
+    if(aggtype_ != AggType::NOTAGG) {
+      char *s = aggtypeToStr(aggtype_);
+      os << std::string(s) + "(" + table_name_ + "." + field_name_ + ")";
+    }else {
+      os << table_name_ + "." + field_name_;
+    }
+  } else {
+    if(aggtype_ != AggType::NOTAGG) {
+      char *s = aggtypeToStr(aggtype_);
+      os << std::string(s) + "(" + field_name_ + ")";
+    }else {
+      os << field_name_;
+    }
+  }
+}
+/* ---------------------------------------------------------------------------------------------*/
+
+
 ////////////////////////////////////////////////////////////////////////////////
-void TupleSchema::from_table(const Table *table, TupleSchema &schema) {
+/* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------
+ * have_table_name表示加入到schema中的TupleField在输出时应该不应该带表名
+ */
+void TupleSchema::from_table(const Table *table, TupleSchema &schema, bool have_table_name) {
   const char *table_name = table->name();
   const TableMeta &table_meta = table->table_meta();
   const int field_num = table_meta.field_num();
   for (int i = 0; i < field_num; i++) {
     const FieldMeta *field_meta = table_meta.field(i);
     if (field_meta->visible()) {
-      schema.add(field_meta->type(), table_name, field_meta->name());
+      schema.add(field_meta->type(), table_name, field_meta->name(), have_table_name);
     }
   }
 }
+/* ---------------------------------------------------------------------------------------------*/
 
-void TupleSchema::add(AttrType type, const char *table_name, const char *field_name) {
+/* @author: huahui @what for: 聚合查询, 多表查询  ---------------------------------------------------------------------------------------
+ * have_table_name表示加入到schema中的TupleField在输出时应该不应该带表名
+ */
+void TupleSchema::add(AttrType type, const char *table_name, const char *field_name, bool have_table_name) {
   fields_.emplace_back(type, table_name, field_name);
+  fields_.back().set_have_table_name(have_table_name);
 }
+void TupleSchema::add(AttrType type, const char *table_name, const char *field_name, bool have_table_name, AggType aggtype) {
+  fields_.emplace_back(type, table_name, field_name);
+  fields_.back().set_have_table_name(have_table_name);
+  fields_.back().set_aggtype(aggtype);
+}
+/* ------------------------------------------------------------------------------------------------------------------------------------*/
 
-void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const char *field_name) {
+/* @author: huahui @what for: 聚合查询, 多表查询  --------------------------------------------------------------------------
+ * have_table_name表示加入到schema中的TupleField在输出时应该不应该带表名
+ */
+void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const char *field_name, bool have_table_name) {
   for (const auto &field: fields_) {
     if (0 == strcmp(field.table_name(), table_name) &&
         0 == strcmp(field.field_name(), field_name)) {
@@ -87,8 +127,9 @@ void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const
     }
   }
 
-  add(type, table_name, field_name);
+  add(type, table_name, field_name, have_table_name);
 }
+/* --------------------------------------------------------------------------------------------------------------------------*/
 
 void TupleSchema::append(const TupleSchema &other) {
   fields_.reserve(fields_.size() + other.fields_.size());
@@ -108,8 +149,10 @@ int TupleSchema::index_of_field(const char *table_name, const char *field_name) 
   return -1;
 }
 
+/* @author: huahui @what for: 聚合查询, 多表查询  
+ * ------------------------------------------------------------------------------------------------*/
 void TupleSchema::print(std::ostream &os) const {
-  if (fields_.empty()) {
+  /*if (fields_.empty()) {
     os << "No schema";
     return;
   }
@@ -131,8 +174,17 @@ void TupleSchema::print(std::ostream &os) const {
   if (table_names.size() > 1) {
     os << fields_.back().table_name() << ".";
   }
-  os << fields_.back().field_name() << std::endl;
+  os << fields_.back().field_name() << std::endl;*/
+
+  for (std::vector<TupleField>::const_iterator iter = fields_.begin(), end = --fields_.end();
+       iter != end; ++iter) {
+    iter->print(os);
+    os << " | ";
+  }
+  fields_.back().print(os);
+  os << std::endl;
 }
+/* --------------------------------------------------------------------------------------------------------------*/
 
 /////////////////////////////////////////////////////////////////////////////
 TupleSet::TupleSet(TupleSet &&other) : tuples_(std::move(other.tuples_)), schema_(other.schema_){

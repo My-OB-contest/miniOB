@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/stage.h"
 #include "sql/parser/parse.h"
 #include "rc.h"
+#include "storage/trx/trx.h"
 /* @author: huahui 
  * @what for: 必做题，聚合查询 
  * -----------------------------------------------------------------------------------------------------------------
@@ -54,18 +55,30 @@ protected:
    * @what for: 必做题，查询元数据校验
    * begin -------------------------------------------------------------------------------------------
    */
+  // 检查以下错误
+  // select c1 from t1, t2
+  // select t100.c1 from t1,t2  t100不在t1,t2中
+  // select t1.c100 from t1,t2  c100不在t1中
+  RC check_attr_for_multitable(const char *db, const Selects &selects, const RelAttr &relattr);
+
   // 从长度为value_num的values中，判断有没有date属性
   // 若有，则判断date是否合法
-  RC check_date_from_values(int value_num, Value *values);
+  RC check_date_from_values(int value_num, const Value *values);
   RC check_insert_stat(const Inserts &inserts, SessionEvent *session_event);
   /*end ----------------------------------------------------------------------------------------------*/
+
+
 
   /* @author: huahui 
 	 * @what for: 必做题，聚合查询 
    * tuple_sets是多个单表查询的结果
 	 * -----------------------------------------------------------------------------------------------------------------
 	 */
-  RC agg_select_from_tupleset(TupleSet &tuple_set, TupleSet &agg_res); 
+  // 对聚合属性做合法性校验，比如AVG(birthday)肯定是错的
+  RC check_agg(const char *db, const Selects &selects, std::vector<const RelAttr *> &relattrs);
+  
+  RC have_agg_from_selections(const Selects &selection, bool &hagg, std::vector<const RelAttr *> &relattrs);
+  RC agg_select_from_tupleset(Trx *trx, const char *db, const Selects &selects, TupleSet &tuple_set, std::vector<const RelAttr *> &relattrs, TupleSet &agg_res);
   /* ------------------------------------------------------------------------------------------------------------
 	 */
 private:
