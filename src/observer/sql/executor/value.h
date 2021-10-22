@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #define __OBSERVER_SQL_EXECUTOR_VALUE_H_
 
 #include <string.h>
+#include <stdio.h>
 
 #include <string>
 #include <ostream>
@@ -60,7 +61,7 @@ public:
   }
 
   void to_string(std::ostream &os) const override {
-    os << value_;
+    os << formatFloat(value_);
   }
 
   int compare(const TupleValue &other) const override {
@@ -78,6 +79,22 @@ public:
     return value_;
   }
 private:
+  /* @author: huahui  @what for: 浮点数默认格式化---------------------------------------------
+   */
+  std::string formatFloat(float f) const {
+    char s[100];
+    sprintf(s, "%.2f", f);
+    for(int i=strlen(s)-1; s[i]!='.'; i--) {
+      if(s[i]=='0') {
+        s[i] = '\0';
+      }
+    }
+    if(s[strlen(s)-1] == '.') {
+      s[strlen(s)-1] = '\0';
+    }
+    return std::string(s);
+  }
+  /* -------------------------------------------------------------------------------------*/
   float value_;
 };
 

@@ -550,7 +550,11 @@ RC ExecuteStage::check_date_from_values(int value_num, const Value *values) {
     month = (int)(scratch[2]);
     day = (int)(scratch[3]);
     if((year == 2038 && month > 2) || (year > 2038)) {
-      LOG_ERROR("The date should not exceed February 2038");
+      LOG_ERROR("The date should not exceed February 2038\n");
+      return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+    }
+    if(year < 1970) {
+      LOG_ERROR("The date should not be earlier than 1970-01-01\n");
       return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
     }
 
