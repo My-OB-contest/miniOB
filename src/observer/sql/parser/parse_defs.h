@@ -25,12 +25,17 @@ See the Mulan PSL v2 for more details. */
 
 /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------*/
 typedef enum {NOTAGG, AGGCOUNT, AGGMAX, AGGMIN, AGGAVG} AggType;
+typedef enum {AGGNUMBER, AGGFLOAT} AggValType;
+typedef union {int intv; float floatv;} AggVal;
 /* -----------------------------------------------------------------------------------------------*/
 
 //属性结构体
 typedef struct {
   /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
   AggType agg_type;   // 标识是否是聚合查询以及是什么聚合查询，NOTAGG表示不是
+  int is_attr;       // 如果是聚合属性，则这个is_attr判断是属性还是数值
+  AggValType agg_val_type;
+  AggVal agg_val;
   /* --------------------------------------------------------------------------------------------------*/
   char *relation_name;   // relation name (may be NULL) 表名
   char *attribute_name;  // attribute name              属性名

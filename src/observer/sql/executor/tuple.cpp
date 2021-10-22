@@ -66,6 +66,16 @@ std::string TupleField::to_string() const {
 /* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------
  */
 void TupleField::print(std::ostream &os) const {
+  if(!is_attr_) {
+    char *s = aggtypeToStr(aggtype_);
+    if(agg_val_type_ == AggValType::AGGNUMBER) {
+      os << std::string(s) << "(" << agg_val_.intv << ")";
+    }else {
+      os << std::string(s) << "(" << formatFloat(agg_val_.floatv) << ")";
+    }
+    return;
+  }
+
   if(have_table_name_) {
     if(aggtype_ != AggType::NOTAGG) {
       char *s = aggtypeToStr(aggtype_);
@@ -85,6 +95,16 @@ void TupleField::print(std::ostream &os) const {
 
 AggType TupleField::getAggtype() const {
   return aggtype_;
+}
+
+bool TupleField::get_is_attr() const {
+  return is_attr_;
+}
+AggValType TupleField::get_agg_val_type() const {
+  return agg_val_type_;
+}
+AggVal TupleField::get_agg_val() const {
+  return agg_val_;
 }
 /* ---------------------------------------------------------------------------------------------*/
 
@@ -115,11 +135,21 @@ void TupleSchema::add(AttrType type, const char *table_name, const char *field_n
 void TupleSchema::add(AttrType type, const char *table_name, const char *field_name, bool have_table_name) {
   fields_.emplace_back(type, table_name, field_name);
   fields_.back().set_have_table_name(have_table_name);
+  fields_.back().set_is_attr(true);
 }
 void TupleSchema::add(AttrType type, const char *table_name, const char *field_name, bool have_table_name, AggType aggtype) {
   fields_.emplace_back(type, table_name, field_name);
   fields_.back().set_have_table_name(have_table_name);
   fields_.back().set_aggtype(aggtype);
+  fields_.back().set_is_attr(true);
+}
+void TupleSchema::add(bool have_table_name, AggType aggtype, bool is_attr, AggValType agg_val_type, AggVal agg_val) {
+  fields_.emplace_back(AttrType::UNDEFINED, "", "");
+  fields_.back().set_have_table_name(have_table_name);
+  fields_.back().set_aggtype(aggtype);
+  fields_.back().set_is_attr(is_attr);
+  fields_.back().set_agg_val_type(agg_val_type);
+  fields_.back().set_agg_val(agg_val);
 }
 /* ------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -323,5 +353,22 @@ void TupleRecordConverter::add_record(const char *record) {
 
   tuple_set_.add(std::move(tuple));
 }
+
+/* @author: huahui  @what for: 浮点数默认格式化---------------------------------------------
+  */
+std::string formatFloat(float f) {
+  char s[100];
+  sprintf(s, "%.2f", f);
+  for(int i=strlen(s)-1; s[i]!='.'; i--) {
+    if(s[i]=='0') {
+      s[i] = '\0';
+    }
+  }
+  if(s[strlen(s)-1] == '.') {
+    s[strlen(s)-1] = '\0';
+  }
+  return std::string(s);
+}
+/* -------------------------------------------------------------------------------------*/
 
 
