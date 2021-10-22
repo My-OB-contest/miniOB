@@ -39,6 +39,7 @@ void relation_attr_init(RelAttr *relation_attr, const char *relation_name, const
 /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
 void relation_agg_attr_init(RelAttr *relation_attr, AggType agg_type, const char *relation_name, const char *attribute_name) {
   relation_attr->agg_type = agg_type;
+  relation_attr->is_attr = true;
   if(relation_name != nullptr) {
     relation_attr->relation_name = strdup(relation_name);
   }else{

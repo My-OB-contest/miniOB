@@ -206,16 +206,66 @@ RC AggExeNode::init(Trx *trx, TupleSchema && tuple_schema, TupleSet && tuple_set
 RC AggExeNode::execute(TupleSet &res_tupleset) {
   res_tupleset.set_schema(tuple_schema_);
   int agg_num = tuple_schema_.fields().size();
-  if(tuple_set_.size() <= 0){
+  if(tuple_set_.size() <= 0){ // 如果集合为空，只计算max(5),min(5),avg(5)的值，其他都为0
+    Tuple tuple;
+    for(int i=0;i<agg_num;i++) {
+      const TupleField &tuple_field = tuple_schema_.field(i);
+      if(tuple_field.get_is_attr() || (!tuple_field.get_is_attr() && tuple_field.getAggtype() == AggType::AGGCOUNT)) {
+        tuple.add(0);
+      } else if(tuple_field.getAggtype() == AggType::AGGMAX || tuple_field.getAggtype() == AggType::AGGMIN) {
+        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
+          tuple.add(tuple_field.get_agg_val().intv);
+        }else{
+          tuple.add((float)tuple_field.get_agg_val().floatv);
+        }
+      } else {
+        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
+          tuple.add((float)(tuple_field.get_agg_val().intv));
+        }else{
+          tuple.add((float)(tuple_field.get_agg_val().floatv));
+        }
+      }
+    }
+    res_tupleset.add(std::move(tuple));
     return RC::SUCCESS;
   }
+  
   // 保存结果,如果是max, min, 就保存下标在first中，如果是count，就保存计数器在first中，如果是avg，就保存计数器和累加值在first和second中
+  // 如果是max(5)，则保存5在first中，如果是min(5.6)则保存5.6在second中
   std::vector<std::pair<int, double> > res(agg_num);
-  for(int i = 0; i < tuple_set_.size(); i++) {
+  // 如果是类似于count(1)这种形式的聚合，可以直接把结果算出来
+  bool have_agg_attr = false; // 还存在类似于max(id)这种聚合属性
+  for(int i = 0; i < agg_num; i++) {
+    const TupleField &tuple_field = tuple_schema_.field(i);
+    if(!tuple_field.get_is_attr()) {
+      if(tuple_field.getAggtype() == AggType::AGGMAX || tuple_field.getAggtype() == AggType::AGGMIN) {
+        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
+          res[i].first = tuple_field.get_agg_val().intv;
+        }else{
+          res[i].second = tuple_field.get_agg_val().floatv;
+        }
+      }else if(tuple_field.getAggtype() == AggType::AGGCOUNT) {
+        res[i].first = tuple_set_.size();
+      }else {
+        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
+          res[i].second = tuple_field.get_agg_val().intv;
+        }else{
+          res[i].second = tuple_field.get_agg_val().floatv;
+        }
+      }
+    }else{
+      have_agg_attr = true;
+    }
+  }
+
+  for(int i = 0; i < tuple_set_.size() && have_agg_attr; i++) {
     const Tuple &tuple = tuple_set_.get(i);
     if(i == 0) {
       for(int j = 0; j < agg_num; j++) {
         const TupleField &tuple_field = tuple_schema_.field(j);
+        if(!tuple_field.get_is_attr()) {
+          continue;
+        }
         AggType aggtype = tuple_field.getAggtype();
         if(aggtype == AggType::NOTAGG) {
           return RC::SQL_SYNTAX;
@@ -239,6 +289,9 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
     }else{
       for(int j = 0; j < agg_num; j++) {
         const TupleField &tuple_field = tuple_schema_.field(j);
+        if(!tuple_field.get_is_attr()) {
+          continue;
+        }
         AggType aggtype = tuple_field.getAggtype();
         if(aggtype == AggType::NOTAGG) {
           return RC::SQL_SYNTAX;
@@ -273,6 +326,22 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
 
   Tuple tuple;
   for(int j = 0; j < agg_num; j++) {
+    const TupleField &tuple_field = tuple_schema_.field(j);
+    if(!tuple_field.get_is_attr()) {
+      if(tuple_field.getAggtype() == AggType::AGGMAX || tuple_field.getAggtype() == AggType::AGGMIN) {
+        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
+          tuple.add(res[j].first);
+        }else{
+          tuple.add((float)res[j].second);
+        }
+      }else if(tuple_field.getAggtype() == AggType::AGGCOUNT) {
+        tuple.add(res[j].first);
+      }else{
+        tuple.add((float)res[j].second);
+      }
+      continue;
+    }
+
     if(tuple_schema_.field(j).getAggtype() == AggType::AGGMAX || tuple_schema_.field(j).getAggtype() == AggType::AGGMIN) {
       if(tuple_schema_.field(j).type() == AttrType::INTS) {
         std::shared_ptr<IntValue> tv = std::static_pointer_cast<IntValue>(tuple_set_.get(res[j].first).get_pointer(j));

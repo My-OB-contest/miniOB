@@ -290,6 +290,9 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
         return RC::SCHEMA_TABLE_NOT_EXIST;
     }
     for (size_t j = 0; j < selects.attr_num ; ++j) {
+        if(!selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
+          continue;
+        }
         if(selects.attributes[j].relation_name != nullptr && strcmp(selects.attributes[j].relation_name, selects.relations[0])!=0) {
           return RC::SQL_SYNTAX;
         }
@@ -369,6 +372,9 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
     }
   }
   for(size_t j=0; j<selects.attr_num; j++) {
+    if(!selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
+      continue;
+    }
     RC rc2 = check_attr_for_multitable(db, selects, selects.attributes[j]);
     if(rc2 != RC::SUCCESS) {
       return rc2;
@@ -406,7 +412,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
   const Selects &selects = sql->sstr.selection;
-  //rc = select_check(db,selects);
+  rc = select_check(db,selects);
   if ( rc != RC::SUCCESS){
       LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
       return rc;
@@ -607,6 +613,10 @@ RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session
  */
 RC ExecuteStage::check_agg(const char *db, const Selects &selects, std::vector<const RelAttr *> &relattrs) {
   for(size_t i = 0; i < relattrs.size(); i++) {
+    if(!relattrs[i]->is_attr) {
+      continue;
+    }
+
     const char *table_name = (relattrs[i]->relation_name == nullptr ? selects.relations[0] : relattrs[i]->relation_name);
     Table * table = DefaultHandler::get_default().find_table(db, table_name);
     if(!table) {
@@ -662,6 +672,10 @@ RC ExecuteStage::agg_select_from_tupleset(Trx *trx, const char *db, const Select
   // 1. 先创建AggExeNode
   TupleSchema schema;
   for(size_t i = 0; i < relattrs.size(); i++) {
+    if(!relattrs[i]->is_attr) {
+      schema.add(false, relattrs[i]->agg_type, relattrs[i]->is_attr, relattrs[i]->agg_val_type, relattrs[i]->agg_val);
+      continue;
+    }
     const char *table_name = relattrs[i]->relation_name==nullptr?selects.relations[0]:relattrs[i]->relation_name;
     Table * table = DefaultHandler::get_default().find_table(db, table_name);
     if(!table) {
@@ -719,7 +733,13 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
 
   for (int i = selects.attr_num - 1; i >= 0; i--) {
     const RelAttr &attr = selects.attributes[i];
+    // 如果是类似max(1)的情况，attr.attribute_name就是空的
+    if (attr.attribute_name == nullptr) {
+      continue;
+    }
+    /* ----------------------------------------------------------------------------------------------*/
     if (nullptr == attr.relation_name || 0 == strcmp(table_name, attr.relation_name)) {
+      /* @author: huahui  @what for: 聚合查询  --------------------------------------------------------*/
       if (0 == strcmp("*", attr.attribute_name)) {
         /* @author: huahui  @what for: 聚合查询 多表查询  -----------------------------------------------*/
         // 列出这张表所有字段
