@@ -1,0 +1,790 @@
+[2021-10-22 0:0:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:0:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:0:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:0:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:1:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:1:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:1:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:1:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:2:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:2:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:2:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:2:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:3:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:3:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:3:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:3:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:4:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:4:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:4:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:4:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:5:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:5:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:5:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:5:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:6:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:6:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:6:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:6:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:7:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:7:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:7:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:7:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:8:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:8:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:8:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:8:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:9:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:9:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:9:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:9:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:10:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:10:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:10:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:10:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:11:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:11:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:11:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:11:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:12:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:12:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:12:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:12:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:13:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:13:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:13:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:13:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:14:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:14:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:14:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:14:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:15:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:15:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:15:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:15:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:16:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:16:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:16:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:16:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:17:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:17:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:17:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:17:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:18:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:18:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:18:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:18:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:19:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:19:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:19:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:19:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:20:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:20:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:20:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:20:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:21:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:21:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:21:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:21:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:22:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:22:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:22:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:22:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:23:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:23:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:23:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:23:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:24:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:24:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:24:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:24:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:25:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:25:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:25:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:25:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:26:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:26:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:26:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:26:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:27:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:27:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:27:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:27:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:28:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:28:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:28:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:28:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:29:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:29:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:29:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:29:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:30:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:30:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:30:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:30:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:31:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:31:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:31:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:31:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:32:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:32:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:32:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:32:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:33:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:33:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:33:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:33:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:34:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:34:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:34:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:34:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:35:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:35:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:35:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:35:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:36:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:36:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:36:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:36:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:37:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:37:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:37:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:37:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:38:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:38:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:38:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:38:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:39:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:39:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:39:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:39:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:40:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:40:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:40:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:40:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:41:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:41:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:41:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:41:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:42:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:42:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:42:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:42:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:43:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:43:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:43:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:43:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:44:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:44:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:44:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:44:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:45:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:45:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:45:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:45:18 pid:12344 tid:7f898bfff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:46:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:46:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:46:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:46:18 pid:12344 tid:7f8991283700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 13195 Time: Fri Oct 22 00:46:43 2021
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e3700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe985e3700, threadname = SQLThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe8f5e1700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe8f5e1700, threadname = SQLThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe975e1700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe975e1700, threadname = IOThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe95dde700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe95dde700, threadname = DefaultThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe965df700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe965df700, threadname = IOThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe955dd700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe955dd700, threadname = DefaultThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe94ddc700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe94ddc700, threadname = DefaultThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  WARNNING: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp create_db 74]>>Db already exists: sys
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=__trx
+[2021-10-22 0:46:43 pid:13195 tid:7fbe97de2700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe97de2700, threadname = SQLThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe96de0700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fbe96de0700, threadname = IOThreads
+
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=__trx
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=age
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp open_file 107]>>Successfully open file ./miniob/db/sys/mytable.data.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp open_file 147]>>Successfully open ./miniob/db/sys/mytable.data. file_id=0, hdr_frame=0x7fbe945a9010
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 123]>>Open table: mytable, file: mytable.table
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=1
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  ERROR: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 319]>>bind(): can not bind server socket, Address already in use
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  PANIC: /home/xiaoyu/miniOB/src/observer/net/server.cpp serve 419]>>Failed to start network
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp sync 806]>>Sync table over. table=mytable
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp sync 150]>>Sync db over. db=sys
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp close_file 173]>>Successfully close file 0:.
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp ~Table 46]>>Table has been closed: mytable
+[2021-10-22 0:46:43 pid:13195 tid:7fbe985e7100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp ~Db 33]>>Db has been closed: sys
+[2021-10-22 0:47:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:47:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:47:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:47:18 pid:12344 tid:7f8990a82700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:47:23 pid:12344 tid:7f898affd700  INFO: /home/xiaoyu/miniOB/src/observer/main.cpp quit_thread_func 135]>>Receive signal: 15
+[2021-10-22 0:47:23 pid:12344 tid:7f898affd700  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp shutdown 429]>>Server shutting down
+[2021-10-22 0:47:23 pid:12344 tid:7f898affd700  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp shutdown 449]>>Server quit
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 13230 Time: Fri Oct 22 00:47:32 2021
+
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-22 0:47:32 pid:13230 tid:7f8130653700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f8130653700, threadname = SQLThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f812ee50700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f812ee50700, threadname = IOThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f8126e50700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f8126e50700, threadname = IOThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f812de4e700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f812de4e700, threadname = DefaultThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f812f651700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f812f651700, threadname = SQLThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f812d64d700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f812d64d700, threadname = DefaultThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f812ce4c700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f812ce4c700, threadname = DefaultThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f812fe52700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f812fe52700, threadname = SQLThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  WARNNING: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp create_db 74]>>Db already exists: sys
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=__trx
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=__trx
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=age
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp open_file 107]>>Successfully open file ./miniob/db/sys/mytable.data.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp open_file 147]>>Successfully open ./miniob/db/sys/mytable.data. file_id=0, hdr_frame=0x7f812c619010
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 123]>>Open table: mytable, file: mytable.table
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=1
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-22 0:47:32 pid:13230 tid:7f812e64f700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f812e64f700, threadname = IOThreads
+
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  ERROR: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 319]>>bind(): can not bind server socket, Address already in use
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  PANIC: /home/xiaoyu/miniOB/src/observer/net/server.cpp serve 419]>>Failed to start network
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp sync 806]>>Sync table over. table=mytable
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp sync 150]>>Sync db over. db=sys
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp close_file 173]>>Successfully close file 0:.
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp ~Table 46]>>Table has been closed: mytable
+[2021-10-22 0:47:32 pid:13230 tid:7f8130657100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp ~Db 33]>>Db has been closed: sys
+[2021-10-22 0:47:47 pid:12344 tid:7f899428d100  INFO: /home/xiaoyu/miniOB/src/observer/main.cpp main 165]>>Server stopped
+[2021-10-22 0:47:47 pid:12344 tid:7f899428d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp sync 806]>>Sync table over. table=mytable
+[2021-10-22 0:47:47 pid:12344 tid:7f899428d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp sync 150]>>Sync db over. db=sys
+[2021-10-22 0:47:47 pid:12344 tid:7f898a7fc700  INFO: /home/xiaoyu/miniOB/src/observer/main.cpp quit_thread_func 135]>>Receive signal: 15
+[2021-10-22 0:47:47 pid:12344 tid:7f899428d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp close_file 173]>>Successfully close file 0:.
+[2021-10-22 0:47:47 pid:12344 tid:7f899428d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp ~Table 46]>>Table has been closed: mytable
+[2021-10-22 0:47:47 pid:12344 tid:7f899428d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp ~Db 33]>>Db has been closed: sys
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 13269 Time: Fri Oct 22 00:47:57 2021
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe410700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0abe410700, threadname = SQLThreads
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0ab7fff700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0ab7fff700, threadname = IOThreads
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0aaffff700, threadname = DefaultThreads
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  WARNNING: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp create_db 74]>>Db already exists: sys
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=__trx
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=__trx
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=age
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp open_file 107]>>Successfully open file ./miniob/db/sys/mytable.data.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp open_file 147]>>Successfully open ./miniob/db/sys/mytable.data. file_id=0, hdr_frame=0x7f0abc3da010
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 123]>>Open table: mytable, file: mytable.table
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=1
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-22 0:47:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0ab6ffd700, threadname = DefaultThreads
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0abd40e700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0abd40e700, threadname = SQLThreads
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0abcc0d700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0abcc0d700, threadname = IOThreads
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0ab77fe700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0ab77fe700, threadname = IOThreads
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0ab67fc700, threadname = DefaultThreads
+
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 330]>>Listen on port 6789
+[2021-10-22 0:47:57 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 348]>>Observer start success
+[2021-10-22 0:47:57 pid:13269 tid:7f0abdc0f700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f0abdc0f700, threadname = SQLThreads
+
+[2021-10-22 0:48:3 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp accept 276]>>Accepted connection from 127.0.0.1:52421
+
+[2021-10-22 0:48:6 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=7): help;
+
+[2021-10-22 0:48:13 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=14): show tables;
+
+[2021-10-22 0:48:21 pid:13269 tid:7f0abe414100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=21): drop table mytable;
+
+[2021-10-22 0:48:21 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp close_file 173]>>Successfully close file 0:.
+[2021-10-22 0:48:21 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp ~Table 46]>>Table has been closed: mytable
+[2021-10-22 0:48:21 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp drop_table 93]>>Drop table success. table name=mytable
+[2021-10-22 0:48:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0.0333333
+[2021-10-22 0:48:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0.05
+[2021-10-22 0:48:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0.05
+[2021-10-22 0:48:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0.1
+[2021-10-22 0:49:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:49:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:49:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:49:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:50:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:50:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:50:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:50:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:51:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:51:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:51:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:51:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:52:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:52:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:52:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:52:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:53:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:53:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:53:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:53:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:54:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:54:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:54:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:54:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:55:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:55:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:55:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:55:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:56:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:56:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:56:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:56:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:57:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:57:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:57:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:57:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:58:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:58:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:58:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:58:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 0:59:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 0:59:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 0:59:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 0:59:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:0:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:0:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:0:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:0:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:1:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:1:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:1:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:1:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:2:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:2:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:2:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:2:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:3:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:3:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:3:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:3:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:4:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:4:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:4:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:4:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:5:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:5:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:5:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:5:57 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:6:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:6:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:6:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:6:57 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:7:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:7:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:7:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:7:57 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:10:44 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:10:44 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:10:44 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:10:44 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 1:14:20 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 1:14:20 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 1:14:20 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 1:14:20 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:12:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:12:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:12:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:12:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:13:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:13:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:13:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:13:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:14:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:14:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:14:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:14:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:15:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:15:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:15:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:15:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:16:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:16:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:16:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:16:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:17:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:17:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:17:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:17:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:18:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:18:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:18:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:18:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:19:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:19:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:19:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:19:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:20:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:20:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:20:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:20:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:21:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:21:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:21:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:21:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:22:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:22:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:22:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:22:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:23:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:23:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:23:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:23:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:24:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:24:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:24:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:24:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:25:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:25:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:25:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:25:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:26:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:26:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:26:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:26:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:27:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:27:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:27:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:27:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:28:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:28:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:28:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:28:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:29:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:29:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:29:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:29:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:30:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:30:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:30:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:30:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:31:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:31:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:31:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:31:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:32:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:32:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:32:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:32:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:33:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:33:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:33:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:33:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:34:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:34:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:34:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:34:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:35:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:35:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:35:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:35:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:36:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:36:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:36:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:36:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:37:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:37:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:37:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:37:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:38:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:38:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:38:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:38:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:39:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:39:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:39:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:39:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:40:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:40:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:40:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:40:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:41:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:41:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:41:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:41:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:42:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:42:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:42:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:42:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:43:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:43:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:43:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:43:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:44:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:44:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:44:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:44:5 pid:13269 tid:7f0aaffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:45:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:45:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:45:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:45:5 pid:13269 tid:7f0ab6ffd700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-22 2:46:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-22 2:46:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-22 2:46:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-22 2:46:5 pid:13269 tid:7f0ab67fc700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0

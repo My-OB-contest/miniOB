@@ -1,0 +1,60 @@
+[2021-10-17 22:14:1 pid:26572 tid:7f525b3a6100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2021-10-17 22:14:1 pid:26572 tid:7f525b3a6100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26572 Time: Sun Oct 17 22:14:01 2021
+
+[2021-10-17 22:14:1 pid:26572 tid:7f525b3a6100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:14:1 pid:26572 tid:7f525b3a6100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:14:1 pid:26572 tid:7f525b3a6100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_thread_pool 218]>>Configuration hasn't set ThreadPools
+[2021-10-17 22:14:1 pid:26572 tid:7f525b3a6100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp instantiate 415]>>Failed to init thread pool
+
+[2021-10-17 22:14:1 pid:26572 tid:7f525b3a6100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 73]>>SedaConfig: unable to initialize seda stages
+[2021-10-17 22:14:1 pid:26572 tid:7f525b3a6100  ERROR: /home/xiaoyu/miniOB/src/observer/init.cpp init 212]>>Failed to init seda configuration!
+[2021-10-17 22:14:36 pid:26594 tid:7f1e9c998100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2021-10-17 22:14:36 pid:26594 tid:7f1e9c998100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26594 Time: Sun Oct 17 22:14:36 2021
+
+[2021-10-17 22:14:36 pid:26594 tid:7f1e9c998100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:14:36 pid:26594 tid:7f1e9c998100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:14:36 pid:26594 tid:7f1e9c998100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_thread_pool 218]>>Configuration hasn't set ThreadPools
+[2021-10-17 22:14:36 pid:26594 tid:7f1e9c998100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp instantiate 415]>>Failed to init thread pool
+
+[2021-10-17 22:14:36 pid:26594 tid:7f1e9c998100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 73]>>SedaConfig: unable to initialize seda stages
+[2021-10-17 22:14:36 pid:26594 tid:7f1e9c998100  ERROR: /home/xiaoyu/miniOB/src/observer/init.cpp init 212]>>Failed to init seda configuration!
+[2021-10-17 22:16:58 pid:26618 tid:7f4c12526100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2021-10-17 22:16:58 pid:26618 tid:7f4c12526100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26618 Time: Sun Oct 17 22:16:58 2021
+
+[2021-10-17 22:16:58 pid:26618 tid:7f4c12526100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:16:58 pid:26618 tid:7f4c12526100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:16:58 pid:26618 tid:7f4c12526100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_thread_pool 218]>>Configuration hasn't set ThreadPools
+[2021-10-17 22:16:58 pid:26618 tid:7f4c12526100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp instantiate 415]>>Failed to init thread pool
+
+[2021-10-17 22:16:58 pid:26618 tid:7f4c12526100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 73]>>SedaConfig: unable to initialize seda stages
+[2021-10-17 22:16:58 pid:26618 tid:7f4c12526100  ERROR: /home/xiaoyu/miniOB/src/observer/init.cpp init 212]>>Failed to init seda configuration!
+[2021-10-17 22:21:20 pid:26823 tid:7f188cda9100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2021-10-17 22:21:20 pid:26823 tid:7f188cda9100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26823 Time: Sun Oct 17 22:21:20 2021
+
+[2021-10-17 22:21:20 pid:26823 tid:7f188cda9100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:21:20 pid:26823 tid:7f188cda9100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:21:20 pid:26823 tid:7f188cda9100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_thread_pool 218]>>Configuration hasn't set ThreadPools
+[2021-10-17 22:21:20 pid:26823 tid:7f188cda9100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp instantiate 415]>>Failed to init thread pool
+
+[2021-10-17 22:21:20 pid:26823 tid:7f188cda9100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 73]>>SedaConfig: unable to initialize seda stages
+[2021-10-17 22:21:20 pid:26823 tid:7f188cda9100  ERROR: /home/xiaoyu/miniOB/src/observer/init.cpp init 212]>>Failed to init seda configuration!

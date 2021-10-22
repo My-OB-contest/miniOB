@@ -23,8 +23,11 @@ See the Mulan PSL v2 for more details. */
 #include <time.h>
 
 #include <vector>
+#include <map>
 
 #include "rc.h"
+
+using namespace std;
 
 typedef int PageNum;
 
@@ -78,40 +81,155 @@ public:
 
 class BPManager {
 public:
+    class Node{
+    public:
+        Frame *frame;
+        Node* pre;
+        Node* next;
+        Node(Frame *f,Node *pr,Node *ne):frame(f),pre(pr),next(ne){}
+    };
+
   BPManager(int size = BP_BUFFER_SIZE) {
     this->size = size;
-    frame = new Frame[size];
-    allocated = new bool[size];
-    for (int i = 0; i < size; i++) {
-      allocated[i] = false;
-      frame[i].pin_count = 0;
-    }
+    allocated_size = 0;
   }
 
   ~BPManager() {
-    delete[] frame;
-    delete[] allocated;
-    size = 0;
-    frame = nullptr;
-    allocated = nullptr;
+      Node *cur = head;
+      while(head != nullptr){
+          cur = head;
+          head = head->next;
+          delete(cur);
+      }
+      size=0;
+      head = nullptr;
+      tail = nullptr;
   }
 
   Frame *alloc() {
-    return nullptr; // TODO for test
+    // TODO for test
+    Node *node = nullptr;
+    if(allocated_size < size){
+      Frame *frame = new Frame();
+      node = new Node(frame, nullptr, nullptr);
+      frame_map.insert(pair<Frame*, Node*>(frame, node));
+      setHead(node);
+      allocated_size++;
+      return node->frame;
+    }
+
+    node = tail;
+//    检查pincount
+    while(node->frame->pin_count != 0){
+      node = node->pre;
+    }
+    if(node->frame->pin_count == 0){
+      moveToHead(node);
+      return node->frame;
+    }
+
+    return nullptr;
   }
 
   Frame *get(int file_desc, PageNum page_num) {
-    return nullptr; // TODO for test
+    if(head == nullptr ){
+      return nullptr;
+    }
+    Node* cur = head;
+    while(cur!= nullptr){
+      if(cur->frame->file_desc == file_desc && cur->frame->page.page_num == page_num){
+        moveToHead(cur);
+        return cur->frame;
+      }
+      cur = cur->next;
+    }
+    return nullptr;
   }
 
-  Frame *getFrame() { return frame; }
+  vector<Frame*> getFlushFrames(int file_desc) {
+    vector<Frame*> vf;
+    Node* cur = head;
+    while(cur!= nullptr){
+      if(cur->frame->file_desc == file_desc){
+        vf.push_back(cur->frame);
+        Node *node = cur;
+        cur = cur->next;
+        delNode(node);
+        allocated_size--;
+      }
+    }
+    return vf;
+  }
 
-  bool *getAllocated() { return allocated; }
+  RC moveToHead(Node* node){
+    if(node == head){
+      return RC::SUCCESS;
+    }
+
+    if(node == tail){
+      tail = node->pre;
+      tail->next = nullptr;
+    }
+
+    node->pre->next = node->next;
+    node->next->pre = node->pre;
+    node->next = head;
+    node->pre = nullptr;
+    head = node;
+    return RC::SUCCESS;
+  }
+
+  RC setHead(Node* node){
+    if(head == nullptr && tail == nullptr){
+      tail = node;
+    }
+
+    node->next = head;
+    head->pre = node;
+    head = node;
+    return RC::SUCCESS;
+  }
+
+  RC delFrame(Frame* frame){
+    map<Frame*, Node*>::iterator it = frame_map.find(frame);
+    if(it != frame_map.end()){
+      return delNode(it->second);
+    }
+    return RC::BUFFERPOOL_DELETE_ERROR;
+  }
+
+  RC delNode(Node* node){
+    if(node == head && node == tail){
+      tail = nullptr;
+      head = nullptr;
+    }else if(node == head){
+      head = node->next;
+      head->pre = nullptr;
+    }else if(node == tail){
+      tail = node->pre;
+      tail->next = nullptr;
+    }else {
+      node->pre->next = node->next;
+      node->next->pre = node->pre;
+    }
+    allocated_size--;
+    delete node;
+    return RC::SUCCESS;
+  }
+
+//  Frame *getFrame() { return head->frame; }
+
+//  bool *getAllocated() { return true; }
 
 public:
   int size;
-  Frame * frame = nullptr;
-  bool *allocated = nullptr;
+  int allocated_size;
+  Node *head = nullptr;
+  Node *tail = nullptr;
+  map<Frame*, Node*> frame_map;
+
+//  Frame * frame = nullptr;
+//  bool *allocated = nullptr;
 };
 
 class DiskBufferPool {

@@ -1,0 +1,763 @@
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 24550 Time: Sun Oct 17 21:55:48 2021
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fa700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe1548fa700, threadname = SQLThreads
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe14bfff700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe14bfff700, threadname = SQLThreads
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe1530f7700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe1530f7700, threadname = IOThreads
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe1528f6700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe1528f6700, threadname = IOThreads
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe1518f4700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe1518f4700, threadname = DefaultThreads
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1510f3700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe1510f3700, threadname = DefaultThreads
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe1540f9700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe1540f9700, threadname = SQLThreads
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=0
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-17 21:55:48 pid:24550 tid:7fe1520f5700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe1520f5700, threadname = DefaultThreads
+
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 330]>>Listen on port 6789
+[2021-10-17 21:55:48 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 348]>>Observer start success
+[2021-10-17 21:55:48 pid:24550 tid:7fe1538f8700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fe1538f8700, threadname = IOThreads
+
+[2021-10-17 21:55:57 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp accept 276]>>Accepted connection from 127.0.0.1:65203
+
+[2021-10-17 21:56:2 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=7): help;
+
+[2021-10-17 21:56:6 pid:24550 tid:7fe1548fe100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=14): show tables;
+
+[2021-10-17 21:56:48 pid:24550 tid:7fe1520f5700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0.0166667
+[2021-10-17 21:56:48 pid:24550 tid:7fe1520f5700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0.0333333
+[2021-10-17 21:56:48 pid:24550 tid:7fe1520f5700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0.0333333
+[2021-10-17 21:56:48 pid:24550 tid:7fe1520f5700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0.0666667
+[2021-10-17 22:17:10 pid:26643 tid:7fe3c4214100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2021-10-17 22:17:10 pid:26643 tid:7fe3c4214100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26643 Time: Sun Oct 17 22:17:10 2021
+
+[2021-10-17 22:17:10 pid:26643 tid:7fe3c4214100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:17:10 pid:26643 tid:7fe3c4214100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:17:10 pid:26643 tid:7fe3c4214100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_thread_pool 218]>>Configuration hasn't set ThreadPools
+[2021-10-17 22:17:10 pid:26643 tid:7fe3c4214100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp instantiate 415]>>Failed to init thread pool
+
+[2021-10-17 22:17:10 pid:26643 tid:7fe3c4214100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 73]>>SedaConfig: unable to initialize seda stages
+[2021-10-17 22:17:10 pid:26643 tid:7fe3c4214100  ERROR: /home/xiaoyu/miniOB/src/observer/init.cpp init 212]>>Failed to init seda configuration!
+[2021-10-17 22:17:46 pid:26665 tid:7f750d627100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2021-10-17 22:17:46 pid:26665 tid:7f750d627100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26665 Time: Sun Oct 17 22:17:46 2021
+
+[2021-10-17 22:17:46 pid:26665 tid:7f750d627100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:17:46 pid:26665 tid:7f750d627100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:17:46 pid:26665 tid:7f750d627100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_thread_pool 218]>>Configuration hasn't set ThreadPools
+[2021-10-17 22:17:46 pid:26665 tid:7f750d627100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp instantiate 415]>>Failed to init thread pool
+
+[2021-10-17 22:17:46 pid:26665 tid:7f750d627100  ERROR: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 73]>>SedaConfig: unable to initialize seda stages
+[2021-10-17 22:17:46 pid:26665 tid:7f750d627100  ERROR: /home/xiaoyu/miniOB/src/observer/init.cpp init 212]>>Failed to init seda configuration!
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26670 Time: Sun Oct 17 22:18:38 2021
+
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0ed9700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f25a0ed9700, threadname = SQLThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f259f6d6700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f259f6d6700, threadname = IOThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f259eed5700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f259eed5700, threadname = IOThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f259e6d4700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f259e6d4700, threadname = IOThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f259ded3700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f259ded3700, threadname = DefaultThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f259d6d2700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f259d6d2700, threadname = DefaultThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f259ced1700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f259ced1700, threadname = DefaultThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-17 22:18:38 pid:26670 tid:7f259fed7700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f259fed7700, threadname = SQLThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f25a06d8700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f25a06d8700, threadname = SQLThreads
+
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  WARNNING: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp create_db 74]>>Db already exists: sys
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=0
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 330]>>Listen on port 6789
+[2021-10-17 22:18:38 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 348]>>Observer start success
+[2021-10-17 22:19:1 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp accept 276]>>Accepted connection from 127.0.0.1:2228
+
+[2021-10-17 22:19:3 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=7): help;
+
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26703 Time: Sun Oct 17 22:19:37 2021
+
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:19:37 pid:26703 tid:7f20abe9c700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f20abe9c700, threadname = SQLThreads
+
+[2021-10-17 22:19:37 pid:26703 tid:7f20aa699700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f20aa699700, threadname = IOThreads
+
+[2021-10-17 22:19:37 pid:26703 tid:7f20a3fff700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f20a3fff700, threadname = IOThreads
+
+[2021-10-17 22:19:37 pid:26703 tid:7f20a9e98700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f20a9e98700, threadname = IOThreads
+
+[2021-10-17 22:19:37 pid:26703 tid:7f20a9697700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7f20a9697700, threadname = DefaultThreads
+
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  WARNNING: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp create_db 74]>>Db already exists: sys
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=0
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  ERROR: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 319]>>bind(): can not bind server socket, Address already in use
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  PANIC: /home/xiaoyu/miniOB/src/observer/net/server.cpp serve 419]>>Failed to start network
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp sync 150]>>Sync db over. db=sys
+[2021-10-17 22:19:37 pid:26703 tid:7f20abea0100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp ~Db 33]>>Db has been closed: sys
+[2021-10-17 22:19:38 pid:26670 tid:7f259ded3700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 22:19:38 pid:26670 tid:7f259ded3700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0.0166667
+[2021-10-17 22:19:38 pid:26670 tid:7f259ded3700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0.0166667
+[2021-10-17 22:19:38 pid:26670 tid:7f259ded3700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0.0333333
+[2021-10-17 22:20:18 pid:26670 tid:7f25777fe700  INFO: /home/xiaoyu/miniOB/src/observer/main.cpp quit_thread_func 135]>>Receive signal: 15
+[2021-10-17 22:20:18 pid:26670 tid:7f25777fe700  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp shutdown 429]>>Server shutting down
+[2021-10-17 22:20:18 pid:26670 tid:7f25777fe700  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp shutdown 449]>>Server quit
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26739 Time: Sun Oct 17 22:20:22 2021
+
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:20:22 pid:26739 tid:7fef65364700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fef65364700, threadname = SQLThreads
+
+[2021-10-17 22:20:22 pid:26739 tid:7fef64b63700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fef64b63700, threadname = SQLThreads
+
+[2021-10-17 22:20:22 pid:26739 tid:7fef64362700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fef64362700, threadname = IOThreads
+
+[2021-10-17 22:20:22 pid:26739 tid:7fef63b61700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fef63b61700, threadname = IOThreads
+
+[2021-10-17 22:20:22 pid:26739 tid:7fef5bb61700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fef5bb61700, threadname = IOThreads
+
+[2021-10-17 22:20:22 pid:26739 tid:7fef63360700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fef63360700, threadname = DefaultThreads
+
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  WARNNING: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp create_db 74]>>Db already exists: sys
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=0
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  ERROR: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 319]>>bind(): can not bind server socket, Address already in use
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  PANIC: /home/xiaoyu/miniOB/src/observer/net/server.cpp serve 419]>>Failed to start network
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp sync 150]>>Sync db over. db=sys
+[2021-10-17 22:20:22 pid:26739 tid:7fef65b69100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp ~Db 33]>>Db has been closed: sys
+[2021-10-17 22:20:38 pid:26670 tid:7f259d6d2700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 22:20:38 pid:26670 tid:7f259d6d2700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-17 22:20:38 pid:26670 tid:7f259d6d2700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-17 22:20:38 pid:26670 tid:7f259d6d2700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-17 22:20:42 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/main.cpp main 165]>>Server stopped
+[2021-10-17 22:20:42 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp sync 150]>>Sync db over. db=sys
+[2021-10-17 22:20:42 pid:26670 tid:7f25a0edd100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp ~Db 33]>>Db has been closed: sys
+[2021-10-17 22:20:42 pid:26670 tid:7f2576ffd700  INFO: /home/xiaoyu/miniOB/src/observer/main.cpp quit_thread_func 135]>>Receive signal: 15
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26777 Time: Sun Oct 17 22:21:10 2021
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:21:10 pid:26777 tid:7fb250599700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb250599700, threadname = SQLThreads
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb24ed96700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb24ed96700, threadname = IOThreads
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb24e595700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb24e595700, threadname = IOThreads
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb24dd94700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb24dd94700, threadname = IOThreads
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb23ffff700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb23ffff700, threadname = DefaultThreads
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb24fd98700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb24fd98700, threadname = SQLThreads
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb24d593700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb24d593700, threadname = DefaultThreads
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  WARNNING: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp create_db 74]>>Db already exists: sys
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=0
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 330]>>Listen on port 6789
+[2021-10-17 22:21:10 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 348]>>Observer start success
+[2021-10-17 22:21:10 pid:26777 tid:7fb24f597700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb24f597700, threadname = SQLThreads
+
+[2021-10-17 22:21:10 pid:26777 tid:7fb24cd92700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fb24cd92700, threadname = DefaultThreads
+
+[2021-10-17 22:21:42 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp accept 276]>>Accepted connection from 127.0.0.1:2740
+
+[2021-10-17 22:21:44 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=7): help;
+
+[2021-10-17 22:21:50 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=14): show tables;
+
+[2021-10-17 22:22:2 pid:26777 tid:7fb23effd700  INFO: /home/xiaoyu/miniOB/src/observer/main.cpp quit_thread_func 135]>>Receive signal: 2
+[2021-10-17 22:22:2 pid:26777 tid:7fb23effd700  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp shutdown 429]>>Server shutting down
+[2021-10-17 22:22:2 pid:26777 tid:7fb23effd700  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp shutdown 449]>>Server quit
+[2021-10-17 22:22:7 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/main.cpp main 165]>>Server stopped
+[2021-10-17 22:22:7 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp sync 150]>>Sync db over. db=sys
+[2021-10-17 22:22:7 pid:26777 tid:7fb25059d100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp ~Db 33]>>Db has been closed: sys
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 204]>>Output configuration 
+Begin dump configuration
+[]
+
+[DefaultStorageStage]
+BaseDir=./miniob
+SystemDb=sys
+ThreadId=IOThreads
+
+[DefaultThreads]
+count=3
+
+[ExecuteStage]
+NextStages=DefaultStorageStage,MemStorageStage
+ThreadId=SQLThreads
+
+[IOThreads]
+count=3
+
+[LOG]
+LOG_CONSOLE_LEVEL=1
+LOG_FILE_LEVEL=3
+LOG_FILE_NAME=observer.log
+
+[MemStorageStage]
+ThreadId=IOThreads
+
+[MetricsStage]
+NextStages=TimerStage
+
+[NET]
+CLIENT_ADDRESS=INADDR_ANY
+MAX_CONNECTION_NUM=8192
+PORT=6789
+
+[OptimizeStage]
+NextStages=ExecuteStage
+ThreadId=SQLThreads
+
+[ParseStage]
+NextStages=OptimizeStage
+ThreadId=SQLThreads
+
+[PlanCacheStage]
+NextStages=ExecuteStage,ParseStage
+ThreadId=SQLThreads
+
+[QueryCacheStage]
+NextStages=PlanCacheStage
+ThreadId=SQLThreads
+
+[ResolveStage]
+NextStages=QueryCacheStage
+ThreadId=SQLThreads
+
+[SEDA_BASE]
+EventHistory=false
+MaxEventHistoryNum=100
+STAGES=SessionStage,ExecuteStage,OptimizeStage,ParseStage,ResolveStage,PlanCacheStage,QueryCacheStage,DefaultStorageStage,MemStorageStage,TimerStage,MetricsStage
+ThreadPools=SQLThre
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 66]>>(Re)Starting State: Pid: 26946 Time: Sun Oct 17 22:40:29 2021
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/init.cpp init_seda 68]>>The process Name is observer
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_event_history 201]>>Successfully init_event_history, EventHistory:0, MaxEventHops:100
+[2021-10-17 22:40:29 pid:26946 tid:7ffff7956700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7ffff7956700, threadname = SQLThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff7155700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7ffff7155700, threadname = SQLThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff6954700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7ffff6954700, threadname = SQLThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff6153700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7ffff6153700, threadname = IOThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff5952700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7ffff5952700, threadname = IOThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff5151700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7ffff5151700, threadname = IOThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7ffff4950700, threadname = DefaultThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fffdffff700, threadname = DefaultThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage SessionStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ExecuteStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage OptimizeStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ParseStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage ResolveStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage PlanCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage QueryCacheStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 86]>>Use sys as system db
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp init 52]>>Default handler init with ./miniob success
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  WARNNING: /home/xiaoyu/miniOB/src/observer/storage/default/default_handler.cpp create_db 74]>>Db already exists: sys
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp open_all_tables 126]>>All table have been opened. num=0
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/default_storage_stage.cpp set_properties 110]>>Open system db success: sys
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage DefaultStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MemStorageStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for TimerStage, use default threadpool DefaultThreads
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage TimerStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp get_thread_pool 291]>>Not set thread_pool_id for MetricsStage, use default threadpool DefaultThreads
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/seda/seda_config.cpp init_stages 347]>>Stage MetricsStage use threadpool DefaultThreads.
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :DefaultStorageStage.query
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.sql
+[2021-10-17 22:40:29 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/deps/common/seda/thread_pool.cpp run_thread 242]>>threadid = 7fffdf7fe700, threadname = DefaultThreads
+
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/init.cpp init 228]>>Successfully init utility
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.readsocket
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/deps/common/metrics/metrics_registry.cpp register_metric 37]>>Successfully register metric :SessionStage.writesocket
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 330]>>Listen on port 6789
+[2021-10-17 22:40:29 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp start_tcp_server 348]>>Observer start success
+[2021-10-17 22:40:40 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp accept 276]>>Accepted connection from 127.0.0.1:5812
+
+[2021-10-17 22:40:50 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=7): help;
+
+[2021-10-17 22:41:22 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=33): create table mytable (age int);
+
+[2021-10-17 22:41:22 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp create 55]>>Begin to create table ./miniob/db/sys:mytable
+[2021-10-17 22:41:22 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=__trx
+[2021-10-17 22:41:22 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=age
+[2021-10-17 22:41:22 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table_meta.cpp init 95]>>Init table meta success. table name=mytable
+[2021-10-17 22:43:6 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 22:43:6 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0.0128205
+[2021-10-17 22:43:6 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0.00641026
+[2021-10-17 22:43:6 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0.0128205
+[2021-10-17 22:55:57 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 22:55:57 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-17 22:55:57 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-17 22:55:57 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-17 22:56:49 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp create_file 78]>>Successfully create ./miniob/db/sys/mytable.data.
+[2021-10-17 23:7:25 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 23:7:25 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-17 23:7:25 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-17 23:7:25 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-17 23:11:16 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 23:11:16 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-17 23:11:16 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-17 23:11:16 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-17 23:11:32 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp open_file 107]>>Successfully open file ./miniob/db/sys/mytable.data.
+[2021-10-17 23:11:32 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp open_file 147]>>Successfully open ./miniob/db/sys/mytable.data. file_id=0, hdr_frame=0x7ffff411d010
+[2021-10-17 23:12:22 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 23:12:22 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-17 23:12:22 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-17 23:12:22 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-17 23:13:19 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp create 110]>>Successfully create table ./miniob/db/sys:mytable
+[2021-10-17 23:13:22 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp create_table 70]>>Create table success. table name=mytable
+[2021-10-17 23:13:30 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 23:13:30 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-17 23:13:30 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-17 23:13:30 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-17 23:14:30 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=21): drop table mytable;
+
+[2021-10-17 23:14:30 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/src/observer/storage/default/disk_buffer_pool.cpp close_file 173]>>Successfully close file 0:.
+[2021-10-17 23:14:30 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp ~Table 46]>>Table has been closed: mytable
+[2021-10-17 23:14:30 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/db.cpp drop_table 93]>>Drop table success. table name=mytable
+[2021-10-17 23:14:31 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:970369,tps:0.0333333
+[2021-10-17 23:14:31 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0.0166667
+[2021-10-17 23:14:31 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:973352,tps:0.0333333
+[2021-10-17 23:14:31 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0.0666667
+[2021-10-17 23:15:27 pid:26946 tid:7ffff795a100  INFO: /home/xiaoyu/miniOB/src/observer/net/server.cpp recv 170]>>receive command(size=32): create table mytable(age int);
+
+[2021-10-17 23:15:27 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table.cpp create 55]>>Begin to create table ./miniob/db/sys:mytable
+[2021-10-17 23:15:27 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/field_meta.cpp init 70]>>Init a field with name=age
+[2021-10-17 23:15:27 pid:26946 tid:7fffdffff700  INFO: /home/xiaoyu/miniOB/src/observer/storage/common/table_meta.cpp init 95]>>Init table meta success. table name=mytable
+[2021-10-17 23:26:46 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 23:26:46 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0.00136054
+[2021-10-17 23:26:46 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-17 23:26:46 pid:26946 tid:7fffdf7fe700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
+[2021-10-17 23:32:12 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>DefaultStorageStage.query:mean:0,tps:0
+[2021-10-17 23:32:12 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.readsocket:mean:0,tps:0
+[2021-10-17 23:32:12 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.sql:mean:0,tps:0
+[2021-10-17 23:32:12 pid:26946 tid:7ffff4950700  INFO: /home/xiaoyu/miniOB/deps/common/metrics/log_reporter.cpp report 35]>>SessionStage.writesocket:mean:0,tps:0
