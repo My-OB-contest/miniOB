@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <memory>
 #include <vector>
+#include <sstream>
 
 #include "sql/parser/parse.h"
 #include "sql/executor/value.h"
@@ -64,6 +65,11 @@ class TupleField {
 public:
   TupleField(AttrType type, const char *table_name, const char *field_name) :
           type_(type), table_name_(table_name), field_name_(field_name){
+    /* @author: huahui @what for: 必做题，聚合查询 TupleField支持聚合属性了
+	   * -----------------------------------------------------------------------------------------------------------------
+	   */
+    aggtype_ = AggType::NOTAGG;
+    /* -----------------------------------------------------------------------------------------------------------------*/
   }
 
   AttrType  type() const{
@@ -76,9 +82,29 @@ public:
   const char *field_name() const {
     return field_name_.c_str();
   }
+  /* @author: huahui @what for: 必做题，聚合查询 TupleField支持聚合属性了
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+  void set_have_table_name(bool have_table_name) {
+    have_table_name_ = have_table_name;
+  }
+  void set_aggtype(AggType aggtype) {
+    aggtype_ = aggtype;
+  }
+  void print(std::ostream &os) const;
+  AggType getAggtype() const;
+  /* -----------------------------------------------------------------------------------------------------------------*/
 
   std::string to_string() const;
 private:
+  /* @author: huahui @what for: 必做题，聚合查询 TupleField支持聚合属性了
+   * have_table_name_表示这个TupleField输出时应不应该带表名 
+   * aggtype_表示聚合类型，为NOTAGG表示不是聚合类型，是正常类型
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+  bool have_table_name_;
+  AggType aggtype_;
+  /* -----------------------------------------------------------------------------------------------------------------*/
   AttrType  type_;
   std::string table_name_;
   std::string field_name_;
@@ -89,8 +115,16 @@ public:
   TupleSchema() = default;
   ~TupleSchema() = default;
 
+  /* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------------------
+   * have_table_name表示加入到schema中的TupleField在输出时应该不应该带表名
+   */
   void add(AttrType type, const char *table_name, const char *field_name);
+  void add(AttrType type, const char *table_name, const char *field_name, bool have_table_name);
+  void add(AttrType type, const char *table_name, const char *field_name, bool have_table_name, AggType aggtype);
   void add_if_not_exists(AttrType type, const char *table_name, const char *field_name);
+  void add_if_not_exists(AttrType type, const char *table_name, const char *field_name, bool have_table_name);
+  /* ---------------------------------------------------------------------------------------------------------------*/
+
   // void merge(const TupleSchema &other);
   void append(const TupleSchema &other);
 
@@ -109,7 +143,11 @@ public:
 
   void print(std::ostream &os) const;
 public:
-  static void from_table(const Table *table, TupleSchema &schema);
+  /* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------
+   * have_table_name表示加入到schema中的TupleField在输出时应该不应该带表名
+   */
+  static void from_table(const Table *table, TupleSchema &schema, bool have_table_name);
+  /* ---------------------------------------------------------------------------------------------*/
 private:
   std::vector<TupleField> fields_;
 };

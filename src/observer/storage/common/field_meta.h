@@ -40,6 +40,11 @@ public:
 
 public:
   void desc(std::ostream &os) const;
+  /* @author: huahui @what for: 必做题，聚合查询，聚合属性的合法性校验要用到
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+  bool addable() const;
+  /* -------------------------------------------------------------------------------------------------------------*/
 public:
   void to_json(Json::Value &json_value) const;
   static RC from_json(const Json::Value &json_value, FieldMeta &field);

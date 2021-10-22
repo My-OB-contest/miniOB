@@ -101,6 +101,18 @@ void FieldMeta::desc(std::ostream &os) const {
      << ", visible=" << (visible_ ? "yes" : "no");
 }
 
+/* @author: huahui @what for: 必做题，聚合查询，聚合属性的合法性校验要用到
+ * -----------------------------------------------------------------------------------------------------------------
+ */
+bool FieldMeta::addable() const {
+  if(attr_type_ == AttrType::CHARS || attr_type_ == AttrType::DATES) {
+    return false;
+  } else {
+    return true;
+  }
+}
+/* -------------------------------------------------------------------------------------------------------------*/
+
 void FieldMeta::to_json(Json::Value &json_value) const {
   json_value[FIELD_NAME] = name_;
   json_value[FIELD_TYPE] = attr_type_to_string(attr_type_);
