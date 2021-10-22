@@ -287,7 +287,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
   const Selects &selects = sql->sstr.selection;
-  rc = select_check(db,selects);
+//  rc = select_check(db,selects);
   if ( rc != RC::SUCCESS){
       LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
       return rc;
@@ -333,11 +333,15 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   std::stringstream ss;
   if (tuple_sets.size() > 1) {
     // 本次查询了多张表，需要做join操作
+    JoinExeNode *joinExeNode = new JoinExeNode;
+    joinExeNode->init(trx, selects.conditions,selects.condition_num);
+    joinExeNode->execute(tuple_sets);
+    tuple_sets.front().print(ss);
+    delete joinExeNode;
   } else {
     // 当前只查询一张表，直接返回结果即可
     tuple_sets.front().print(ss);
   }
-
   for (SelectExeNode *& tmp_node: select_nodes) {
     delete tmp_node;
   }
