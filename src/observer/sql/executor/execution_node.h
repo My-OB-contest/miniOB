@@ -45,4 +45,44 @@ private:
   std::vector<DefaultConditionFilter *> condition_filters_;
 };
 
+
+class JoinExeNode : public ExecutionNode {
+public:
+    JoinExeNode();
+
+
+    RC init(Trx *trx, const _Condition *conditions, int condition_num);
+
+    RC execute(TupleSet &tuple_set) override;
+
+    RC execute(std::vector<TupleSet> &tuple_set) ;
+
+    void Cart(std::vector<TupleSet> &tuple_set);
+private:
+    Trx *trx_ = nullptr;
+    std::vector<Condition> conditions_;
+};
+
+/* @author: huahui 
+ * @what for: 必做题，聚合查询 
+ * 这是一个聚合查询结点，根据多表join的结果来进行聚合查询
+ * -----------------------------------------------------------------------------------------------------------------
+ */
+class AggExeNode : public ExecutionNode {
+public:
+  AggExeNode();
+  virtual ~AggExeNode();
+
+  RC init(Trx *trx, TupleSchema && tuple_schema, TupleSet && tuple_set);
+
+  RC execute(TupleSet &res_tupleset);
+
+private:
+  Trx *trx_ = nullptr;
+  TupleSchema tuple_schema_;
+  TupleSet tuple_set_;
+};
+/*end ----------------------------------------------------------------------------------------------*/
+
+
 #endif //__OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_

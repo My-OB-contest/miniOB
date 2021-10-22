@@ -83,6 +83,7 @@ ParserContext *get_context(yyscan_t scanner)
         INT_T
         STRING_T
         FLOAT_T
+		DATE_T  /* @author: huahui @what for: 必做题，增加date字段 */
         HELP
         EXIT
         DOT //QUOTE
@@ -102,6 +103,10 @@ ParserContext *get_context(yyscan_t scanner)
         LE
         GE
         NE
+		COUNT /* @author: huahui @what for: 必做题，聚合查询 */
+		MAX   /* @author: huahui @what for: 必做题，聚合查询 */
+		MIN   /* @author: huahui @what for: 必做题，聚合查询 */
+		AVG   /* @author: huahui @what for: 必做题，聚合查询 */
 
 %union {
   struct _Attr *attr;
@@ -116,6 +121,9 @@ ParserContext *get_context(yyscan_t scanner)
 %token <number> NUMBER
 %token <floats> FLOAT 
 %token <string> ID
+/* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/
+%token <string> DATE
+/* -----------------------------------------------------------------------------------------------*/
 %token <string> PATH
 %token <string> SSS
 %token <string> STAR
@@ -268,6 +276,7 @@ type:
 	INT_T { $$=INTS; }
        | STRING_T { $$=CHARS; }
        | FLOAT_T { $$=FLOATS; }
+	   | DATE_T { $$=DATES; } /* @author: huahui @what for: 必做题，增加date字段 */
        ;
 ID_get:
 	ID 
@@ -312,6 +321,10 @@ value:
 			$1 = substr($1,1,strlen($1)-2);
   		value_init_string(&CONTEXT->values[CONTEXT->value_length++], $1);
 		}
+	|DATE {
+		$1 = substr($1,1,strlen($1)-2);
+  		value_init_date(&CONTEXT->values[CONTEXT->value_length++], $1);
+	}
     ;
     
 delete:		/*  delete 语句的语法解析树*/
@@ -369,6 +382,72 @@ select_attr:
 			relation_attr_init(&attr, $1, $3);
 			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
 		}
+	/* @author: huahui 
+	 * @what for: 必做题，聚合查询 
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+	| COUNT LBRACE ID RBRACE attr_list {
+            RelAttr attr;
+			relation_agg_attr_init(&attr, AGGCOUNT, NULL, $3);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+	    }
+	    | COUNT LBRACE STAR RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGCOUNT, NULL, "*");
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+		| COUNT LBRACE ID DOT ID RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGCOUNT, $3, $5);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+	| MAX LBRACE ID RBRACE attr_list {
+            RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMAX, NULL, $3);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+	    }
+	    | MAX LBRACE STAR RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMAX, NULL, "*");
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+		| MAX LBRACE ID DOT ID RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMAX, $3, $5);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+	| MIN LBRACE ID RBRACE attr_list {
+            RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMIN, NULL, $3);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+	    }
+	    | MIN LBRACE STAR RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMIN, NULL, "*");
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+		| MIN LBRACE ID DOT ID RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMIN, $3, $5);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+	| AVG LBRACE ID RBRACE attr_list {
+            RelAttr attr;
+			relation_agg_attr_init(&attr, AGGAVG, NULL, $3);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+	    }
+	    | AVG LBRACE STAR RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGAVG, NULL, "*");
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+		| AVG LBRACE ID DOT ID RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGAVG, $3, $5);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+	/* ------------------------------------------------------------------------------------------------------------
+	 */
     ;
 attr_list:
     /* empty */
@@ -386,6 +465,72 @@ attr_list:
         // CONTEXT->ssql->sstr.selection.attributes[CONTEXT->select_length].attribute_name=$4;
         // CONTEXT->ssql->sstr.selection.attributes[CONTEXT->select_length++].relation_name=$2;
   	  }
+	/* @author: huahui 
+	 * @what for: 必做题，聚合查询 
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+	| COMMA COUNT LBRACE ID RBRACE attr_list {
+            RelAttr attr;
+			relation_agg_attr_init(&attr, AGGCOUNT, NULL, $4);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+	    }
+	    | COMMA COUNT LBRACE STAR RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGCOUNT, NULL, "*");
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+		| COMMA COUNT LBRACE ID DOT ID RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGCOUNT, $4, $6);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+	| COMMA MAX LBRACE ID RBRACE attr_list {
+            RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMAX, NULL, $4);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+	    }
+	    | COMMA MAX LBRACE STAR RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMAX, NULL, "*");
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+		| COMMA MAX LBRACE ID DOT ID RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMAX, $4, $6);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+	| COMMA MIN LBRACE ID RBRACE attr_list {
+            RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMIN, NULL, $4);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+	    }
+	    | COMMA MIN LBRACE STAR RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMIN, NULL, "*");
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+		| COMMA MIN LBRACE ID DOT ID RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGMIN, $4, $6);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+	| COMMA AVG LBRACE ID RBRACE attr_list {
+            RelAttr attr;
+			relation_agg_attr_init(&attr, AGGAVG, NULL, $4);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+	    }
+	    | COMMA AVG LBRACE STAR RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGAVG, NULL, "*");
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+		| COMMA AVG LBRACE ID DOT ID RBRACE attr_list {
+			RelAttr attr;
+			relation_agg_attr_init(&attr, AGGAVG, $4, $6);
+			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+		}
+	/* ------------------------------------------------------------------------------------------------------------
+	 */
   	;
 
 rel_list:

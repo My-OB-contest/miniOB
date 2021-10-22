@@ -13,7 +13,10 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include <mutex>
-#include "sql/parser/parse.h"
+/* @author: huahui @what for: 必做题，增加date字段 */
+#include <string.h>
+/* ----------------------------------------------*/
+#include "sql/parser/parse.h" 
 #include "rc.h"
 #include "common/log/log.h"
 
@@ -23,6 +26,9 @@ RC parse(char *st, Query *sqln);
 extern "C" {
 #endif // __cplusplus
 void relation_attr_init(RelAttr *relation_attr, const char *relation_name, const char *attribute_name) {
+  /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
+  relation_attr->agg_type = AggType::NOTAGG;
+  /* --------------------------------------------------------------------------------------------------*/
   if (relation_name != nullptr) {
     relation_attr->relation_name = strdup(relation_name);
   } else {
@@ -30,6 +36,17 @@ void relation_attr_init(RelAttr *relation_attr, const char *relation_name, const
   }
   relation_attr->attribute_name = strdup(attribute_name);
 }
+/* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
+void relation_agg_attr_init(RelAttr *relation_attr, AggType agg_type, const char *relation_name, const char *attribute_name) {
+  relation_attr->agg_type = agg_type;
+  if(relation_name != nullptr) {
+    relation_attr->relation_name = strdup(relation_name);
+  }else{
+    relation_attr->relation_name = nullptr;
+  }
+  relation_attr->attribute_name = strdup(attribute_name);
+}
+/* --------------------------------------------------------------------------------------------------*/
 
 void relation_attr_destroy(RelAttr *relation_attr) {
   free(relation_attr->relation_name);
@@ -52,6 +69,40 @@ void value_init_string(Value *value, const char *v) {
   value->type = CHARS;
   value->data = strdup(v);
 }
+/* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------
+ * 例如：将"1024-08-16"转换为Value存储, Value:{type: DATE_T, data: @{byte(00000100 0000000 00001000 00010000)}}
+ *   前两个字节表示1024，第三个字节表示8，第四个字节表示16
+ */
+unsigned int stoi(const char *s, int len){
+  unsigned int ans = 0;
+  for(int i=0; i<len; i++){
+    ans *= 10;
+    ans += (s[i]-'0');
+  }
+  return ans;
+}
+void value_init_date(Value *value, const char *v){
+  value->type = DATES;
+  value->data = (char*)malloc(4);
+  unsigned int year, month, day;
+  year = stoi(v, 4);
+  int i = 5;
+  if(v[i+1] == '-'){
+    month = stoi(v+i, 1);
+    i += 2;
+  }else{
+    month = stoi(v+i, 2);
+    i += 3;
+  }
+  day = stoi(v+i, strlen(v)-i);
+
+  unsigned char *scratch = (unsigned char*)(value->data);
+  scratch[0] = (year>>8);
+  scratch[1] = year;
+  scratch[2] = month;
+  scratch[3] = day;
+}
+/* -----------------------------------------------------------------------------------------------*/
 void value_destroy(Value *value) {
   value->type = UNDEFINED;
   free(value->data);
@@ -356,6 +407,25 @@ void query_destroy(Query *query) {
   query_reset(query);
   free(query);
 }
+
+/* @author: huahui  @what for: 聚合查询  --------------------------------------------------------------*/
+char * aggtypeToStr(AggType aggtype) {
+  char res[100];
+  if(aggtype == AggType::AGGCOUNT) {
+    strcpy(res, "COUNT");
+  }else if(aggtype == AggType::AGGMAX) {
+    strcpy(res, "MAX");
+  }else if(aggtype == AggType::AGGMIN) {
+    strcpy(res, "MIN");
+  }else if(aggtype == AggType::AGGAVG) {
+    strcpy(res, "AVG");
+  }else {
+    strcpy(res, "NOTAGG");
+  }
+  return strdup(res);
+}
+/* ------------------------------------------------------------------------------------------------------ */
+
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus

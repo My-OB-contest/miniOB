@@ -37,6 +37,9 @@ QUOTE            [\'\"]
 
 [\-]?{DIGIT}+					                   yylval->number=atoi(yytext); RETURN_TOKEN(NUMBER);
 [\-]?{DIGIT}+{DOT}{DIGIT}+				       yylval->floats=(float)(atof(yytext)); RETURN_TOKEN(FLOAT);
+ /* @author: huahui @what for: 必做题，增加date字段 -----------------------------------------------------------------------------------------------------------------*/
+{QUOTE}[0-9]{4}-((0?[1-9])|(1[0-2]))-((0?[1-9])|([12][0-9])|(3[0-1])){QUOTE}	     {yylval->string=strdup(yytext); RETURN_TOKEN(DATE);}
+ /* ----------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 ";"                 	 				           RETURN_TOKEN(SEMICOLON);
 {DOT}                 					         RETURN_TOKEN(DOT);
@@ -68,9 +71,18 @@ QUOTE            [\'\"]
 [Ii][Nn][Tt]					                   RETURN_TOKEN(INT_T);
 [Cc][Hh][Aa][Rr]				                 RETURN_TOKEN(STRING_T);
 [Ff][Ll][Oo][Aa][Tt]			               RETURN_TOKEN(FLOAT_T);
+ /* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/
+[Dd][Aa][Tt][Ee]				                 RETURN_TOKEN(DATE_T);
+ /* -----------------------------------------------------------------------------------------------*/
 [Ll][Oo][Aa][Dd]			                   RETURN_TOKEN(LOAD);
 [Dd][Aa][Tt][Aa]	                       RETURN_TOKEN(DATA);
 [Ii][Nn][Ff][Ii][Ll][Ee]                 RETURN_TOKEN(INFILE);
+ /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------*/
+[Cc][Oo][Uu][Nn][Tt]  RETURN_TOKEN(COUNT);
+[Mm][Aa][Xx]          RETURN_TOKEN(MAX);
+[Mm][Ii][Nn]          RETURN_TOKEN(MIN);
+[Aa][Vv][Gg]          RETURN_TOKEN(AVG);
+ /* -----------------------------------------------------------------------------------------------*/
 {ID}							                       yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 "("								                       RETURN_TOKEN(LBRACE);
 ")"								                       RETURN_TOKEN(RBRACE);

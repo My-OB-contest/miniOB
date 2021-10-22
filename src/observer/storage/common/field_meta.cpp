@@ -23,15 +23,18 @@ const static Json::StaticString FIELD_OFFSET("offset");
 const static Json::StaticString FIELD_LEN("len");
 const static Json::StaticString FIELD_VISIBLE("visible");
 
+//fzh改，加新属性需要修改
 const char *ATTR_TYPE_NAME[] = {
   "undefined",
   "chars",
   "ints",
-  "floats"
+  "floats",
+  "dates"
 };
 
+//fzh改，加新属性需要修改
 const char *attr_type_to_string(AttrType type) {
-  if (type >= UNDEFINED && type <= FLOATS) {
+  if (type >= UNDEFINED && type <= DATES) {
     return ATTR_TYPE_NAME[type];
   }
   return "unknown";
@@ -97,6 +100,18 @@ void FieldMeta::desc(std::ostream &os) const {
      << ", len=" << attr_len_
      << ", visible=" << (visible_ ? "yes" : "no");
 }
+
+/* @author: huahui @what for: 必做题，聚合查询，聚合属性的合法性校验要用到
+ * -----------------------------------------------------------------------------------------------------------------
+ */
+bool FieldMeta::addable() const {
+  if(attr_type_ == AttrType::CHARS || attr_type_ == AttrType::DATES) {
+    return false;
+  } else {
+    return true;
+  }
+}
+/* -------------------------------------------------------------------------------------------------------------*/
 
 void FieldMeta::to_json(Json::Value &json_value) const {
   json_value[FIELD_NAME] = name_;

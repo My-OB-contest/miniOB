@@ -588,6 +588,15 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
         case FLOATS:{
             *(float *)(dest) = *(float *)value->data;
         }
+        break;
+        case DATES:{
+            memcpy(dest,(const unsigned char*)value->data,fieldlen);
+        }
+        break;
+        default:{
+            rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
+            return rc;
+        }
     }
     rc = record_handler_->update_record(record);
     return rc;
@@ -596,6 +605,7 @@ static RC record_reader_update_adapter(Record *record, void *context) {
     RecordUpdater &record_updater = *(RecordUpdater *)context;
     return record_updater.update_record(record);
 }
+
 RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num, const Condition conditions[], int *updated_count) {
   RC rc = RC::SUCCESS;
   CompositeConditionFilter filter;
@@ -607,7 +617,6 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   }
   return rc;
 }
-
 
 class RecordDeleter {
 public:
@@ -632,8 +641,6 @@ private:
   Trx *trx_;
   int deleted_count_ = 0;
 };
-
-
 
 static RC record_reader_delete_adapter(Record *record, void *context) {
   RecordDeleter &record_deleter = *(RecordDeleter *)context;

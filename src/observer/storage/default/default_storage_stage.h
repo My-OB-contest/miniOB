@@ -42,7 +42,6 @@ private:
 protected:
   common::SimpleTimer *query_metric_ = nullptr;
   static const std::string QUERY_METRIC_TAG;
-
 private:
   DefaultHandler * handler_;
 };
