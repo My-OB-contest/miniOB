@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #include "rc.h"
 #include "common/log/log.h"
 #include "sql/parser/parse_defs.h"
+#include "sql/executor/value.h"
 
 int float_compare(float f1, float f2) {
   float result = f1 - f2;
@@ -186,6 +187,18 @@ int CompareKey(const char *pdata, const char *pkey,AttrType attr_type,int attr_l
       return strncmp(s1, s2, attr_length);
     }
       break;
+    /* @author: huahui @what for: date字段, 支持索引
+     * ---------------------------------------------------------------------------------
+     */
+    case DATES: {
+      const unsigned char *left_value2 = (const unsigned char *)pdata;
+      const unsigned char *right_value2 = (const unsigned char *)pkey;
+      DateValue left_dv = DateValue(left_value2);
+      DateValue right_dv = DateValue(right_value2);
+      return left_dv.compare(right_dv);
+    }
+      break;
+    /* -------------------------------------------------------------------------------*/
     default:{
       LOG_PANIC("Unknown attr type: %d", attr_type);
     }
