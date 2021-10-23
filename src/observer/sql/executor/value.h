@@ -124,6 +124,7 @@ private:
  */
 class DateValue : public TupleValue {
 public:
+  DateValue(){};
   DateValue(const unsigned char *value){
     year = (int)value[0]*256 + (int)value[1];
     month = (int)value[2];
