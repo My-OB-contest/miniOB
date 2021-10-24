@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #include "rc.h"
 #include "common/log/log.h"
 #include "sql/parser/parse_defs.h"
+#include "sql/executor/value.h"
 
 int float_compare(float f1, float f2) {
   float result = f1 - f2;
@@ -186,6 +187,18 @@ int CompareKey(const char *pdata, const char *pkey,AttrType attr_type,int attr_l
       return strncmp(s1, s2, attr_length);
     }
       break;
+    /* @author: huahui @what for: date字段, 支持索引
+     * ---------------------------------------------------------------------------------
+     */
+    case DATES: {
+      const unsigned char *left_value2 = (const unsigned char *)pdata;
+      const unsigned char *right_value2 = (const unsigned char *)pkey;
+      DateValue left_dv = DateValue(left_value2);
+      DateValue right_dv = DateValue(right_value2);
+      return left_dv.compare(right_dv);
+    }
+      break;
+    /* -------------------------------------------------------------------------------*/
     default:{
       LOG_PANIC("Unknown attr type: %d", attr_type);
     }
@@ -1799,10 +1812,16 @@ RC BplusTreeScanner::get_next_idx_in_memory(RID *rid) {
   }
   return RC::RECORD_NO_MORE_IDX_IN_MEM;
 }
+/* @author: huahui  @what for: date字段支持索引
+ * -----------------------------------------------------------------------------------------------
+ */
 bool BplusTreeScanner::satisfy_condition(const char *pkey) {
   int i1=0,i2=0;
   float f1=0,f2=0;
   const char *s1=nullptr,*s2=nullptr;
+  const unsigned char *left_value2 = nullptr;
+  const unsigned char *right_value2 = nullptr;
+  DateValue left_dv, right_dv;
 
   if(comp_op_ == NO_OP){
     return true;
@@ -1821,6 +1840,12 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
     case CHARS:
       s1=pkey;
       s2=value_;
+      break;
+    case DATES: 
+      left_value2 = (const unsigned char *)pkey;
+      right_value2 = (const unsigned char *)value_;
+      left_dv = DateValue(left_value2);
+      right_dv = DateValue(right_value2);
       break;
     default:
       LOG_PANIC("Unknown attr type: %d", attr_type);
@@ -1841,6 +1866,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)==0);
           break;
+        case DATES:
+          flag = (left_dv.compare(right_dv) == 0);
+          break;
         default:
           LOG_PANIC("Unknown attr type: %d", attr_type);
       }
@@ -1855,6 +1883,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
           break;
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)<0);
+          break;
+        case DATES:
+          flag = (left_dv.compare(right_dv) < 0);
           break;
         default:
           LOG_PANIC("Unknown attr type: %d", attr_type);
@@ -1871,6 +1902,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)>0);
           break;
+        case DATES:
+          flag = (left_dv.compare(right_dv) > 0);
+          break;
         default:
           LOG_PANIC("Unknown attr type: %d", attr_type);
       }
@@ -1885,6 +1919,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
           break;
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)<=0);
+          break;
+        case DATES:
+          flag = (left_dv.compare(right_dv) <= 0);
           break;
         default:
           LOG_PANIC("Unknown attr type: %d", attr_type);
@@ -1901,6 +1938,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)>=0);
           break;
+        case DATES:
+          flag = (left_dv.compare(right_dv) >= 0);
+          break;
         default:
           LOG_PANIC("Unknown attr type: %d", attr_type);
       }
@@ -1916,6 +1956,8 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)!=0);
           break;
+        case DATES:
+          flag = (left_dv.compare(right_dv) != 0);
         default:
           LOG_PANIC("Unknown attr type: %d", attr_type);
       }
@@ -1925,3 +1967,4 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
   }
   return flag;
 }
+/* -------------------------------------------------------------------------------------------------*/

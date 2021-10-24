@@ -18,6 +18,9 @@ See the Mulan PSL v2 for more details. */
 #include <memory>
 #include <vector>
 #include <sstream>
+#include <string.h>
+#include <stdio.h>
+#include <string>
 
 #include "sql/parser/parse.h"
 #include "sql/executor/value.h"
@@ -91,8 +94,20 @@ public:
   void set_aggtype(AggType aggtype) {
     aggtype_ = aggtype;
   }
+  void set_is_attr(bool is_attr) {
+    is_attr_ = is_attr;
+  }
+  void set_agg_val_type(AggValType agg_val_type) {
+    agg_val_type_ = agg_val_type;
+  }
+  void set_agg_val(AggVal agg_val) {
+    agg_val_ = agg_val;
+  }
   void print(std::ostream &os) const;
   AggType getAggtype() const;
+  bool get_is_attr() const;
+  AggValType get_agg_val_type() const;
+  AggVal get_agg_val() const;
   /* -----------------------------------------------------------------------------------------------------------------*/
 
   std::string to_string() const;
@@ -104,6 +119,9 @@ private:
 	 */
   bool have_table_name_;
   AggType aggtype_;
+  bool is_attr_;       // 如果是聚合属性，则这个is_attr判断是属性还是数值
+  AggValType agg_val_type_;
+  AggVal agg_val_;
   /* -----------------------------------------------------------------------------------------------------------------*/
   AttrType  type_;
   std::string table_name_;
@@ -121,6 +139,7 @@ public:
   void add(AttrType type, const char *table_name, const char *field_name);
   void add(AttrType type, const char *table_name, const char *field_name, bool have_table_name);
   void add(AttrType type, const char *table_name, const char *field_name, bool have_table_name, AggType aggtype);
+  void add(bool have_table_name, AggType aggtype, bool is_attr, AggValType agg_val_type_, AggVal agg_val_);
   void add_if_not_exists(AttrType type, const char *table_name, const char *field_name);
   void add_if_not_exists(AttrType type, const char *table_name, const char *field_name, bool have_table_name);
   /* ---------------------------------------------------------------------------------------------------------------*/
@@ -194,5 +213,10 @@ private:
   Table *table_;
   TupleSet &tuple_set_;
 };
+
+/* @author: huahui  @what for: 浮点数默认格式化---------------------------------------------
+  */
+std::string formatFloat(float f);
+/* -------------------------------------------------------------------------------------*/
 
 #endif //__OBSERVER_SQL_EXECUTOR_TUPLE_H_
