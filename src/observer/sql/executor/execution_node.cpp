@@ -12,11 +12,13 @@ See the Mulan PSL v2 for more details. */
 // Created by Wangyunlai on 2021/5/14.
 //
 
+#include <storage/default/default_handler.h>
 #include "sql/executor/execution_node.h"
 #include "storage/common/table.h"
 #include "common/log/log.h"
 #include "sql/executor/value.h"
 #include "sql/parser/parse_defs.h"
+
 
 SelectExeNode::SelectExeNode() : table_(nullptr) {
 }
@@ -66,6 +68,56 @@ RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num) 
     }
     return RC::SUCCESS;
 }
+RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num,const char *db) {
+    this->trx_=trx;
+    for (int i = 0; i < condition_num; ++i) {
+        //左右必须都为列
+        if (conditions[i].left_is_attr==0 || conditions[i].right_is_attr==0){
+            LOG_ERROR("some join conditions init error");
+            return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+        }
+        //因前面select_cehck已做筛选，不考虑表不存在的情况
+        Table *tablel = DefaultHandler::get_default().find_table(db,conditions[i].left_attr.relation_name);
+        Table *tabler = DefaultHandler::get_default().find_table(db,conditions[i].right_attr.relation_name);
+        const FieldMeta * fieldMetal = tablel->table_meta().field(conditions[i].left_attr.attribute_name);
+        const FieldMeta * fieldMetar = tabler->table_meta().field(conditions[i].right_attr.attribute_name);
+        if (fieldMetal->type() != fieldMetar->type()){
+            LOG_ERROR("some join conditions field type not match");
+            return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+        }
+    }
+    int tablecount=0;
+    for (int i = 0; i < condition_num; ++i) {
+        //遍历所有连接条件找出，将所属同一对表的属性添加到一个数组里，如stu1.id = stu2.id和stu1.old = stu2.old要放一起
+        // 此外注意stu2.old=stu1.old也是一样的
+        std::string consumname=strcat(strdup(conditions[i].left_attr.relation_name),strdup(conditions[i].right_attr.relation_name));
+        std::string consumnamev=strcat(strdup(conditions[i].right_attr.relation_name),strdup(conditions[i].left_attr.relation_name));
+        if (sameTablecountmap.count(consumname) == 0){
+            //如果map中没有则添加表对和对应二维数组位置和数量的map
+            //并作初始化
+            conditionset[tablecount][0]=conditions[i];
+            ++sameTablecountmap[consumname].sameTableconNum;
+            ++sameTablecountmap[consumnamev].sameTableconNum;
+            sameTablecountmap[consumname].tablePos=tablecount;
+            sameTablecountmap[consumnamev].tablePos=tablecount;
+            ++tablecount;
+        } else{
+            //如果map中有，则通过map找到这个表对在二维数组中的位置，然后装入条件并把该表对的条件数量+1
+            conditionset[sameTablecountmap[consumname].tablePos][sameTablecountmap[consumname].sameTableconNum]=conditions[i];
+            ++sameTablecountmap[consumname].sameTableconNum;
+            ++sameTablecountmap[consumnamev].sameTableconNum;
+        }
+    }
+    //二维数组的第一列的大小joinTableNum，即表明一共有多少个不同的表对
+    joinTableNum=tablecount;
+    for( auto it : sameTablecountmap ){
+        //初始化sameTableconNum数组，用来得知每种表对所涉及到的条件数量，用于后面形成and条件过滤器
+        sameTableconNum[it.second.tablePos]=it.second.sameTableconNum;
+    }
+
+    return RC::SUCCESS;
+}
+
 
 RC JoinExeNode::execute(TupleSet &tuple_set) {
     return RC::SUCCESS;
@@ -104,45 +156,38 @@ void JoinExeNode::Cart(std::vector<TupleSet> &tuple_sets){
     }
 }
 
+/* @author: fzh
+ * 多表查询
+ * 目前逻辑：将selects形成的TupleSets连接为一个tupleset给后续聚合使用
+ * 连接时先取连接条件（目前未做join on 只是把左右都是不同表且属性相同的条件加到jionnode），
+ * 将连接条件涉及的表先条件连接（后续要考虑索引等），然后对剩余的tupleset做笛卡尔积
+ * -----------------------------------------------------------------------------------------------------------------
+ */
+
 RC JoinExeNode::execute(std::vector<TupleSet> &tuplesets) {
     RC rc = RC::SUCCESS;
     //遍历所有左右均有列名的条件
-    for (auto it_condition = conditions_.begin();it_condition != conditions_.end();){
+    for (int i_table = 0; i_table < joinTableNum; ++i_table) {
         std::vector<TupleSet>::iterator itleft;
         std::vector<TupleSet>::iterator itright;
-        int indexl=-1;
-        int indexr=-1;
-        //找到condition涉及的tuoleset在tuplesets的位置(itleft/itright)以及列位置(indexl/indexr)
+        //找到condition涉及的tuoleset在tuplesets的位置(itleft/itright)
         for(auto it_tuple = tuplesets.begin();it_tuple !=tuplesets.end(); ++it_tuple){
-            int count=0;
             for(auto it_field = it_tuple->get_schema().fields().begin();it_field != it_tuple->get_schema().fields().end(); ++it_field){
-                if (strcmp(it_field->table_name(),it_condition->left_attr.relation_name) == 0 && strcmp(it_field->field_name(),it_condition->left_attr.attribute_name) == 0){
+                if (strcmp(it_field->table_name(),conditionset[i_table][0].left_attr.relation_name) ==0 ){
                     itleft = it_tuple;
-                    indexl=count;
                     break;
                 }
-                count++;
             }
-            if (indexl != -1){
-                break;
-            }
+
         }
         for(auto it_tuple = tuplesets.begin();it_tuple !=tuplesets.end(); ++it_tuple){
-            int count=0;
             for(auto it_field = it_tuple->get_schema().fields().begin();it_field != it_tuple->get_schema().fields().end(); ++it_field){
-                if (strcmp(it_field->table_name(),it_condition->right_attr.relation_name) == 0 && strcmp(it_field->field_name(),it_condition->right_attr.attribute_name) == 0){
+                if (strcmp(it_field->table_name(),conditionset[i_table][0].right_attr.relation_name) == 0 ){
                     itright = it_tuple;
-                    indexr=count;
                     break;
                 }
-                count++;
             }
-            if (indexr != -1){
-                break;
-            }
-        }
-        if (indexl == -1 || indexr == -1){
-            continue;
+
         }
         TupleSet tmptupset;
         TupleSchema tmpschema;
@@ -154,11 +199,19 @@ RC JoinExeNode::execute(std::vector<TupleSet> &tuplesets) {
             tmpschema.add_if_not_exists(it_field->type(),it_field->table_name(),it_field->field_name(), true);
         }
         tmptupset.set_schema(tmpschema);
-
-        //合并两tupleset满足条件的元组数据
         for(auto it_tuplel = itleft->tuples().begin();it_tuplel != itleft->tuples().end();++it_tuplel){
             for(auto it_tupler = itright->tuples().begin();it_tupler != itright->tuples().end();++it_tupler){
-                if (it_tuplel->get(indexl).compare(it_tupler->get(indexr)) == 0){
+                bool finalret = true;
+                for (int i_sametable = 0; i_sametable < sameTableconNum[i_table]; ++i_sametable) {
+                    TupleConditionFilter tupleFilter;
+                    rc = tupleFilter.init(&(*it_tuplel),&(*it_tupler),&conditionset[i_table][i_sametable],itleft->get_schema(),itright->get_schema());
+                    if (rc != RC::SUCCESS){
+                        return rc;
+                    }
+                    finalret = finalret&&tupleFilter.filter();
+                }
+
+                if (finalret){
                     Tuple tmptuple;
                     for (int i = 0; i < it_tuplel->size(); ++i) {
                         tmptuple.add(it_tuplel->get_pointer(i));
@@ -179,16 +232,20 @@ RC JoinExeNode::execute(std::vector<TupleSet> &tuplesets) {
             tuplesets.erase(itleft2-dis-1);
         }
         tuplesets.push_back(std::move(tmptupset));
-        it_condition=conditions_.erase(it_condition);
         if (tuplesets.size() == 1){
             break;
         }
+
     }
     if(tuplesets.size()>1){
         this->Cart(tuplesets);
     }
     return rc;
 }
+
+
+
+
 
 /* @author: huahui 
  * @what for: 必做题，聚合查询 

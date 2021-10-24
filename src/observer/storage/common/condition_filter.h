@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_COMMON_CONDITION_FILTER_H_
 #define __OBSERVER_STORAGE_COMMON_CONDITION_FILTER_H_
 
+#include <sql/executor/tuple.h>
 #include "rc.h"
 #include "sql/parser/parse.h"
 
@@ -70,6 +71,7 @@ private:
   CompOp   comp_op_ = NO_OP;
 };
 
+
 class CompositeConditionFilter : public ConditionFilter {
 public:
   CompositeConditionFilter() = default;
@@ -93,6 +95,26 @@ private:
   const ConditionFilter **      filters_ = nullptr;
   int                           filter_num_ = 0;
   bool                          memory_owner_ = false; // filters_的内存是否由自己来控制
+};
+
+
+class TupleConditionFilter {
+
+public:
+    TupleConditionFilter();
+    ~TupleConditionFilter();
+    RC init(const Tuple *tuple, Condition *condition,TupleSchema tupleSchema);
+    RC init(const Tuple *tuplel,const Tuple *tupler, Condition *condition,TupleSchema tupleSchemal,TupleSchema tupleSchemar);
+    RC init(const Tuple *tuple, Condition *condition,int pos);
+    bool filter(const Tuple *tuple,int posr) const;
+    bool filter() const;
+
+private:
+    const Tuple *tupleleft_;
+    const Tuple *tupleright_;
+    int posl_;
+    int posr_;
+    CompOp comp_op_ = NO_OP;
 };
 
 #endif // __OBSERVER_STORAGE_COMMON_CONDITION_FILTER_H_

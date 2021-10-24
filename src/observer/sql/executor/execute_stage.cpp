@@ -170,6 +170,15 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
     case SCF_UPDATE: {
       const Value *values = (const Value *)(&(sql->sstr.update.value));
       RC rc = check_date_from_values(1, values);
+      //校验where中不合规的date
+      for( int conditionnum = 0 ; conditionnum < sql->sstr.update.condition_num ; ++conditionnum ){
+          if (!sql->sstr.update.conditions->left_is_attr && sql->sstr.update.conditions->left_value.type == DATES){
+              rc = check_date_from_values(1,(const Value *)&(sql->sstr.update.conditions->left_value));
+          }
+          if (!sql->sstr.update.conditions->right_is_attr && sql->sstr.update.conditions->right_value.type == DATES){
+              rc =check_date_from_values(1,(const Value *)&(sql->sstr.update.conditions->right_value));
+          }
+      }
       if(rc != RC::SUCCESS){
         char err[207];
         sprintf(err, "FAILURE\n");
@@ -406,7 +415,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
   const Selects &selects = sql->sstr.selection;
-  //rc = select_check(db,selects);
+  rc = select_check(db,selects);
   if ( rc != RC::SUCCESS){
       LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
       return rc;
@@ -459,7 +468,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   if (tuple_sets.size() > 1) {
     // 本次查询了多张表，需要做join操作
     JoinExeNode *joinExeNode = new JoinExeNode;
-    joinExeNode->init(trx, selects.conditions,selects.condition_num);
+    joinExeNode->init(trx, selects.conditions,selects.condition_num,db);
     joinExeNode->execute(tuple_sets);
     res_tupleset = std::move(tuple_sets.front());
     delete joinExeNode;
