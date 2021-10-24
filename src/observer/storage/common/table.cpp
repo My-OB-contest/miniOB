@@ -575,7 +575,6 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
     int fieldlen=fieldMeta->len();
     int fieldoffset=fieldMeta->offset();
     char *dest = record->data+fieldoffset;
-//    memcpy(record+fieldoffset,value->data,fieldlen);
     switch (value->type) {
         case CHARS:{
             memcpy(dest,(const char *)value->data,fieldlen);

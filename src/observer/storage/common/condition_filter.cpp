@@ -202,6 +202,128 @@ CompositeConditionFilter::~CompositeConditionFilter()
     filters_ = nullptr;
   }
 }
+TupleConditionFilter::TupleConditionFilter(){
+    posl_=-1;
+    posr_=-1;
+    tupleleft_= nullptr;
+    tupleright_= nullptr;
+}
+TupleConditionFilter::~TupleConditionFilter(){}
+
+RC TupleConditionFilter::init(const Tuple *tuple, Condition *condition, int pos) {
+    comp_op_ = condition->comp;
+    tupleleft_ = tuple;
+    posl_ = pos;
+    return RC::SUCCESS;
+}
+RC TupleConditionFilter::init(const Tuple *tuple, Condition *condition,TupleSchema tupleSchema){
+    comp_op_ = condition->comp;
+    tupleleft_ = tuple;
+    int count=0;
+    bool flag= false;
+    for(auto it_field = tupleSchema.fields().begin();it_field != tupleSchema.fields().end(); ++it_field) {
+        if (strcmp(it_field->table_name(), condition->left_attr.relation_name) == 0 &&
+            strcmp(it_field->field_name(), condition->left_attr.attribute_name) == 0) {
+            posl_ = count;
+            flag = true;
+            break;
+        }
+        count++;
+    }
+    if (flag == false){
+        LOG_ERROR("TupleConditionFilter init fail,because tuple not match condition");
+        return RC::SCHEMA_FIELD_MISSING;
+    }
+    return RC::SUCCESS;
+}
+RC TupleConditionFilter::init(const Tuple *tuplel,const Tuple *tupler, Condition *condition,TupleSchema tupleSchemal,TupleSchema tupleSchemar){
+    comp_op_ = condition->comp;
+    tupleleft_ = tuplel;
+    tupleright_ = tupler;
+    int count = 0;
+    bool flag = false;
+    for(auto it_field = tupleSchemal.fields().begin();it_field != tupleSchemal.fields().end(); ++it_field) {
+        if (strcmp(it_field->table_name(), condition->left_attr.relation_name) == 0 &&
+            strcmp(it_field->field_name(), condition->left_attr.attribute_name) == 0) {
+            posl_ = count;
+            flag = true;
+            break;
+        }
+        count++;
+    }
+    if (flag == false){
+        LOG_ERROR("TupleConditionFilter init fail,because tuple not match condition");
+        return RC::SCHEMA_FIELD_MISSING;
+    }
+    count = 0;
+    flag = false;
+    for(auto it_field = tupleSchemar.fields().begin();it_field != tupleSchemar.fields().end(); ++it_field) {
+        if (strcmp(it_field->table_name(), condition->right_attr.relation_name) == 0 &&
+            strcmp(it_field->field_name(), condition->right_attr.attribute_name) == 0) {
+            posr_ = count;
+            flag = true;
+            break;
+        }
+        count++;
+    }
+    if (flag == false){
+        LOG_ERROR("TupleConditionFilter init fail,because tuple not match condition");
+        return RC::SCHEMA_FIELD_MISSING;
+    }
+    return RC::SUCCESS;
+}
+
+bool TupleConditionFilter::filter(const Tuple *tupleright,int posr) const {
+    if (tupleleft_ != nullptr&&tupleright_ != nullptr){
+        LOG_ERROR("execute wrong filter method,you should init with one tuple");
+    }
+    int cmp_result=tupleleft_->get(posl_).compare(tupleright->get(posr));
+
+    switch (comp_op_) {
+        case EQUAL_TO:
+            return 0 == cmp_result;
+        case LESS_EQUAL:
+            return cmp_result <= 0;
+        case NOT_EQUAL:
+            return cmp_result != 0;
+        case LESS_THAN:
+            return cmp_result < 0;
+        case GREAT_EQUAL:
+            return cmp_result >= 0;
+        case GREAT_THAN:
+            return cmp_result > 0;
+        default:
+            break;
+    }
+    LOG_PANIC("Never should print this.");
+    return cmp_result;  // should not go here
+}
+
+bool TupleConditionFilter::filter() const {
+    if (tupleleft_== nullptr||tupleright_== nullptr){
+        LOG_ERROR("execute wrong filter method,you should init with two tuple");
+    }
+    int cmp_result=tupleleft_->get(posl_).compare(tupleright_->get(posr_));
+
+    switch (comp_op_) {
+        case EQUAL_TO:
+            return 0 == cmp_result;
+        case LESS_EQUAL:
+            return cmp_result <= 0;
+        case NOT_EQUAL:
+            return cmp_result != 0;
+        case LESS_THAN:
+            return cmp_result < 0;
+        case GREAT_EQUAL:
+            return cmp_result >= 0;
+        case GREAT_THAN:
+            return cmp_result > 0;
+        default:
+            break;
+    }
+    LOG_PANIC("Never should print this.");
+    return cmp_result;  // should not go here
+}
 
 RC CompositeConditionFilter::init(const ConditionFilter *filters[], int filter_num, bool own_memory)
 {
