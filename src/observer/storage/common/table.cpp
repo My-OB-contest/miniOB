@@ -572,6 +572,16 @@ private:
 RC Table::update_record(Record *record,const Value *value,const char *attribute_name){
     RC rc = RC::SUCCESS;
     const FieldMeta *fieldMeta = table_meta_.field(attribute_name);
+    if(fieldMeta== nullptr){
+        rc = RC::SCHEMA_FIELD_MISSING;
+        return rc;
+    }
+    rc = delete_entry_of_indexes(record->data, record->rid, false);
+    if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to delete indexes of record (rid=%d.%d). rc=%d:%s",
+                  record->rid.page_num, record->rid.slot_num, rc, strrc(rc));
+        return rc;
+    }
     int fieldlen=fieldMeta->len();
     int fieldoffset=fieldMeta->offset();
     char *dest = record->data+fieldoffset;
@@ -597,6 +607,12 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
             return rc;
         }
     }
+    rc = insert_entry_of_indexes(record->data, record->rid);
+    if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to insert indexes of record (rid=%d.%d). rc=%d:%s",
+                  record->rid.page_num, record->rid.slot_num, rc, strrc(rc));
+        return rc;
+    }
     rc = record_handler_->update_record(record);
     return rc;
 }
@@ -607,8 +623,25 @@ static RC record_reader_update_adapter(Record *record, void *context) {
 
 RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num, const Condition conditions[], int *updated_count) {
   RC rc = RC::SUCCESS;
+  //校验属性是否存在
+  if(this->table_meta_.field(attribute_name) == nullptr){
+      rc = RC::SCHEMA_FIELD_MISSING;
+      LOG_ERROR("update field not exist");
+      return rc;
+  }
+  //校验属性的类型是否匹配
+  if (value->type !=this->table_meta_.field(attribute_name)->type()){
+      rc = RC::SCHEMA_FIELD_MISSING;
+      LOG_ERROR("update field type not match");
+      return rc;
+  }
   CompositeConditionFilter filter;
-  filter.init(*this,conditions,condition_num);
+  //init过程中会校验条件中的属性是否存在或类型是否匹配
+  rc = filter.init(*this,conditions,condition_num);
+  if (rc != RC::SUCCESS){
+      LOG_ERROR("update filter init fail");
+      return rc;
+  }
   RecordUpdater updater(*this,value,attribute_name);
   rc = scan_record(trx, &filter, -1, &updater, record_reader_update_adapter);
   if (updated_count != nullptr) {
