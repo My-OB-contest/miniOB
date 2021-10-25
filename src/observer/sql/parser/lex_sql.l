@@ -78,6 +78,12 @@ QUOTE            [\'\"]
 [Dd][Aa][Tt][Aa]	                       RETURN_TOKEN(DATA);
 [Ii][Nn][Ff][Ii][Ll][Ee]                 RETURN_TOKEN(INFILE);
  /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------*/
+
+ /* @author: fzh @what for: join ------------------------------------------------*/
+[Ii][Nn][Nn][Ee][Rr]    RETURN_TOKEN(INNER);
+[Jj][Oo][Ii][Nn]        RETURN_TOKEN(JOIN);
+ /* -----------------------------------------------------------------------------------------------*/
+
 [Cc][Oo][Uu][Nn][Tt]  RETURN_TOKEN(COUNT);
 [Mm][Aa][Xx]          RETURN_TOKEN(MAX);
 [Mm][Ii][Nn]          RETURN_TOKEN(MIN);

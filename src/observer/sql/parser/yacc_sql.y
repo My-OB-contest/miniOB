@@ -107,6 +107,8 @@ ParserContext *get_context(yyscan_t scanner)
 		MAX   /* @author: huahui @what for: 必做题，聚合查询 */
 		MIN   /* @author: huahui @what for: 必做题，聚合查询 */
 		AVG   /* @author: huahui @what for: 必做题，聚合查询 */
+		INNER /* @author: fzh @what for: join */
+		JOIN  /* @author: fzh @what for: join */
 
 %union {
   struct _Attr *attr;
@@ -364,6 +366,17 @@ select:				/*  select 语句的语法解析树*/
 			CONTEXT->select_length=0;
 			CONTEXT->value_length = 0;
 	}
+	|SELECT select_attr FROM ID join where SEMICOLON
+	    {
+			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
+			selects_append_conditions(&CONTEXT->ssql->sstr.selection, CONTEXT->conditions, CONTEXT->condition_length);
+			CONTEXT->ssql->flag=SCF_SELECT;//"select";
+			CONTEXT->condition_length=0;
+			CONTEXT->from_length=0;
+			CONTEXT->select_length=0;
+			CONTEXT->value_length = 0;
+
+	    }
 	;
 
 select_attr:
@@ -602,6 +615,21 @@ rel_list:
     | COMMA ID rel_list {	
 				selects_append_relation(&CONTEXT->ssql->sstr.selection, $2);
 		  }
+    ;
+
+join:
+    INNER JOIN ID onwhere {
+        selects_append_relation(&CONTEXT->ssql->sstr.selection, $3);
+    }
+    |INNER JOIN ID onwhere join {
+        selects_append_relation(&CONTEXT->ssql->sstr.selection, $3);
+    }
+    ;
+onwhere:
+    /* empty */
+    | ON condition condition_list{
+
+    }
     ;
 where:
     /* empty */ 

@@ -71,11 +71,6 @@ RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num) 
 RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num,const char *db) {
     this->trx_=trx;
     for (int i = 0; i < condition_num; ++i) {
-        //左右必须都为列
-        if (conditions[i].left_is_attr==0 || conditions[i].right_is_attr==0){
-            LOG_ERROR("some join conditions init error");
-            return RC::SCHEMA_FIELD_TYPE_MISMATCH;
-        }
         //因前面select_cehck已做筛选，不考虑表不存在的情况
         Table *tablel = DefaultHandler::get_default().find_table(db,conditions[i].left_attr.relation_name);
         Table *tabler = DefaultHandler::get_default().find_table(db,conditions[i].right_attr.relation_name);
@@ -88,6 +83,10 @@ RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num,c
     }
     int tablecount=0;
     for (int i = 0; i < condition_num; ++i) {
+        //左右必须都为列
+        if (conditions[i].left_is_attr==0 || conditions[i].right_is_attr==0){
+            continue;
+        }
         //遍历所有连接条件找出，将所属同一对表的属性添加到一个数组里，如stu1.id = stu2.id和stu1.old = stu2.old要放一起
         // 此外注意stu2.old=stu1.old也是一样的
         std::string consumname=strcat(strdup(conditions[i].left_attr.relation_name),strdup(conditions[i].right_attr.relation_name));
