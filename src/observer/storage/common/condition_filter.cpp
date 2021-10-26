@@ -81,6 +81,7 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
     left.value = nullptr;
 
     type_left = field_left->type();
+    left.attrtype = type_left;
   } else {
     left.is_attr = false;
     left.value = condition.left_value.data;  // 校验type 或者转换类型
@@ -88,6 +89,7 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
 
     left.attr_length = 0;
     left.attr_offset = 0;
+    left.attrtype = type_left;
   }
 
   if (1 == condition.right_is_attr) {
@@ -102,6 +104,7 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
     type_right = field_right->type();
 
     right.value = nullptr;
+    right.attrtype = type_right;
   } else {
     right.is_attr = false;
     right.value = condition.right_value.data;
@@ -109,6 +112,7 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
 
     right.attr_length = 0;
     right.attr_offset = 0;
+    right.attrtype = type_right;
   }
 
   // 校验和转换
@@ -118,11 +122,12 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
   //  }
   // NOTE：这里没有实现不同类型的数据比较，比如整数跟浮点数之间的对比
   // 但是选手们还是要实现。这个功能在预选赛中会出现
-  if (type_left != type_right) {
+  if (type_left != type_right 
+     && !(type_left==AttrType::INTS && type_right==AttrType::FLOATS || type_left==AttrType::FLOATS && type_right==AttrType::INTS)) {
     return RC::SCHEMA_FIELD_TYPE_MISMATCH;
   }
 
-  return init(left, right, type_left, condition.comp);
+  return init(left, right, (type_left==AttrType::FLOATS || type_right==AttrType::FLOATS)?AttrType::FLOATS:type_left, condition.comp);
 }
 
 bool DefaultConditionFilter::filter(const Record &rec) const
@@ -157,11 +162,24 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       int right = *(int *)right_value;
       cmp_result = left - right;
     } break;
+    /* @author: huahui @what for: 元数据校验
+     * -----------------------------------------------------------------------
+     */
     case FLOATS: {
-      float left = *(float *)left_value;
-      float right = *(float *)right_value;
+      float left, right;
+      if(left_.attrtype == AttrType::INTS){
+        left = float(*((int *)left_value));
+      }else{
+        left = *(float *)left_value;
+      }
+      if(right_.attrtype == AttrType::INTS){
+        right = float(*((int *)right_value));
+      }else{
+        right = *(float *)right_value;
+      }
       cmp_result = (int)(left - right);
     } break;
+    /* ------------------------------------------------------------------------------*/
     case DATES: {
       unsigned char *left_value2 = (unsigned char *)left_value;
       unsigned char *right_value2 = (unsigned char *)right_value;
