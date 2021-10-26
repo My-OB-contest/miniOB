@@ -99,6 +99,12 @@ private:
   Trx *trx_ = nullptr;
   TupleSchema tuple_schema_;
   TupleSet tuple_set_;
+ 
+  // 由于tuple_schema_和tuple_set_.tuple_schema_是不一样的，比如：
+  // 对于查询select max(f), min(f) from t, tuple_chema_包含两个tuple_field: (max(f), min(f))，
+  // tuple_set_.tuple_schema_仅包含一个tuple_filed: (f)
+  // 所以要找出tuple_chema_中的tuple_field对应于tuple_set_.tuple_schema_中的下标
+  int index_of_field(const TupleField &tuple_field);
 };
 /*end ----------------------------------------------------------------------------------------------*/
 

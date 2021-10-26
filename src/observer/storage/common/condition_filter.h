@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include <sql/executor/tuple.h>
 #include "rc.h"
 #include "sql/parser/parse.h"
+#include "sql/parser/parse_defs.h"
 
 struct Record;
 class Table;
@@ -27,6 +28,7 @@ struct ConDesc {
   int    attr_length; // 如果是属性，表示属性值长度
   int    attr_offset; // 如果是属性，表示在记录中的偏移量
   void * value;       // 如果是值类型，这里记录值的数据
+  AttrType attrtype; // 属性类型
 };
 
 class ConditionFilter {

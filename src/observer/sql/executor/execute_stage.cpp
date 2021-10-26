@@ -364,8 +364,9 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
 
           right_at = selects.conditions[j].right_value.type;
         }
-        // 检查左右两边的类型是否相符
-        if(left_at != right_at) {
+        // 检查左右两边的类型是否相容，比如int和float就是相容的
+        if(left_at != right_at && 
+          !(left_at==AttrType::INTS && right_at==AttrType::FLOATS || left_at==AttrType::FLOATS && right_at==AttrType::INTS)) {
           return RC::SQL_SYNTAX;
         }
 
@@ -623,6 +624,10 @@ RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session
 RC ExecuteStage::check_agg(const char *db, const Selects &selects, std::vector<const RelAttr *> &relattrs) {
   for(size_t i = 0; i < relattrs.size(); i++) {
     if(!relattrs[i]->is_attr) {
+      continue;
+    }
+    // count(*)的情况
+    if(strcmp(relattrs[i]->attribute_name,"*")==0 && relattrs[i]->agg_type==AggType::AGGCOUNT){
       continue;
     }
 

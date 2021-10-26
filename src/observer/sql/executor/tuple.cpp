@@ -71,7 +71,7 @@ void TupleField::print(std::ostream &os) const {
     if(agg_val_type_ == AggValType::AGGNUMBER) {
       os << std::string(s) << "(" << agg_val_.intv << ")";
     }else {
-      os << std::string(s) << "(" << formatFloat(agg_val_.floatv) << ")";
+      os << std::string(s) << "(" << std::string(agg_val_.str) << ")";
     }
     return;
   }

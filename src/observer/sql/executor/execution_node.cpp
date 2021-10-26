@@ -339,12 +339,14 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
           }
           res[j].first = 1;
           res[j].second = 0.0;
-          res[j].second += getNum(tuple.get_pointer(j), tuple_field.type());
+          int idx = index_of_field(tuple_field);
+          res[j].second += getNum(tuple.get_pointer(idx), tuple_field.type());
         }
       }
     }else{
       for(int j = 0; j < agg_num; j++) {
         const TupleField &tuple_field = tuple_schema_.field(j);
+        int idx = index_of_field(tuple_field);
         if(!tuple_field.get_is_attr()) {
           continue;
         }
@@ -356,14 +358,14 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
           if(tuple_field.type() == AttrType::UNDEFINED){
             return RC::SQL_SYNTAX;
           }
-          if(tuple.get_pointer(j)->compare(tuple_set_.get(res[j].first).get(j)) > 0) {
+          if(tuple.get_pointer(idx)->compare(tuple_set_.get(res[j].first).get(idx)) > 0) {
             res[j].first = i;
           }
         }else if(aggtype == AggType::AGGMIN) {
           if(tuple_field.type() == AttrType::UNDEFINED){
             return RC::SQL_SYNTAX;
           }
-          if(tuple.get_pointer(j)->compare(tuple_set_.get(res[j].first).get(j)) < 0) {
+          if(tuple.get_pointer(idx)->compare(tuple_set_.get(res[j].first).get(idx)) < 0) {
             res[j].first = i;
           }
         }
@@ -374,7 +376,7 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
             return RC::SQL_SYNTAX;
           }
           res[j].first += 1;
-          res[j].second += getNum(tuple.get_pointer(j), tuple_field.type());
+          res[j].second += getNum(tuple.get_pointer(idx), tuple_field.type());
         }
       }
     }
@@ -399,17 +401,19 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
     }
 
     if(tuple_schema_.field(j).getAggtype() == AggType::AGGMAX || tuple_schema_.field(j).getAggtype() == AggType::AGGMIN) {
-      if(tuple_schema_.field(j).type() == AttrType::INTS) {
-        std::shared_ptr<IntValue> tv = std::static_pointer_cast<IntValue>(tuple_set_.get(res[j].first).get_pointer(j));
+      const TupleField &tuple_field = tuple_schema_.field(j);
+      int idx = index_of_field(tuple_field);
+      if(tuple_field.type() == AttrType::INTS) {
+        std::shared_ptr<IntValue> tv = std::static_pointer_cast<IntValue>(tuple_set_.get(res[j].first).get_pointer(idx));
         tuple.add(tv);
-      }else if(tuple_schema_.field(j).type() == AttrType::FLOATS) {
-        std::shared_ptr<FloatValue> tv = std::static_pointer_cast<FloatValue>(tuple_set_.get(res[j].first).get_pointer(j));
+      }else if(tuple_field.type() == AttrType::FLOATS) {
+        std::shared_ptr<FloatValue> tv = std::static_pointer_cast<FloatValue>(tuple_set_.get(res[j].first).get_pointer(idx));
         tuple.add(tv);
-      }else if(tuple_schema_.field(j).type() == AttrType::CHARS) {
-        std::shared_ptr<StringValue> tv = std::static_pointer_cast<StringValue>(tuple_set_.get(res[j].first).get_pointer(j));
+      }else if(tuple_field.type() == AttrType::CHARS) {
+        std::shared_ptr<StringValue> tv = std::static_pointer_cast<StringValue>(tuple_set_.get(res[j].first).get_pointer(idx));
         tuple.add(tv);
       }else {
-        std::shared_ptr<DateValue> tv = std::static_pointer_cast<DateValue>(tuple_set_.get(res[j].first).get_pointer(j));
+        std::shared_ptr<DateValue> tv = std::static_pointer_cast<DateValue>(tuple_set_.get(res[j].first).get_pointer(idx));
         tuple.add(tv);
       }
     }else if(tuple_schema_.field(j).getAggtype() == AggType::AGGCOUNT) {
@@ -422,6 +426,14 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
   res_tupleset.add(std::move(tuple));
 
   return RC::SUCCESS;
+}
+
+// 由于tuple_schema_和tuple_set_.tuple_schema_是不一样的，比如：
+// 对于查询select max(f), min(f) from t, tuple_chema_包含两个tuple_field: (max(f), min(f))，
+// tuple_set_.tuple_schema_仅包含一个tuple_filed: (f)
+// 所以要找出tuple_chema_中的tuple_field对应于tuple_set_.tuple_schema_中的下标
+int AggExeNode::index_of_field(const TupleField &tuple_field) {
+  return tuple_set_.get_schema().index_of_field(tuple_field.table_name(), tuple_field.field_name());
 }
 /*end ----------------------------------------------------------------------------------------------*/
 
