@@ -44,7 +44,12 @@ private:
   TupleSchema  tuple_schema_;
   std::vector<DefaultConditionFilter *> condition_filters_;
 };
+class Tablemapinfo{
 
+public:
+    int sameTableconNum = 0;
+    int tablePos = 0;
+};
 
 class JoinExeNode : public ExecutionNode {
 public:
@@ -52,6 +57,8 @@ public:
 
 
     RC init(Trx *trx, const _Condition *conditions, int condition_num);
+
+    RC init(Trx *trx, const _Condition *conditions, int condition_num,const char *db);
 
     RC execute(TupleSet &tuple_set) override;
 
@@ -61,7 +68,18 @@ public:
 private:
     Trx *trx_ = nullptr;
     std::vector<Condition> conditions_;
+    Condition conditionset[MAX_NUM][MAX_NUM];
+    //joinTableNum表明conditionset第一列的数量
+    int joinTableNum;
+
+    //sameTableconNum数组表明conditionset第二列的数量
+    int sameTableconNum[MAX_NUM];
+
+    //map保存了一对表名和它在conditionset的位置以及这对表涉及条件的数量的映射
+    std::map<std::string,Tablemapinfo> sameTablecountmap;
 };
+
+
 
 /* @author: huahui 
  * @what for: 必做题，聚合查询 
