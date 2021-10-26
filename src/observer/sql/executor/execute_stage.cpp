@@ -474,7 +474,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   if (tuple_sets.size() > 1) {
     // 本次查询了多张表，需要做join操作
     JoinExeNode *joinExeNode = new JoinExeNode;
-    joinExeNode->init(trx, selects.conditions,selects.condition_num,db);
+    joinExeNode->init(trx, selects.conditions, selects.condition_num, db, selects.relations, selects.relation_num);
     joinExeNode->execute(tuple_sets);
     res_tupleset = std::move(tuple_sets.front());
     delete joinExeNode;

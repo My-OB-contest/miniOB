@@ -58,7 +58,7 @@ public:
 
     RC init(Trx *trx, const _Condition *conditions, int condition_num);
 
-    RC init(Trx *trx, const _Condition *conditions, int condition_num,const char *db);
+    RC init(Trx *trx, const _Condition *conditions, int condition_num, const char *db, char *const *relations, int relation_num);
 
     RC execute(TupleSet &tuple_set) override;
 
@@ -77,6 +77,7 @@ private:
 
     //map保存了一对表名和它在conditionset的位置以及这对表涉及条件的数量的映射
     std::map<std::string,Tablemapinfo> sameTablecountmap;
+    std::map<std::string,int> selectorder;
 };
 
 
