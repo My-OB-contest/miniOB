@@ -30,6 +30,9 @@ public:
   ~FieldMeta() = default;
 
   RC init(const char *name, AttrType attr_type, int attr_offset, int attr_len, bool visible);
+  /* @author: huahui  @what for: null ---------------------------------------------------------------------------------------*/
+  RC init(const char *name, AttrType attr_type, int attr_offset, int attr_len, bool visible, int nullable, int null_tag_offset, int null_tag_len);
+  /* ---------------------------------------------------------------------------------------------------------------------------*/
 
 public:
   const char *name() const;
@@ -37,7 +40,10 @@ public:
   int         offset() const;
   int         len() const;
   bool        visible() const;
-
+  /* @author: huahui  @what for: null ---------------------------------------------------------------------------------------*/
+  int         get_nullable() const;
+  int         get_null_tag_offset() const;
+  /* ---------------------------------------------------------------------------------------------------------------------------*/
 public:
   void desc(std::ostream &os) const;
   /* @author: huahui @what for: 必做题，聚合查询，聚合属性的合法性校验要用到
@@ -55,5 +61,10 @@ private:
   int          attr_offset_;
   int          attr_len_;
   bool         visible_;
+  /* @author: huahui  @what for: null ---------------------------------------------------------------------------------------*/
+  int          nullable_;
+  int          null_tag_offset_;
+  int          null_tag_len_;
+  /* ---------------------------------------------------------------------------------------------------------------------------*/
 };
 #endif // __OBSERVER_STORAGE_COMMON_FIELD_META_H__

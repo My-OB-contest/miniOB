@@ -29,6 +29,10 @@ struct ConDesc {
   int    attr_offset; // 如果是属性，表示在记录中的偏移量
   void * value;       // 如果是值类型，这里记录值的数据
   AttrType attrtype; // 属性类型
+  /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
+  int    null_tag_offset;  
+  int    is_null;
+  /* ----------------------------------------------------------------------------------------------------------------*/
 };
 
 class ConditionFilter {

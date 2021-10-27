@@ -110,6 +110,9 @@ ParserContext *get_context(yyscan_t scanner)
 		AVG   /* @author: huahui @what for: 必做题，聚合查询 */
 		INNER /* @author: fzh @what for: join */
 		JOIN  /* @author: fzh @what for: join */
+		NOT      /* @author: huahui @what for: null */
+		NULL_A     /* @author: huahui @what for: null */
+		NULLABLE /* @author: huahui @what for: null */
 
 /* @author: huahui &what for: 聚合
  * 由于max(1.999)需要完整保留1.999，因此lex_sql.l文件中解析到FLOATS时需要保存float值和字符串
@@ -282,6 +285,58 @@ attr_def:
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
 			CONTEXT->value_length++;
 		}
+	/* @author: huahui  @what for: null
+	 * ------------------------------------------------------------------------------------------------------------------------------------------------
+	 */
+	| ID_get type LBRACE number RBRACE NOT NULL_A 
+	    {
+			AttrInfo attribute;
+			attr_info_init(&attribute, CONTEXT->id, $2, $4);
+			attribute.nullable = 0;
+			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name =(char*)malloc(sizeof(char));
+			// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id); 
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type = $2;  
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length = $4;
+			CONTEXT->value_length++;
+		}
+	| ID_get type LBRACE number RBRACE NULLABLE 
+	    {
+			AttrInfo attribute;
+			attr_info_init(&attribute, CONTEXT->id, $2, $4);
+			attribute.nullable = 1;
+			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name =(char*)malloc(sizeof(char));
+			// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id); 
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type = $2;  
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length = $4;
+			CONTEXT->value_length++;
+		}
+	| ID_get type NOT NULL_A 
+	    {
+			AttrInfo attribute;
+			attr_info_init(&attribute, CONTEXT->id, $2, 4);
+			attribute.nullable = 0;
+			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
+			// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id); 
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type=$2;  
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
+			CONTEXT->value_length++;
+		}
+	| ID_get type NULLABLE 
+	    {
+			AttrInfo attribute;
+			attr_info_init(&attribute, CONTEXT->id, $2, 4);
+			attribute.nullable = 1;
+			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
+			// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id); 
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type=$2;  
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
+			CONTEXT->value_length++;
+		}
+	/* --------------------------------------------------------------------------------------------------------------------------------------------*/
     ;
 number:
 		NUMBER {$$ = $1;}
@@ -339,6 +394,11 @@ value:
 		$1 = substr($1,1,strlen($1)-2);
   		value_init_date(&CONTEXT->values[CONTEXT->value_length++], $1);
 	}
+	/* @author: huahui  @what for: null----------------------------------------------------------------*/
+	|NULL_A {
+		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+	}
+	/* -----------------------------------------------------------------------------------------------*/
     ;
     
 delete:		/*  delete 语句的语法解析树*/
@@ -407,6 +467,15 @@ select_attr:
 			relation_attr_init(&attr, $1, $3);
 			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
 		}
+	/* @author: fzh
+	 * @what for:  支持t.*
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+    | ID DOT STAR attr_list {
+            RelAttr attr;
+            relation_attr_init(&attr, $1, "*");
+            selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+        }
 	/* @author: huahui 
 	 * @what for: 必做题，聚合查询 
 	 * -----------------------------------------------------------------------------------------------------------------

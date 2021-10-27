@@ -317,6 +317,13 @@ void TupleRecordConverter::add_record(const char *record) {
   for (const TupleField &field : schema.fields()) {
     const FieldMeta *field_meta = table_meta.field(field.field_name());
     assert(field_meta != nullptr);
+    /* @author: huahui  @what for: null -----------------------------------------------------------------------*/
+    // 如果这个属性是null，则直接在tuple中加入NullValue
+    if(record[field_meta->get_null_tag_offset()]) {
+      tuple.add(new NullValue());
+      continue;
+    }
+    /* --------------------------------------------------------------------------------------------------------*/
     switch (field_meta->type()) {
       case INTS: {
         int value = *(int*)(record + field_meta->offset());
