@@ -36,7 +36,12 @@ QUOTE            [\'\"]
 \n																						 ;
 
 [\-]?{DIGIT}+					                   yylval->number=atoi(yytext); RETURN_TOKEN(NUMBER);
-[\-]?{DIGIT}+{DOT}{DIGIT}+				       yylval->floats=(float)(atof(yytext)); RETURN_TOKEN(FLOAT);
+[\-]?{DIGIT}+{DOT}{DIGIT}+ {
+	yylval->floatsAndStr.floats = (float)(atof(yytext));
+	yylval->floats=(float)(atof(yytext)); 
+	yylval->floatsAndStr.str = strdup(yytext);
+	RETURN_TOKEN(FLOAT);
+}
  /* @author: huahui @what for: 必做题，增加date字段 -----------------------------------------------------------------------------------------------------------------*/
 {QUOTE}[0-9]{4}-((0?[1-9])|(1[0-2]))-((0?[1-9])|([12][0-9])|(3[0-1])){QUOTE}	     {yylval->string=strdup(yytext); RETURN_TOKEN(DATE);}
  /* ----------------------------------------------------------------------------------------------------------------------------------------------------------------*/

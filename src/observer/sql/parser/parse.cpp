@@ -84,7 +84,8 @@ unsigned int stoi(const char *s, int len){
 }
 void value_init_date(Value *value, const char *v){
   value->type = DATES;
-  value->data = (char*)malloc(4);
+  value->data = (char*)malloc(4+strlen(v)+5);
+  // 将字符串编码成合适的存储结构
   unsigned int year, month, day;
   year = stoi(v, 4);
   int i = 5;
@@ -102,6 +103,10 @@ void value_init_date(Value *value, const char *v){
   scratch[1] = year;
   scratch[2] = month;
   scratch[3] = day;
+
+  // 这里要保存字符串的原本值
+  char *s2 = (char *)(value->data) + 4;
+  strcpy(s2, v);
 }
 /* -----------------------------------------------------------------------------------------------*/
 void value_destroy(Value *value) {
@@ -114,6 +119,30 @@ void condition_init(Condition *condition, CompOp comp,
                     int left_is_attr, RelAttr *left_attr, Value *left_value,
                     int right_is_attr, RelAttr *right_attr, Value *right_value) {
   condition->comp = comp;
+  /* @author: huahui  @what for: date字段 
+   * 解决select * from t where "2010-1-10"="2015-10-15"的问题，应该是字符串比较，但是搞成了日期比较
+   * -----------------------------------------------------------------------------------------
+   */
+  if(!left_is_attr && !right_is_attr) {
+    if(left_value->type == AttrType::DATES) {
+      left_value->type = AttrType::CHARS;
+      char *s = (char *)(left_value->data);
+      char *tmp = (char*)malloc(strlen(s+4) + 5);
+      strcpy(tmp, s+4);
+      strcpy(s, tmp);
+      free(tmp);
+    }
+    if(right_value->type == AttrType::DATES) {
+      right_value->type = AttrType::CHARS;
+      char *s = (char *)(right_value->data);
+      char *tmp = (char*)malloc(strlen(s+4) + 5);
+      strcpy(tmp, s+4);
+      strcpy(s, tmp);
+      free(tmp);
+    }
+  }
+  /* ---------------------------------------------------------------------------------------------*/
+
   condition->left_is_attr = left_is_attr;
   if (left_is_attr) {
     condition->left_attr = *left_attr;

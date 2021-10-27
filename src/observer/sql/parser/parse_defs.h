@@ -26,7 +26,7 @@ See the Mulan PSL v2 for more details. */
 /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------*/
 typedef enum {NOTAGG, AGGCOUNT, AGGMAX, AGGMIN, AGGAVG} AggType;
 typedef enum {AGGNUMBER, AGGFLOAT} AggValType;
-typedef union {int intv; float floatv;} AggVal;
+typedef struct {int intv; float floatv; char *str; } AggVal;
 /* -----------------------------------------------------------------------------------------------*/
 
 //属性结构体
@@ -198,7 +198,7 @@ void relation_agg_attr_init(RelAttr *relation_attr, AggType agg_type, const char
 void relation_attr_destroy(RelAttr *relation_attr);
 
 void value_init_integer(Value *value, int v);
-void value_init_float(Value *value, float v);
+void value_init_float(Value *value, float v); 
 void value_init_string(Value *value, const char *v);
 /* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/
 void value_init_date(Value *value, const char *v);
