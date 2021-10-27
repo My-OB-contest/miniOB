@@ -274,15 +274,22 @@ RC TupleConditionFilter::init(const Tuple *tuple, Condition *condition,TupleSche
 }
 RC TupleConditionFilter::init(const Tuple *tuplel,const Tuple *tupler, Condition *condition,TupleSchema tupleSchemal,TupleSchema tupleSchemar){
     comp_op_ = condition->comp;
-    tupleleft_ = tuplel;
-    tupleright_ = tupler;
     int count = 0;
     bool flag = false;
+    bool verse = false;
     for(auto it_field = tupleSchemal.fields().begin();it_field != tupleSchemal.fields().end(); ++it_field) {
         if (strcmp(it_field->table_name(), condition->left_attr.relation_name) == 0 &&
             strcmp(it_field->field_name(), condition->left_attr.attribute_name) == 0) {
             posl_ = count;
             flag = true;
+            break;
+        }
+        //可能and连接的两个条件表顺序相反，如t1.id=t2.id and t2.old>t1.old;
+        if (strcmp(it_field->table_name(), condition->right_attr.relation_name) == 0 &&
+            strcmp(it_field->field_name(), condition->right_attr.attribute_name) == 0) {
+            posr_ = count;
+            flag = true;
+            verse = true;
             break;
         }
         count++;
@@ -300,12 +307,27 @@ RC TupleConditionFilter::init(const Tuple *tuplel,const Tuple *tupler, Condition
             flag = true;
             break;
         }
+        if (strcmp(it_field->table_name(), condition->left_attr.relation_name) == 0 &&
+            strcmp(it_field->field_name(), condition->left_attr.attribute_name) == 0) {
+            posl_ = count;
+            flag = true;
+            verse = true;
+            break;
+        }
         count++;
     }
     if (flag == false){
         LOG_ERROR("TupleConditionFilter init fail,because tuple not match condition");
         return RC::SCHEMA_FIELD_MISSING;
     }
+    if (verse == false){
+        tupleleft_ = tuplel;
+        tupleright_ = tupler;
+    } else{
+        tupleleft_ = tupler;
+        tupleright_ = tuplel;
+    }
+
     return RC::SUCCESS;
 }
 
