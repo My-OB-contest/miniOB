@@ -168,6 +168,7 @@ private:
  * -------------------------------------------------------------------------------------------------------------------
  */
 class NullValue : public TupleValue {
+public:
   NullValue(){};
   void to_string(std::ostream &os) const override {
     os << "NULL";
@@ -177,7 +178,7 @@ class NullValue : public TupleValue {
   int compare(const TupleValue &other) const override {
     return 0;
   }
-}
+};
 /*end -----------------------------------------------------------------------------------------------------------------*/
 
 /* @author: huahui @what for: 必做题，聚合查询，

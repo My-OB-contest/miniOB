@@ -320,7 +320,7 @@ void TupleRecordConverter::add_record(const char *record) {
     /* @author: huahui  @what for: null -----------------------------------------------------------------------*/
     // 如果这个属性是null，则直接在tuple中加入NullValue
     if(record[field_meta->get_null_tag_offset()]) {
-      tupele.add(new NullValue());
+      tuple.add(new NullValue());
       continue;
     }
     /* --------------------------------------------------------------------------------------------------------*/
