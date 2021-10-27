@@ -844,7 +844,9 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
             }
         }
     }
-
+    /*
+     * 可以优化，将schema按照原表的先后顺序排好，后面就很可能少排一次
+    */
 
   // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
   std::vector<DefaultConditionFilter *> condition_filters;
