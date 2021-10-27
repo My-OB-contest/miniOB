@@ -414,6 +414,55 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
 }
 /* --------------------------------------------------------------------------------------------------------------------------------*/
 
+
+/*
+ * fzh
+ * 投影操作
+ */
+RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &selects) {
+    RC rc = RC::SUCCESS;
+    for (int i = selects.attr_num-1; i >=0 ; --i){
+        if (0 == strcmp("*", selects.attributes[i].attribute_name)) {
+            return rc;
+        }
+    }
+    /*
+     * 待优化，因前面已经对大部分情况进行了正常列排序，如果顺序正确且不需要投影应直接返回成功，减少一次投影操作
+     *
+     *
+    */
+    TupleSet tmptupset;
+    TupleSchema tmpschema;
+    int attrindex[selects.attr_num];
+    int indexcount=0;
+    for (int i = selects.attr_num-1; i >=0 ; --i) {
+        for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
+            if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
+                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+                attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+                break;
+            }
+            if (it_field == tuplesets[0].get_schema().fields().end()-1){
+                LOG_ERROR("projection error,not found the projection atrr!");
+                rc = RC::MISMATCH;
+                return rc;
+            }
+        }
+    }
+    tmptupset.set_schema(tmpschema);
+    for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
+        Tuple tmptuple;
+        for (int i = 0; i < selects.attr_num; ++i) {
+            tmptuple.add(it_tuple->get_pointer(attrindex[i]));
+        }
+        tmptupset.add(std::move(tmptuple));
+    }
+    tuplesets.pop_back();
+    tuplesets.push_back(std::move(tmptupset));
+    return rc;
+}
+
+
 // 这里没有对输入的某些信息做合法性校验，比如查询的列名、where条件中的列名等，没有做必要的合法性校验
 // 需要补充上这一部分. 校验部分也可以放在resolve，不过跟execution放一起也没有关系
 RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_event) {
@@ -475,8 +524,24 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   if (tuple_sets.size() > 1) {
     // 本次查询了多张表，需要做join操作
     JoinExeNode *joinExeNode = new JoinExeNode;
-    joinExeNode->init(trx, selects.conditions,selects.condition_num,db);
-    joinExeNode->execute(tuple_sets);
+    rc = joinExeNode->init(trx, selects.conditions, selects.condition_num, db, selects.relations, selects.relation_num);
+    if (rc != RC::SUCCESS){
+        LOG_ERROR("Join init error");
+        delete joinExeNode;
+        return rc;
+    }
+    rc = joinExeNode->execute(tuple_sets);
+    if (rc != RC::SUCCESS){
+        LOG_ERROR("Join execute error");
+        delete joinExeNode;
+        return rc;
+    }
+    rc = projection(tuple_sets,selects);
+    if (rc != RC::SUCCESS){
+        LOG_ERROR("projection error");
+        delete joinExeNode;
+        return rc;
+    }
     res_tupleset = std::move(tuple_sets.front());
     delete joinExeNode;
     // 本次查询了多张表，需要做join操作, 结果放在res_tuple_set中
@@ -738,6 +803,7 @@ static RC schema_add_field(Table *table, const char *field_name, TupleSchema &sc
 // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
 RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node) {
   // 列出跟这张表关联的Attr
+  RC rc = RC::SUCCESS;
   TupleSchema schema;
   Table * table = DefaultHandler::get_default().find_table(db, table_name);
   if (nullptr == table) {
@@ -763,7 +829,7 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
       } else {
         /* @author: huahui  @what for: 聚合查询 多表查询  ---------------------------------------------------*/
         // 列出这张表相关字段
-        RC rc = schema_add_field(table, attr.attribute_name, schema, (attr.relation_name!=nullptr));
+        rc = schema_add_field(table, attr.attribute_name, schema, (attr.relation_name!=nullptr));
         /* ---------------------------------------------------------------------------------------------------*/
         if (rc != RC::SUCCESS) {
           return rc;
@@ -771,6 +837,21 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
       }
     }
   }
+  //添加条件两边都是列的字段
+    for (size_t i = 0; i < selects.condition_num; i++) {
+        const Condition &condition = selects.conditions[i];
+        if(condition.left_is_attr == 1 && condition.right_is_attr == 1 ) {
+            if (match_table(selects, condition.left_attr.relation_name, table_name) && (!match_table(selects, condition.right_attr.relation_name, table_name))){
+                rc = schema_add_field(table,condition.left_attr.attribute_name,schema,true);
+            }
+            if ((!match_table(selects, condition.left_attr.relation_name, table_name)) && match_table(selects, condition.right_attr.relation_name, table_name)){
+                rc = schema_add_field(table,condition.right_attr.attribute_name,schema,true);
+            }
+        }
+    }
+    /*
+     * 可以优化，将schema按照原表的先后顺序排好，后面就很可能少排一次
+    */
 
   // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
   std::vector<DefaultConditionFilter *> condition_filters;

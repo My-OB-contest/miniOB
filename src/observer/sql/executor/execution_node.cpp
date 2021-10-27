@@ -68,7 +68,7 @@ RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num) 
     }
     return RC::SUCCESS;
 }
-RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num,const char *db) {
+RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num, const char *db, char *const *relations, int relation_num) {
     this->trx_=trx;
     for (int i = 0; i < condition_num; ++i) {
         //因前面select_cehck已做筛选，不考虑表不存在的情况
@@ -81,6 +81,10 @@ RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num,c
             return RC::SCHEMA_FIELD_TYPE_MISMATCH;
         }
     }
+    for (int i = 0; i < relation_num; ++i) {
+        selectorder[relations[i]]=i;
+    }
+
     int tablecount=0;
     for (int i = 0; i < condition_num; ++i) {
         //左右必须都为列
@@ -130,21 +134,62 @@ void JoinExeNode::Cart(std::vector<TupleSet> &tuple_sets){
         std::vector<TupleSet>::iterator itright = tuple_sets.end()-2;
         TupleSet tmptupset;
         TupleSchema tmpschema;
-        for(auto it_field = itleft->get_schema().fields().begin();it_field != itleft->get_schema().fields().end(); ++it_field){
+        bool LorRflag[itleft->get_schema().fields().size()+itright->get_schema().fields().size()];
+        int sumcount,leftcount,rightcount;
+        sumcount=leftcount=rightcount=0;
+        for (; leftcount < itleft->get_schema().fields().size()&&rightcount < itright->get_schema().fields().size(); ) {
+            if (selectorder[itleft->get_schema().field(leftcount).table_name()] > selectorder[itright->get_schema().field(rightcount).table_name()]){
+                tmpschema.add_if_not_exists(itleft->get_schema().field(leftcount).type(),itleft->get_schema().field(leftcount).table_name(),itleft->get_schema().field(leftcount).field_name(),
+                                            true);
+                leftcount++;
+                LorRflag[sumcount++]=0;
+            } else{
+                tmpschema.add_if_not_exists(itright->get_schema().field(rightcount).type(),itright->get_schema().field(rightcount).table_name(),itright->get_schema().field(rightcount).field_name(),
+                                            true);
+                rightcount++;
+                LorRflag[sumcount++]=1;
+            }
+        }
+        while(leftcount < itleft->get_schema().fields().size()){
+            tmpschema.add_if_not_exists(itleft->get_schema().field(leftcount).type(),itleft->get_schema().field(leftcount).table_name(),itleft->get_schema().field(leftcount).field_name(),
+                                        true);
+            leftcount++;
+            LorRflag[sumcount++]=0;
+        }
+        while(rightcount < itright->get_schema().fields().size()){
+            tmpschema.add_if_not_exists(itright->get_schema().field(rightcount).type(),itright->get_schema().field(rightcount).table_name(),itright->get_schema().field(rightcount).field_name(),
+                                        true);
+            rightcount++;
+            LorRflag[sumcount++]=1;
+        }
+        /*for(auto it_field = itleft->get_schema().fields().begin();it_field != itleft->get_schema().fields().end(); ++it_field){
             tmpschema.add_if_not_exists(it_field->type(),it_field->table_name(),it_field->field_name(), true);
         }
         for(auto it_field = itright->get_schema().fields().begin();it_field != itright->get_schema().fields().end(); ++it_field){
             tmpschema.add_if_not_exists(it_field->type(),it_field->table_name(),it_field->field_name(), true);
         }
+         */
         tmptupset.set_schema(tmpschema);
         for(auto it_tuplel = itleft->tuples().begin();it_tuplel != itleft->tuples().end();++it_tuplel){
             for(auto it_tupler = itright->tuples().begin();it_tupler != itright->tuples().end();++it_tupler){
                 Tuple tmptuple;
-                for (int i = 0; i < it_tuplel->size(); ++i) {
+                /*for (int i = 0; i < it_tuplel->size(); ++i) {
                     tmptuple.add(it_tuplel->get_pointer(i));
                 }
                 for (int i = 0; i < it_tupler->size() ; ++i) {
                     tmptuple.add(it_tupler->get_pointer(i));
+                }
+                 */
+                int tuplel,tupler;
+                tuplel=tupler=0;
+                for (int i = 0; i < sumcount ; ++i) {
+                    if (LorRflag[i]){
+                        tmptuple.add(it_tupler->get_pointer(tupler));
+                        tupler++;
+                    } else{
+                        tmptuple.add(it_tuplel->get_pointer(tuplel));
+                        tuplel++;
+                    }
                 }
                 tmptupset.add(std::move(tmptuple));
             }
@@ -191,15 +236,40 @@ RC JoinExeNode::execute(std::vector<TupleSet> &tuplesets) {
         TupleSet tmptupset;
         TupleSchema tmpschema;
         //合并两个tupleset中的属性
-        for(auto it_field = itleft->get_schema().fields().begin();it_field != itleft->get_schema().fields().end(); ++it_field){
-            tmpschema.add_if_not_exists(it_field->type(),it_field->table_name(),it_field->field_name(), true);
+        //按照select from或者join的顺序归并两个schema，同时记录每次合并的是左表还是右表，后续合并tuple使用
+        bool LorRflag[itleft->get_schema().fields().size()+itright->get_schema().fields().size()];
+        int sumcount,leftcount,rightcount;
+        sumcount=leftcount=rightcount=0;
+        for (; leftcount < itleft->get_schema().fields().size()&&rightcount < itright->get_schema().fields().size(); ) {
+            if (selectorder[itleft->get_schema().field(leftcount).table_name()] > selectorder[itright->get_schema().field(rightcount).table_name()]){
+                tmpschema.add_if_not_exists(itleft->get_schema().field(leftcount).type(),itleft->get_schema().field(leftcount).table_name(),itleft->get_schema().field(leftcount).field_name(),
+                                            true);
+                leftcount++;
+                LorRflag[sumcount++]=0;
+            } else{
+                tmpschema.add_if_not_exists(itright->get_schema().field(rightcount).type(),itright->get_schema().field(rightcount).table_name(),itright->get_schema().field(rightcount).field_name(),
+                                            true);
+                rightcount++;
+                LorRflag[sumcount++]=1;
+            }
         }
-        for(auto it_field = itright->get_schema().fields().begin();it_field != itright->get_schema().fields().end(); ++it_field){
-            tmpschema.add_if_not_exists(it_field->type(),it_field->table_name(),it_field->field_name(), true);
+        while(leftcount < itleft->get_schema().fields().size()){
+            tmpschema.add_if_not_exists(itleft->get_schema().field(leftcount).type(),itleft->get_schema().field(leftcount).table_name(),itleft->get_schema().field(leftcount).field_name(),
+                                        true);
+            leftcount++;
+            LorRflag[sumcount++]=0;
+        }
+        while(rightcount < itright->get_schema().fields().size()){
+            tmpschema.add_if_not_exists(itright->get_schema().field(rightcount).type(),itright->get_schema().field(rightcount).table_name(),itright->get_schema().field(rightcount).field_name(),
+                                        true);
+            rightcount++;
+            LorRflag[sumcount++]=1;
         }
         tmptupset.set_schema(tmpschema);
         for(auto it_tuplel = itleft->tuples().begin();it_tuplel != itleft->tuples().end();++it_tuplel){
             for(auto it_tupler = itright->tuples().begin();it_tupler != itright->tuples().end();++it_tupler){
+
+                //将这对tupleset所涉及的连接条件综合，目前只支持and
                 bool finalret = true;
                 for (int i_sametable = 0; i_sametable < sameTableconNum[i_table]; ++i_sametable) {
                     TupleConditionFilter tupleFilter;
@@ -212,11 +282,16 @@ RC JoinExeNode::execute(std::vector<TupleSet> &tuplesets) {
 
                 if (finalret){
                     Tuple tmptuple;
-                    for (int i = 0; i < it_tuplel->size(); ++i) {
-                        tmptuple.add(it_tuplel->get_pointer(i));
-                    }
-                    for (int i = 0; i < it_tupler->size() ; ++i) {
-                        tmptuple.add(it_tupler->get_pointer(i));
+                    int tuplel,tupler;
+                    tuplel=tupler=0;
+                    for (int i = 0; i < sumcount ; ++i) {
+                        if (LorRflag[i]){
+                            tmptuple.add(it_tupler->get_pointer(tupler));
+                            tupler++;
+                        } else{
+                            tmptuple.add(it_tuplel->get_pointer(tuplel));
+                            tuplel++;
+                        }
                     }
                     tmptupset.add(std::move(tmptuple));
                 }
