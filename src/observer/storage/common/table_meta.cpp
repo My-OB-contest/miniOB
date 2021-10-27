@@ -76,11 +76,24 @@ RC TableMeta::init(const char *name, int field_num, const AttrInfo attributes[])
     fields_[i] = sys_fields_[i];
   }
 
-  int field_offset = sys_fields_.back().offset() + sys_fields_.back().len(); // 当前实现下，所有类型都是4字节对齐的，所以不再考虑字节对齐问题
+  /* @author: huahui  @what for: null
+   * --------------------------------------------------------------------------------------------------------------------------
+   */
+  // 在一个record中，本来只包含sys_fields和用户定义的fields
+  // 但是为了标识每个属性是否是Null，需要在sys_fields后面，用户定义的fields前面，加上null_tags
+  // 这是一个char类型数组，长度是用户定义的fields的数量
+  int null_tags_offset;
+  int null_tags_len;
+  null_tags_offset = sys_fields_.back().offset() + sys_fields_.back().len(); 
+  null_tags_len = field_num;
+  int field_offset = null_tags_offset + ((null_tags_len-1)/4 + 1)*4;  // 4字节对齐的
+  /* ----------------------------------------------------------------------------------------------------------------------------*/
 
   for (int i = 0; i < field_num; i++) {
     const AttrInfo &attr_info = attributes[i];
-    rc = fields_[i + sys_fields_.size()].init(attr_info.name, attr_info.type, field_offset, attr_info.length, true);
+    /* @author: huahui  @what for: null -----------------------------------------------------------------------------------------------------------------------*/
+    rc = fields_[i + sys_fields_.size()].init(attr_info.name, attr_info.type, field_offset, attr_info.length, true, attr_info.nullable, null_tags_offset+i, 1); 
+    /* --------------------------------------------------------------------------------------------------------------------------------------------------------*/
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, attr_info.name);
       return rc;

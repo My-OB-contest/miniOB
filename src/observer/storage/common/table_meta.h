@@ -69,6 +69,7 @@ private:
   int  record_size_ = 0;
 
   static std::vector<FieldMeta> sys_fields_;
+
 };
 
 #endif // __OBSERVER_STORAGE_COMMON_TABLE_META_H__

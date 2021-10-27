@@ -82,8 +82,11 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
 
     type_left = field_left->type();
     left.attrtype = type_left;
+
+    left.null_tag_offset = field_left->get_null_tag_offset(); /* @author: huahui  @what for: null -----------------------------------------------*/
   } else {
     left.is_attr = false;
+    left.is_null = condition.left_value.is_null;   /* @author: huahui  @what for: null -----------------------------------------------*/
     left.value = condition.left_value.data;  // 校验type 或者转换类型
     type_left = condition.left_value.type;
 
@@ -105,8 +108,11 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
 
     right.value = nullptr;
     right.attrtype = type_right;
+
+    right.null_tag_offset = field_right->get_null_tag_offset(); /* @author: huahui  @what for: null -----------------------------------------------*/
   } else {
     right.is_attr = false;
+    right.is_null = condition.right_value.is_null;         /* @author: huahui  @what for: null -----------------------------------------------*/
     right.value = condition.right_value.data;
     type_right = condition.right_value.type;
 
@@ -136,14 +142,26 @@ bool DefaultConditionFilter::filter(const Record &rec) const
   char *right_value = nullptr;
 
   if (left_.is_attr) {  // value
+    if(rec.data[left_.null_tag_offset]) { /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
+      return false;
+    }
     left_value = (char *)(rec.data + left_.attr_offset);
   } else {
+    if(left_.is_null) { /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
+      return false;
+    }
     left_value = (char *)left_.value;
   }
 
-  if (right_.is_attr) {
+  if (right_.is_attr) { 
+    if(rec.data[right_.null_tag_offset]) { /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
+      return false;
+    }
     right_value = (char *)(rec.data + right_.attr_offset);
   } else {
+    if(right_.is_null) { /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
+      return false;
+    }
     right_value = (char *)right_.value;
   }
 

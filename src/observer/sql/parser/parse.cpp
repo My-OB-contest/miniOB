@@ -57,16 +57,19 @@ void relation_attr_destroy(RelAttr *relation_attr) {
 }
 
 void value_init_integer(Value *value, int v) {
+  value->is_null = 0;       /* @author: huahui  @what for: null--------------------------------------*/
   value->type = INTS;
   value->data = malloc(sizeof(v));
   memcpy(value->data, &v, sizeof(v));
 }
 void value_init_float(Value *value, float v) {
+  value->is_null = 0;      /* @author: huahui  @what for: null--------------------------------------*/
   value->type = FLOATS;
   value->data = malloc(sizeof(v));
   memcpy(value->data, &v, sizeof(v));
 }
 void value_init_string(Value *value, const char *v) {
+  value->is_null = 0;     /* @author: huahui  @what for: null--------------------------------------*/
   value->type = CHARS;
   value->data = strdup(v);
 }
@@ -83,6 +86,7 @@ unsigned int stoi(const char *s, int len){
   return ans;
 }
 void value_init_date(Value *value, const char *v){
+  value->is_null = 0;    /* @author: huahui  @what for: null--------------------------------------*/
   value->type = DATES;
   value->data = (char*)malloc(4+strlen(v)+5);
   // 将字符串编码成合适的存储结构
@@ -107,6 +111,13 @@ void value_init_date(Value *value, const char *v){
   // 这里要保存字符串的原本值
   char *s2 = (char *)(value->data) + 4;
   strcpy(s2, v);
+}
+/* -----------------------------------------------------------------------------------------------*/
+
+/* @author: huahui  @what for: null----------------------------------------------------------------*/
+void value_init_null(Value *value) {
+  value->is_null = 1;
+  value->type = AttrType::UNDEFINED;
 }
 /* -----------------------------------------------------------------------------------------------*/
 void value_destroy(Value *value) {
@@ -174,6 +185,9 @@ void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type, size_t
   attr_info->name = strdup(name);
   attr_info->type = type;
   attr_info->length = length;
+  /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
+  attr_info->nullable = 0;  // 默认属性不支持nullable
+  /* ---------------------------------------------------------------------------------------------------------------*/
 }
 void attr_info_destroy(AttrInfo *attr_info) {
   free(attr_info->name);

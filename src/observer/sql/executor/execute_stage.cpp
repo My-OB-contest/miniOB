@@ -608,11 +608,16 @@ RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session
   // 校验insert语句中的date字段是否符合要求，即满足日期小于2038年2月，以及满足闰年平年的要求
   const Value *values = (const Value *)(inserts.values);
   RC rc = check_date_from_values(inserts.value_num, values);
-  if(rc == RC::SUCCESS) return rc;
-  char err[207];
-  sprintf(err, "FAILURE\n");
-  session_event->set_response(err);
-  return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+  if(rc != RC::SUCCESS) {
+    char err[207];
+    sprintf(err, "FAILURE\n");
+    session_event->set_response(err);
+    return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+  }
+  
+  // 校验insert语句中的null是否符合要求，比如insrt into t values(null) 但是t中没有一个属性是nullable的
+
+  return RC::SUCCESS;
 }
 /*end ----------------------------------------------------------------------------------------------*/
 

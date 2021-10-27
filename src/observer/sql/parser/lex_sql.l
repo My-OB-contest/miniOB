@@ -84,7 +84,7 @@ QUOTE            [\'\"]
 [Ii][Nn][Ff][Ii][Ll][Ee]                 RETURN_TOKEN(INFILE);
  /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------*/
 
- /* @author: fzh @what for: join ------------------------------------------------*/
+ /* @author: fzh @what for: join ---------------------------------------------------------------*/
 [Ii][Nn][Nn][Ee][Rr]    RETURN_TOKEN(INNER);
 [Jj][Oo][Ii][Nn]        RETURN_TOKEN(JOIN);
  /* -----------------------------------------------------------------------------------------------*/
@@ -93,7 +93,12 @@ QUOTE            [\'\"]
 [Mm][Aa][Xx]          RETURN_TOKEN(MAX);
 [Mm][Ii][Nn]          RETURN_TOKEN(MIN);
 [Aa][Vv][Gg]          RETURN_TOKEN(AVG);
- /* -----------------------------------------------------------------------------------------------*/
+ /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
+[Nn][Oo][Tt]                                 RETURN_TOKEN(NOT);
+[Nn][Uu][Ll][Ll]                             RETURN_TOKEN(NULL_A);
+[Nn][Uu][Ll][Ll][Aa][Bb][Ll][Ee]             RETURN_TOKEN(NULLABLE);
+ /* ---------------------------------------------------------------------------------------------------------------*/
+
 {ID}							                       yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 "("								                       RETURN_TOKEN(LBRACE);
 ")"								                       RETURN_TOKEN(RBRACE);
