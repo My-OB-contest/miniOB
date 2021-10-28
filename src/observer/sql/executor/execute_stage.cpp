@@ -421,19 +421,21 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
  */
 RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &selects) {
     RC rc = RC::SUCCESS;
-    for (int i = selects.attr_num-1; i >=0 ; --i){
-        if (0 == strcmp("*", selects.attributes[i].attribute_name)) {
-            return rc;
-        }
+/*
+ * for (int i = selects.attr_num-1; i >=0 ; --i){
+    if (0 == strcmp("*", selects.attributes[i].attribute_name)) {
+        return rc;
     }
-    /*
-     * 待优化，因前面已经对大部分情况进行了正常列排序，如果顺序正确且不需要投影应直接返回成功，减少一次投影操作
-     *
-     *
-    */
+}
+ */
+/*
+ * 待优化，因前面已经对大部分情况进行了正常列排序，如果顺序正确且不需要投影应直接返回成功，减少一次投影操作
+ *
+ *
+*/
     TupleSet tmptupset;
     TupleSchema tmpschema;
-    int attrindex[selects.attr_num];
+    int attrindex[40];
     int indexcount=0;
     for (int i = selects.attr_num-1; i >=0 ; --i) {
         for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
@@ -441,6 +443,13 @@ RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &sele
                 tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
                 attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
                 break;
+            }
+            if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp("*",selects.attributes[i].attribute_name) == 0){
+                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+                attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+                if (it_field == tuplesets[0].get_schema().fields().end()-1){
+                    break;
+                }
             }
             if (it_field == tuplesets[0].get_schema().fields().end()-1){
                 LOG_ERROR("projection error,not found the projection atrr!");
@@ -452,7 +461,7 @@ RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &sele
     tmptupset.set_schema(tmpschema);
     for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
         Tuple tmptuple;
-        for (int i = 0; i < selects.attr_num; ++i) {
+        for (int i = 0; i < indexcount; ++i) {
             tmptuple.add(it_tuple->get_pointer(attrindex[i]));
         }
         tmptupset.add(std::move(tmptuple));
