@@ -72,6 +72,9 @@ RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num, 
     this->trx_=trx;
     for (int i = 0; i < condition_num; ++i) {
         //因前面select_cehck已做筛选，不考虑表不存在的情况
+        if (conditions[i].left_is_attr==0 || conditions[i].right_is_attr==0){
+            continue;
+        }
         Table *tablel = DefaultHandler::get_default().find_table(db,conditions[i].left_attr.relation_name);
         Table *tabler = DefaultHandler::get_default().find_table(db,conditions[i].right_attr.relation_name);
         const FieldMeta * fieldMetal = tablel->table_meta().field(conditions[i].left_attr.attribute_name);
