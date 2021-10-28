@@ -423,7 +423,7 @@ RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &sele
     RC rc = RC::SUCCESS;
 
     for (int i = selects.attr_num-1; i >=0 ; --i){
-        if (0 == strcmp("*", selects.attributes[i].attribute_name) && selects.attributes->relation_name== nullptr ) {
+        if (0 == strcmp("*", selects.attributes[i].attribute_name) && selects.attributes[i].relation_name == nullptr ) {
             return rc;
         }
     }
