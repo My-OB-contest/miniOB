@@ -421,13 +421,13 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
  */
 RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &selects) {
     RC rc = RC::SUCCESS;
-/*
- * for (int i = selects.attr_num-1; i >=0 ; --i){
-    if (0 == strcmp("*", selects.attributes[i].attribute_name)) {
-        return rc;
+
+    for (int i = selects.attr_num-1; i >=0 ; --i){
+        if (0 == strcmp("*", selects.attributes[i].attribute_name) && selects.attributes->relation_name== nullptr ) {
+            return rc;
+        }
     }
-}
- */
+
 /*
  * 待优化，因前面已经对大部分情况进行了正常列排序，如果顺序正确且不需要投影应直接返回成功，减少一次投影操作
  *
