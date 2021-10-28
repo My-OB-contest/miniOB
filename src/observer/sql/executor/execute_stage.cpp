@@ -447,14 +447,6 @@ RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &sele
             if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp("*",selects.attributes[i].attribute_name) == 0){
                 tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
                 attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
-                if (it_field == tuplesets[0].get_schema().fields().end()-1){
-                    break;
-                }
-            }
-            if (it_field == tuplesets[0].get_schema().fields().end()-1){
-                LOG_ERROR("projection error,not found the projection atrr!");
-                rc = RC::MISMATCH;
-                return rc;
             }
         }
     }
