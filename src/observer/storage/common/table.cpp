@@ -485,7 +485,7 @@ static RC insert_index_record_reader_adapter(Record *record, void *context) {
   return inserter.insert_index(record);
 }
 
-RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_name) {
+RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_name,int isunique) {
   if (index_name == nullptr || common::is_blank(index_name) ||
       attribute_name == nullptr || common::is_blank(attribute_name)) {
     return RC::INVALID_ARGUMENT;
@@ -501,7 +501,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_n
   }
 
   IndexMeta new_index_meta;
-  RC rc = new_index_meta.init(index_name, *field_meta);
+  RC rc = new_index_meta.init(index_name, *field_meta,isunique);
   if (rc != RC::SUCCESS) {
     return rc;
   }
