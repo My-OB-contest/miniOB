@@ -49,6 +49,7 @@ protected:
   void handle_request(common::StageEvent *event);
   RC do_select(const char *db, Query *sql, SessionEvent *session_event);
   RC select_check(const char *db, const Selects &selects);
+  RC update_check(const char *db, const Updates &updates);  /* @author: huahui  @what for: 元数据校验-----------*/
   RC projection(std::vector<TupleSet> &tuplesets,const Selects &selects);
 protected:
   /*
@@ -82,6 +83,12 @@ protected:
   RC agg_select_from_tupleset(Trx *trx, const char *db, const Selects &selects, TupleSet &tuple_set, std::vector<const RelAttr *> &relattrs, TupleSet &agg_res);
   /* ------------------------------------------------------------------------------------------------------------
 	 */
+  
+  /* @author: huahui  @what for: null ------------------------------------------------------------------------------*/
+  // 检验select和update的语句中的where语句是否符合要求
+  // 检查属性, 表名是否合法
+  RC check_condition(int condition_num, const Condition *conditions, const Table * table);
+  /* --------------------------------------------------------------------------------------------------------------*/
 private:
   Stage *default_storage_stage_ = nullptr;
   Stage *mem_storage_stage_ = nullptr;

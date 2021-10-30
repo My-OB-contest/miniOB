@@ -144,6 +144,7 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
      * begin -------------------------------------------------------------------------------------------
      */
     case SCF_INSERT: {
+      // 在check_insert_stat中不用检验插入的数据是否合法,不用检查null相关,因为在后面的make_record()中会检查
       RC rc = check_insert_stat(sql->sstr.insertion, session_event);
       if(rc != RC::SUCCESS){
         event->done_immediate();
@@ -165,10 +166,10 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
     /*
      * @author: huahui
      * @what for: 必做题，update。添加对date字段的校验
-     * begin -------------------------------------------------------------------------------------------
+     * begin ------------------------------------------------------------------------------------------------------
      */
     case SCF_UPDATE: {
-      const Value *values = (const Value *)(&(sql->sstr.update.value));
+      /*const Value *values = (const Value *)(&(sql->sstr.update.value));
       RC rc = check_date_from_values(1, values);
       //校验where中不合规的date
       for( int conditionnum = 0 ; conditionnum < sql->sstr.update.condition_num ; ++conditionnum ){
@@ -178,7 +179,8 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
           if (!sql->sstr.update.conditions->right_is_attr && sql->sstr.update.conditions->right_value.type == DATES){
               rc =check_date_from_values(1,(const Value *)&(sql->sstr.update.conditions->right_value));
           }
-      }
+      }*/
+      RC rc = update_check(current_db, sql->sstr.update);
       if(rc != RC::SUCCESS){
         char err[207];
         sprintf(err, "FAILURE\n");
@@ -315,6 +317,7 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
     }
     for (size_t j = 0; j < selects.condition_num ; ++j) {
         AttrType left_at, right_at;
+        int left_is_null = false, right_is_null = false; /* @author: huahui  @what for: null-----------------------------------*/
         if (selects.conditions[j].left_is_attr){
             // 条件中不能带*
             if(strcmp("*", selects.conditions[j].left_attr.attribute_name) == 0) {
@@ -329,7 +332,7 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
             }
             left_at = fieldMeta->type();
         } else { 
-          // 检查date是否符合要求
+          // 检查date是否符合要求  (其实这个检验应该也没有必要)
           if(selects.conditions[j].left_value.type == AttrType::DATES) {
             const Value *values = (const Value *)(&(selects.conditions[j].left_value));
             rc = check_date_from_values(1, values);
@@ -339,6 +342,7 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
           }
 
           left_at = selects.conditions[j].left_value.type;
+          left_is_null = selects.conditions[j].left_value.is_null;           /* @author: huahui  @what for: null-----------------------------------*/
         }
         if (selects.conditions[j].right_is_attr){
             if(strcmp("*", selects.conditions[j].right_attr.attribute_name) == 0) {
@@ -353,7 +357,7 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
             }
             right_at = fieldMeta->type();
         }else {
-          // 检查date是否符合要求
+          // 检查date是否符合要求   (其实这个检验应该也没有必要)
           if(selects.conditions[j].right_value.type == AttrType::DATES) {
             const Value *values = (const Value *)(&(selects.conditions[j].right_value));
             rc = check_date_from_values(1, values);
@@ -363,13 +367,21 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
           }
 
           right_at = selects.conditions[j].right_value.type;
+          right_is_null = selects.conditions[j].right_value.is_null;                       /* @author: huahui  @what for: null-----------------------------------*/
         }
+        
+        /* @author: huahui  @what for: null--------------------------------------------------------------*/
+        // 检查如果有一个是值null，则可以跳过
+        if(left_is_null || right_is_null) {
+          continue;
+        }
+
+        /* @author: huahui  @what for: 元数据校验, where中int和float兼容 -----------------------------------------*/
         // 检查左右两边的类型是否相容，比如int和float就是相容的
         if(left_at != right_at && 
           !(left_at==AttrType::INTS && right_at==AttrType::FLOATS || left_at==AttrType::FLOATS && right_at==AttrType::INTS)) {
           return RC::SQL_SYNTAX;
         }
-
     }
     return RC::SUCCESS;
   }
@@ -391,6 +403,8 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
     }
   }
   for(size_t j=0; j<selects.condition_num; j++) {
+    AttrType left_at, right_at;
+    int left_is_null = false, right_is_null = false; /* @author: huahui  @what for: null-----------------------------------*/
     if (selects.conditions[j].left_is_attr){
       if(strcmp("*", selects.conditions[j].left_attr.attribute_name) == 0) {
         return RC::SQL_SYNTAX;
@@ -399,6 +413,18 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
       if(rc2 != RC::SUCCESS) {
         return rc2;
       }
+    } else {
+      // 检查date是否符合要求  (其实这个检验应该也没有必要)
+      if(selects.conditions[j].left_value.type == AttrType::DATES) {
+        const Value *values = (const Value *)(&(selects.conditions[j].left_value));
+        rc = check_date_from_values(1, values);
+        if(rc != RC::SUCCESS) {
+          return rc;
+        }
+      }
+
+      left_at = selects.conditions[j].left_value.type;
+      left_is_null = selects.conditions[j].left_value.is_null;           /* @author: huahui  @what for: null-----------------------------------*/
     }
     if (selects.conditions[j].right_is_attr){
       if(strcmp("*", selects.conditions[j].right_attr.attribute_name) == 0) {
@@ -408,12 +434,56 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
       if(rc2 != RC::SUCCESS) {
         return rc2;
       }
+    } else {
+      // 检查date是否符合要求  (其实这个检验应该也没有必要)
+      if(selects.conditions[j].left_value.type == AttrType::DATES) {
+        const Value *values = (const Value *)(&(selects.conditions[j].left_value));
+        rc = check_date_from_values(1, values);
+        if(rc != RC::SUCCESS) {
+          return rc;
+        }
+      }
+
+      right_at = selects.conditions[j].right_value.type;
+      right_is_null = selects.conditions[j].right_value.is_null;                       /* @author: huahui  @what for: null-----------------------------------*/
+    }
+
+    /* @author: huahui  @what for: null--------------------------------------------------------------*/
+    // 检查如果有一个是值null，则可以跳过后面的判断
+    if(left_is_null || right_is_null) {
+      continue;
+    }
+
+    /* @author: huahui  @what for: 元数据校验, where中int和float兼容 -----------------------------------------*/
+    // 检查左右两边的类型是否相容，比如int和float就是相容的
+    if(left_at != right_at && 
+      !(left_at==AttrType::INTS && right_at==AttrType::FLOATS || left_at==AttrType::FLOATS && right_at==AttrType::INTS)) {
+      return RC::SQL_SYNTAX;
     }
   }
   return RC::SUCCESS;
 }
 /* --------------------------------------------------------------------------------------------------------------------------------*/
 
+/* @author: huahui  @what for: 元数据校验----------------------------------------------------------------------*/
+RC ExecuteStage::update_check(const char *db, const Updates &updates) {
+  // 查看date是否合法
+  const Value *values = (const Value *)(&(updates.value));
+  RC rc = check_date_from_values(1, values);
+  if(rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  // check conditon
+  Table * table = DefaultHandler::get_default().find_table(db, updates.relation_name);
+  rc = check_condition(updates.condition_num, updates.conditions, table);
+  if(rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  return RC::SUCCESS;
+}
+/* -------------------------------------------------------------------------------------------------------------------*/
 
 /*
  * fzh
@@ -669,6 +739,8 @@ RC ExecuteStage::check_date_from_values(int value_num, const Value *values) {
 
   return RC::SUCCESS;
 }
+
+// 在check_insert_stat中不用检验插入的数据是否合法,不用检查null相关,因为在后面的make_record()中会检查
 RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session_event){
   // 校验insert语句中的date字段是否符合要求，即满足日期小于2038年2月，以及满足闰年平年的要求
   const Value *values = (const Value *)(inserts.values);
@@ -679,8 +751,6 @@ RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session
     session_event->set_response(err);
     return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
   }
-  
-  // 校验insert语句中的null是否符合要求，比如insrt into t values(null) 但是t中没有一个属性是nullable的
 
   return RC::SUCCESS;
 }
@@ -783,6 +853,85 @@ RC ExecuteStage::agg_select_from_tupleset(Trx *trx, const char *db, const Select
 } 
 /* ------------------------------------------------------------------------------------------------------------
  */
+
+/* @author: huahui  @what for: null ------------------------------------------------------------------------------*/
+// 检验select和update的语句中的where语句是否符合要求
+// 检查属性, 表名是否合法, 支持有关null的校验
+// 一般在select_check()的单表校验和update_check()函数中被调用
+RC ExecuteStage::check_condition(int condition_num, const Condition *conditions, const Table * table) {
+  RC rc = RC::SUCCESS;
+  for (size_t j = 0; j < condition_num ; ++j) {
+    AttrType left_at, right_at;
+    int left_is_null = false, right_is_null = false; /* @author: huahui  @what for: null-----------------------------------*/
+    if (conditions[j].left_is_attr){
+      // 条件中不能带*
+      if(strcmp("*", conditions[j].left_attr.attribute_name) == 0) {
+          return RC::SQL_SYNTAX;
+      }
+      if(conditions[j].left_attr.relation_name != nullptr && strcmp(conditions[j].left_attr.relation_name, table->name())!=0) {
+          return RC::SQL_SYNTAX;
+      }
+      const FieldMeta * fieldMeta = table->table_meta().field(conditions[j].left_attr.attribute_name);
+      if (fieldMeta == nullptr){
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
+      left_at = fieldMeta->type();
+    } else { 
+      // 检查date是否符合要求  (其实这个检验应该也没有必要)
+      if(conditions[j].left_value.type == AttrType::DATES) {
+        const Value *values = (const Value *)(&(conditions[j].left_value));
+        rc = check_date_from_values(1, values);
+        if(rc != RC::SUCCESS) {
+          return rc;
+        }
+      }
+
+      left_at = conditions[j].left_value.type;
+      left_is_null = conditions[j].left_value.is_null;           /* @author: huahui  @what for: null-----------------------------------*/
+    }
+    if (conditions[j].right_is_attr){
+      if(strcmp("*", conditions[j].right_attr.attribute_name) == 0) {
+          return RC::SQL_SYNTAX;
+      }
+      if(conditions[j].right_attr.relation_name != nullptr && strcmp(conditions[j].right_attr.relation_name, table->name())!=0) {
+          return RC::SQL_SYNTAX;
+      }
+      const FieldMeta * fieldMeta = table->table_meta().field(conditions[j].right_attr.attribute_name);
+      if (fieldMeta == nullptr){
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
+      right_at = fieldMeta->type();
+    }else {
+      // 检查date是否符合要求   (其实这个检验应该也没有必要)
+      if(conditions[j].right_value.type == AttrType::DATES) {
+        const Value *values = (const Value *)(&(conditions[j].right_value));
+        rc = check_date_from_values(1, values);
+        if(rc != RC::SUCCESS) {
+          return rc;
+        }
+      }
+
+      right_at = conditions[j].right_value.type;
+      right_is_null = conditions[j].right_value.is_null;                       /* @author: huahui  @what for: null-----------------------------------*/
+    }
+    
+    /* @author: huahui  @what for: null--------------------------------------------------------------*/
+    // 检查如果有一个是值null，则可以跳过
+    if(left_is_null || right_is_null) {
+      continue;
+    }
+
+    /* @author: huahui  @what for: 元数据校验, where中int和float兼容 -----------------------------------------*/
+    // 检查左右两边的类型是否相容，比如int和float就是相容的
+    if(left_at != right_at && 
+      !(left_at==AttrType::INTS && right_at==AttrType::FLOATS || left_at==AttrType::FLOATS && right_at==AttrType::INTS)) {
+      return RC::SQL_SYNTAX;
+    }
+  }
+
+  return RC::SUCCESS;
+}
+/* --------------------------------------------------------------------------------------------------------------*/
 
 bool match_table(const Selects &selects, const char *table_name_in_condition, const char *table_name_to_match) {
   if (table_name_in_condition != nullptr) {

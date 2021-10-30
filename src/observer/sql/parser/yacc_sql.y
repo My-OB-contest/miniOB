@@ -113,6 +113,7 @@ ParserContext *get_context(yyscan_t scanner)
 		NOT      /* @author: huahui @what for: null */
 		NULL_A     /* @author: huahui @what for: null */
 		NULLABLE /* @author: huahui @what for: null */
+		IS_A      /* @author: huahui @what for: null */
 
 /* @author: huahui &what for: 聚合
  * 由于max(1.999)需要完整保留1.999，因此lex_sql.l文件中解析到FLOATS时需要保存float值和字符串
@@ -380,16 +381,16 @@ value_list:
 	  }
     ;
 value:
-    NUMBER{	
+    NUMBER {	
   		value_init_integer(&CONTEXT->values[CONTEXT->value_length++], $1);
-		}
-    |FLOAT{
+	}
+    |FLOAT {
   		value_init_float(&CONTEXT->values[CONTEXT->value_length++], ($1).floats);
-		}
+	}
     |SSS {
-			$1 = substr($1,1,strlen($1)-2);
+		$1 = substr($1,1,strlen($1)-2);
   		value_init_string(&CONTEXT->values[CONTEXT->value_length++], $1);
-		}
+	}
 	|DATE {
 		$1 = substr($1,1,strlen($1)-2);
   		value_init_date(&CONTEXT->values[CONTEXT->value_length++], $1);
@@ -802,7 +803,31 @@ condition:
 			// $$->right_is_attr = 1;		//属性
 			// $$->right_attr.relation_name=$5;
 			// $$->right_attr.attribute_name=$7;
-    }
+    } 
+	/* @author: huahui  @what for: null ------------------------------------------------------------------------*/
+	| ID IS_A NULL_A {
+		RelAttr left_attr;
+		relation_attr_init(&left_attr, NULL, $1);
+		CONTEXT->comp = IS;
+		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
+
+		Condition condition;
+		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
+		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
+	}
+	| ID DOT ID IS_A NULL_A {
+		RelAttr left_attr;
+		relation_attr_init(&left_attr, $1, $3);
+		CONTEXT->comp = IS;
+		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
+
+		Condition condition;
+		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
+		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
+	}
+	/* ------------------------------------------------------------------------------------------------------------*/
     ;
 
 comOp:

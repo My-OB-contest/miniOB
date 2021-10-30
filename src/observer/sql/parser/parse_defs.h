@@ -48,7 +48,8 @@ typedef enum {
   LESS_THAN,    //"<"     3
   GREAT_EQUAL,  //">="    4
   GREAT_THAN,   //">"     5
-  NO_OP
+  IS,            // is 
+  NO_OP             /* @author: huahui  @what for: null */
 } CompOp;
  
 /* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/

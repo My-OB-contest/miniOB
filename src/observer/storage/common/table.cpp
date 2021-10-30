@@ -602,7 +602,21 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
     int fieldlen=fieldMeta->len();
     int fieldoffset=fieldMeta->offset();
     char *dest = record->data+fieldoffset;
-    switch (value->type) {
+    /* @author: huahui  @what for: null -------------------------------------------------------------------*/
+    // 如果value是null，则先判断是否是nullable，然后直接更新record的null_tag为1
+    // 如果不是null，则也更新null_tag为0
+    if(value->is_null) {
+      if(fieldMeta->get_nullable()) {
+        record->data[fieldMeta->get_null_tag_offset()] = 1;
+      }else {
+        return RC::SQL_SYNTAX;
+      }
+    } else {
+      record->data[fieldMeta->get_null_tag_offset()] = 0;
+    }
+    /* ----------------------------------------------------------------------------------------------------*/
+    if(!value->is_null){
+      switch (value->type) {
         case CHARS:{
             memcpy(dest,(const char *)value->data,fieldlen);
         }
@@ -623,7 +637,9 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
             rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
             return rc;
         }
+      }
     }
+    
     rc = insert_entry_of_indexes(record->data, record->rid);
     if (rc != RC::SUCCESS) {
         LOG_ERROR("Failed to insert indexes of record (rid=%d.%d). rc=%d:%s",
@@ -647,11 +663,14 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
       return rc;
   }
   //校验属性的类型是否匹配
-  if (value->type !=this->table_meta_.field(attribute_name)->type()){
+  if(!value->is_null){
+    if (value->type !=this->table_meta_.field(attribute_name)->type()){
       rc = RC::SCHEMA_FIELD_MISSING;
       LOG_ERROR("update field type not match");
       return rc;
+    }
   }
+  
   CompositeConditionFilter filter;
   //init过程中会校验条件中的属性是否存在或类型是否匹配
   rc = filter.init(*this,conditions,condition_num);
