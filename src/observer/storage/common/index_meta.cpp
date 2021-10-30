@@ -73,7 +73,7 @@ const char *IndexMeta::field() const {
   return field_.c_str();
 }
 
-const int IndexMeta::isunique() {
+const int IndexMeta::isunique() const {
     return isunique_;
 }
 

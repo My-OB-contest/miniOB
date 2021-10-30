@@ -34,7 +34,7 @@ public:
 public:
   const char *name() const;
   const char *field() const;
-  const int isunique();
+  const int isunique() const;
 
   void desc(std::ostream &os) const;
 public:
