@@ -113,6 +113,7 @@ ParserContext *get_context(yyscan_t scanner)
 		NOT      /* @author: huahui @what for: null */
 		NULL_A     /* @author: huahui @what for: null */
 		NULLABLE /* @author: huahui @what for: null */
+		UNIQUE  /* @author: fzh @what for: unique index */
 
 /* @author: huahui &what for: 聚合
  * 由于max(1.999)需要完整保留1.999，因此lex_sql.l文件中解析到FLOATS时需要保存float值和字符串
@@ -236,8 +237,13 @@ create_index:		/*create index 语句的语法解析树*/
     CREATE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON 
 		{
 			CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_index";
-			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5, $7);
+			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5, $7 ,0);
 		}
+	| CREATE UNIQUE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON
+	    {
+	        CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_unique_index";
+            create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6, $8 ,1);
+	    }
     ;
 
 drop_index:			/*drop index 语句的语法解析树*/

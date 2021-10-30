@@ -64,6 +64,19 @@ RC BplusTreeIndex::insert_entry(const char *record, const RID *rid) {
   return index_handler_.insert_entry(record + field_meta_.offset(), rid);
 }
 
+RC BplusTreeIndex::insert_unique_entry(const char *record, const RID *rid ) {
+
+    RID ridtmp={-1,-1};
+    index_handler_.get_entry(record + field_meta_.offset() , &ridtmp);
+    RID ridtmp2={-1,-1};
+    if(ridtmp == ridtmp2){
+        return index_handler_.insert_entry(record + field_meta_.offset(), rid);
+    } else{
+        return RC::RECORD_DUPLICATE_KEY;
+    }
+
+}
+
 RC BplusTreeIndex::delete_entry(const char *record, const RID *rid) {
   return index_handler_.delete_entry(record + field_meta_.offset(), rid);
 }

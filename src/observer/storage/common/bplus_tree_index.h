@@ -28,6 +28,7 @@ public:
   RC close();
 
   RC insert_entry(const char *record, const RID *rid) override;
+  RC insert_unique_entry(const char *record, const RID *rid ) override;
   RC delete_entry(const char *record, const RID *rid) override;
 
   IndexScanner *create_scanner(CompOp comp_op, const char *value) override;
