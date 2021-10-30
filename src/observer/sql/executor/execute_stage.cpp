@@ -171,7 +171,7 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
       const Value *values = (const Value *)(&(sql->sstr.update.value));
       RC rc = check_date_from_values(1, values);
       //校验where中不合规的date
-      for( int conditionnum = 0 ; conditionnum < sql->sstr.update.condition_num ; ++conditionnum ){
+      for( size_t conditionnum = 0 ; conditionnum < sql->sstr.update.condition_num ; ++conditionnum ){
           if (!sql->sstr.update.conditions->left_is_attr && sql->sstr.update.conditions->left_value.type == DATES){
               rc = check_date_from_values(1,(const Value *)&(sql->sstr.update.conditions->left_value));
           }
@@ -672,13 +672,15 @@ RC ExecuteStage::check_date_from_values(int value_num, const Value *values) {
 }
 RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session_event){
   // 校验insert语句中的date字段是否符合要求，即满足日期小于2038年2月，以及满足闰年平年的要求
-  const Value *values = (const Value *)(inserts.values);
-  RC rc = check_date_from_values(inserts.value_num, values);
-  if(rc != RC::SUCCESS) {
-    char err[207];
-    sprintf(err, "FAILURE\n");
-    session_event->set_response(err);
-    return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+  for(size_t i = 0; i < inserts.value_list_length; i++){
+    const Value *values = (const Value *)(inserts.values[i]);
+    RC rc = check_date_from_values(inserts.value_num[i], values);
+    if(rc != RC::SUCCESS) {
+      char err[207];
+      sprintf(err, "FAILURE\n");
+      session_event->set_response(err);
+      return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+    }
   }
   
   // 校验insert语句中的null是否符合要求，比如insrt into t values(null) 但是t中没有一个属性是nullable的

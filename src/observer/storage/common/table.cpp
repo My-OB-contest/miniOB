@@ -258,6 +258,36 @@ RC Table::insert_record(Trx *trx, Record *record) {
   }
   return rc;
 }
+RC Table::insert_records(Trx *trx, const size_t value_num[], const Value values[][MAX_NUM], int value_list_length) {
+  for(int i = 0; i < value_list_length; i++) {
+    if (value_num[i] <= 0 || nullptr == values[i]) {
+      LOG_ERROR("Invalid argument. value num=%d, values=%p", value_num, values);
+      return RC::INVALID_ARGUMENT;
+    }
+
+    char *record_data;
+    RC rc = make_record(value_num[i], values[i], record_data);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to create a record. rc=%d:%s", rc, strrc(rc));
+      trx->rollback();
+      return rc;
+    }
+
+    Record record;
+    record.data = record_data;
+    // record.valid = true;
+    rc = insert_record(trx, &record);
+    delete[] record_data;
+    if(rc!=RC::SUCCESS){
+      LOG_ERROR("Insert record failed in Table::insert_records.");
+      trx->rollback();
+      return rc;
+    }
+  }
+  return RC::SUCCESS;
+}
+
+//保留旧的用法
 RC Table::insert_record(Trx *trx, int value_num, const Value *values) {
   if (value_num <= 0 || nullptr == values ) {
     LOG_ERROR("Invalid argument. value num=%d, values=%p", value_num, values);
@@ -287,7 +317,7 @@ const TableMeta &Table::table_meta() const {
   return table_meta_;
 }
 
-RC Table::make_record(int value_num, const Value *values, char * &record_out) {
+RC Table::make_record(int value_num, const Value values[], char * &record_out) {
   // 检查字段类型是否一致
   if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
     return RC::SCHEMA_FIELD_MISSING;

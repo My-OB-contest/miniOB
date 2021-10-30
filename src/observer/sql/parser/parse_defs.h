@@ -86,10 +86,12 @@ typedef struct {
 } Selects;
 
 // struct of insert
+// insert支持多条插入,修改Inserts结构 by：xiaoyu
 typedef struct {
   char *relation_name;    // Relation to insert into
-  size_t value_num;       // Length of values
-  Value values[MAX_NUM];  // values to insert
+  size_t value_list_length;
+  size_t value_num[MAX_NUM];       // Length of values
+  Value values[MAX_NUM][MAX_NUM];  // values to insert
 } Inserts;
 
 // struct of delete
@@ -134,7 +136,6 @@ typedef struct {
   char *index_name;      // Index name
   char *relation_name;   // Relation name
   char *attribute_name;  // Attribute name
-  int   isunique;
 } CreateIndex;
 
 // struct of  drop_index
@@ -226,7 +227,8 @@ void selects_append_relation(Selects *selects, const char *relation_name);
 void selects_append_conditions(Selects *selects, Condition conditions[], size_t condition_num);
 void selects_destroy(Selects *selects);
 
-void inserts_init(Inserts *inserts, const char *relation_name, Value values[], size_t value_num);
+// insert支持多条插入 by：xiaoyu
+void inserts_init(Inserts *inserts, const char *relation_name, Value values[][MAX_NUM], size_t insert_value_length[], size_t value_list_length);
 void inserts_destroy(Inserts *inserts);
 
 void deletes_init_relation(Deletes *deletes, const char *relation_name);
@@ -244,10 +246,8 @@ void create_table_destroy(CreateTable *create_table);
 void drop_table_init(DropTable *drop_table, const char *relation_name);
 void drop_table_destroy(DropTable *drop_table);
 
-/* @author: fzh  @what for: unique index  --------------------------------------------------------------*/
 void create_index_init(
-    CreateIndex *create_index, const char *index_name, const char *relation_name, const char *attr_name,int isunique);
-/* ----------------------------------------------------------------------------------------------------*/
+    CreateIndex *create_index, const char *index_name, const char *relation_name, const char *attr_name);
 void create_index_destroy(CreateIndex *create_index);
 
 void drop_index_init(DropIndex *drop_index, const char *index_name);

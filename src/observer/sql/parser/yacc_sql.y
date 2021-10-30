@@ -10,13 +10,17 @@
 #include<stdlib.h>
 #include<string.h>
 
+// insert支持多条插入,修改ParserContext结构 by：xiaoyu
 typedef struct ParserContext {
   Query * ssql;
   size_t select_length;
   size_t condition_length;
   size_t from_length;
   size_t value_length;
+  size_t value_list_length;
+  size_t insert_value_length[MAX_NUM];
   Value values[MAX_NUM];
+  Value insert_values[MAX_NUM][MAX_NUM];
   Condition conditions[MAX_NUM];
   CompOp comp;
 	char id[MAX_NUM];
@@ -43,7 +47,10 @@ void yyerror(yyscan_t scanner, const char *str)
   context->from_length = 0;
   context->select_length = 0;
   context->value_length = 0;
-  context->ssql->sstr.insertion.value_num = 0;
+  for(size_t i = 0; i < context->value_list_length; i++){
+    context->ssql->sstr.insertion.value_num[i] = 0;
+  }
+  context->value_list_length = 0;
   printf("parse sql failed. error=%s", str);
 }
 
@@ -361,9 +368,10 @@ ID_get:
 	}
 	;
 
-	
+
+/* @author: xiaoyu @what for: 选做题，插入多个值 ------------------------------------------------*/
 insert:				/*insert   语句的语法解析树*/
-    INSERT INTO ID VALUES LBRACE value value_list RBRACE SEMICOLON 
+    INSERT INTO ID VALUES value_tuple values_lists SEMICOLON
 		{
 			// CONTEXT->values[CONTEXT->value_length++] = *$6;
 
@@ -373,32 +381,54 @@ insert:				/*insert   语句的语法解析树*/
 			// for(i = 0; i < CONTEXT->value_length; i++){
 			// 	CONTEXT->ssql->sstr.insertion.values[i] = CONTEXT->values[i];
       // }
-			inserts_init(&CONTEXT->ssql->sstr.insertion, $3, CONTEXT->values, CONTEXT->value_length);
+            //CONTEXT->value_list_length++;
+			inserts_init(&CONTEXT->ssql->sstr.insertion, $3, CONTEXT->insert_values, CONTEXT->insert_value_length, CONTEXT->value_list_length);
 
       //临时变量清零
-      CONTEXT->value_length=0;
+      for(int i=0; i<CONTEXT->value_list_length; i++){
+        CONTEXT->insert_value_length[i] = 0;
+      }
+      CONTEXT->value_list_length = 0;
     }
+
+values_lists:
+    /* empty */{
+        //CONTEXT->value_list_length++;
+    }
+    | COMMA value_tuple values_lists{
+  	     //CONTEXT->value_list_length++;
+	  }
+    ;
+
+value_tuple:
+    /* empty */
+    | LBRACE value value_list RBRACE  {
+        CONTEXT->value_list_length++;
+	  }
+    ;
 
 value_list:
     /* empty */
-    | COMMA value value_list  { 
+    | COMMA value value_list{
   		// CONTEXT->values[CONTEXT->value_length++] = *$2;
 	  }
     ;
+
 value:
+    // insert支持多条插入,修改CONTEXT结构 by：xiaoyu
     NUMBER{	
-  		value_init_integer(&CONTEXT->values[CONTEXT->value_length++], $1);
+  		value_init_integer(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
 		}
     |FLOAT{
-  		value_init_float(&CONTEXT->values[CONTEXT->value_length++], ($1).floats);
+  		value_init_float(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], ($1).floats);
 		}
     |SSS {
 			$1 = substr($1,1,strlen($1)-2);
-  		value_init_string(&CONTEXT->values[CONTEXT->value_length++], $1);
+  		value_init_string(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
 		}
 	|DATE {
 		$1 = substr($1,1,strlen($1)-2);
-  		value_init_date(&CONTEXT->values[CONTEXT->value_length++], $1);
+  		value_init_date(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
 	}
 	/* @author: huahui  @what for: null----------------------------------------------------------------*/
 	|NULL_A {
