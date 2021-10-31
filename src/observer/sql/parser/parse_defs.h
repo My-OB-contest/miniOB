@@ -252,6 +252,7 @@ void create_index_init(
 void drop_table_init(DropTable *drop_table, const char *relation_name);
 void drop_table_destroy(DropTable *drop_table);
 
+
 void create_index_destroy(CreateIndex *create_index);
 
 void drop_index_init(DropIndex *drop_index, const char *index_name);

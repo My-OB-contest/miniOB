@@ -325,6 +325,7 @@ void drop_table_destroy(DropTable *drop_table) {
   drop_table->relation_name = nullptr;
 }
 
+
 /* @author: fzh  @what for: unique index  --------------------------------------------------------------*/
 
 void create_index_init(CreateIndex *create_index, const char *index_name,const char *relation_name, const char *attr_name ,int isunique) {
@@ -333,6 +334,7 @@ void create_index_init(CreateIndex *create_index, const char *index_name,const c
   create_index->attribute_name = strdup(attr_name);
   create_index->isunique = isunique;
 }
+
 /* ----------------------------------------------------------------------------------------------------*/
 
 void create_index_destroy(CreateIndex *create_index) {
