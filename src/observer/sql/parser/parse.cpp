@@ -332,6 +332,7 @@ void create_index_init(CreateIndex *create_index, const char *index_name,const c
   create_index->index_name = strdup(index_name);
   create_index->relation_name = strdup(relation_name);
   create_index->attribute_name = strdup(attr_name);
+  create_index->isunique = isunique;
 }
 
 /* ----------------------------------------------------------------------------------------------------*/
