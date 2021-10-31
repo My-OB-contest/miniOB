@@ -172,7 +172,7 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
       /*const Value *values = (const Value *)(&(sql->sstr.update.value));
       RC rc = check_date_from_values(1, values);
       //校验where中不合规的date
-      for( int conditionnum = 0 ; conditionnum < sql->sstr.update.condition_num ; ++conditionnum ){
+      for( size_t conditionnum = 0 ; conditionnum < sql->sstr.update.condition_num ; ++conditionnum ){
           if (!sql->sstr.update.conditions->left_is_attr && sql->sstr.update.conditions->left_value.type == DATES){
               rc = check_date_from_values(1,(const Value *)&(sql->sstr.update.conditions->left_value));
           }
@@ -491,19 +491,21 @@ RC ExecuteStage::update_check(const char *db, const Updates &updates) {
  */
 RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &selects) {
     RC rc = RC::SUCCESS;
+
     for (int i = selects.attr_num-1; i >=0 ; --i){
-        if (0 == strcmp("*", selects.attributes[i].attribute_name)) {
+        if (0 == strcmp("*", selects.attributes[i].attribute_name) && selects.attributes[i].relation_name == nullptr ) {
             return rc;
         }
     }
-    /*
-     * 待优化，因前面已经对大部分情况进行了正常列排序，如果顺序正确且不需要投影应直接返回成功，减少一次投影操作
-     *
-     *
-    */
+
+/*
+ * 待优化，因前面已经对大部分情况进行了正常列排序，如果顺序正确且不需要投影应直接返回成功，减少一次投影操作
+ *
+ *
+*/
     TupleSet tmptupset;
     TupleSchema tmpschema;
-    int attrindex[selects.attr_num];
+    int attrindex[40];
     int indexcount=0;
     for (int i = selects.attr_num-1; i >=0 ; --i) {
         for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
@@ -512,17 +514,16 @@ RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &sele
                 attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
                 break;
             }
-            if (it_field == tuplesets[0].get_schema().fields().end()-1){
-                LOG_ERROR("projection error,not found the projection atrr!");
-                rc = RC::MISMATCH;
-                return rc;
+            if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp("*",selects.attributes[i].attribute_name) == 0){
+                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+                attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
             }
         }
     }
     tmptupset.set_schema(tmpschema);
     for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
         Tuple tmptuple;
-        for (int i = 0; i < selects.attr_num; ++i) {
+        for (int i = 0; i < indexcount; ++i) {
             tmptuple.add(it_tuple->get_pointer(attrindex[i]));
         }
         tmptupset.add(std::move(tmptuple));
@@ -743,13 +744,15 @@ RC ExecuteStage::check_date_from_values(int value_num, const Value *values) {
 // 在check_insert_stat中不用检验插入的数据是否合法,不用检查null相关,因为在后面的make_record()中会检查
 RC ExecuteStage::check_insert_stat(const Inserts &inserts, SessionEvent *session_event){
   // 校验insert语句中的date字段是否符合要求，即满足日期小于2038年2月，以及满足闰年平年的要求
-  const Value *values = (const Value *)(inserts.values);
-  RC rc = check_date_from_values(inserts.value_num, values);
-  if(rc != RC::SUCCESS) {
-    char err[207];
-    sprintf(err, "FAILURE\n");
-    session_event->set_response(err);
-    return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+  for(size_t i = 0; i < inserts.value_list_length; i++){
+    const Value *values = (const Value *)(inserts.values[i]);
+    RC rc = check_date_from_values(inserts.value_num[i], values);
+    if(rc != RC::SUCCESS) {
+      char err[207];
+      sprintf(err, "FAILURE\n");
+      session_event->set_response(err);
+      return RC::CONSTRAINT_CHECK; // ?这里要返回什么RC
+    }
   }
 
   return RC::SUCCESS;

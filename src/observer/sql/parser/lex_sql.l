@@ -88,7 +88,7 @@ QUOTE            [\'\"]
 [Ii][Nn][Nn][Ee][Rr]    RETURN_TOKEN(INNER);
 [Jj][Oo][Ii][Nn]        RETURN_TOKEN(JOIN);
  /* -----------------------------------------------------------------------------------------------*/
-
+[Uu][Nn][Ii][Qq][Uu][Ee]  RETURN_TOKEN(UNIQUE);
 [Cc][Oo][Uu][Nn][Tt]  RETURN_TOKEN(COUNT);
 [Mm][Aa][Xx]          RETURN_TOKEN(MAX);
 [Mm][Ii][Nn]          RETURN_TOKEN(MIN);

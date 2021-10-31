@@ -164,7 +164,7 @@ void DefaultStorageStage::handle_event(StageEvent *event) {
   case SCF_INSERT: { // insert into
       const Inserts &inserts = sql->sstr.insertion;
       const char *table_name = inserts.relation_name;
-      rc = handler_->insert_record(current_trx, current_db, table_name, inserts.value_num, inserts.values);
+      rc = handler_->insert_record(current_trx, current_db, table_name, inserts.value_num, inserts.values, inserts.value_list_length);
       snprintf(response, sizeof(response), "%s\n", rc == RC::SUCCESS ? "SUCCESS" : "FAILURE");
     }
     break;
@@ -203,7 +203,7 @@ void DefaultStorageStage::handle_event(StageEvent *event) {
   case SCF_CREATE_INDEX: {
       const CreateIndex &create_index = sql->sstr.create_index;
       rc = handler_->create_index(current_trx, current_db, create_index.relation_name, 
-                                  create_index.index_name, create_index.attribute_name);
+                                  create_index.index_name, create_index.attribute_name,create_index.isunique);
       snprintf(response, sizeof(response), "%s\n", rc == RC::SUCCESS ? "SUCCESS" : "FAILURE");
     }
     break;

@@ -72,6 +72,9 @@ RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num, 
     this->trx_=trx;
     for (int i = 0; i < condition_num; ++i) {
         //因前面select_cehck已做筛选，不考虑表不存在的情况
+        if (conditions[i].left_is_attr==0 || conditions[i].right_is_attr==0){
+            continue;
+        }
         Table *tablel = DefaultHandler::get_default().find_table(db,conditions[i].left_attr.relation_name);
         Table *tabler = DefaultHandler::get_default().find_table(db,conditions[i].right_attr.relation_name);
         const FieldMeta * fieldMetal = tablel->table_meta().field(conditions[i].left_attr.attribute_name);
@@ -93,8 +96,10 @@ RC JoinExeNode::init(Trx *trx, const _Condition *conditions, int condition_num, 
         }
         //遍历所有连接条件找出，将所属同一对表的属性添加到一个数组里，如stu1.id = stu2.id和stu1.old = stu2.old要放一起
         // 此外注意stu2.old=stu1.old也是一样的
-        std::string consumname=strcat(strdup(conditions[i].left_attr.relation_name),strdup(conditions[i].right_attr.relation_name));
-        std::string consumnamev=strcat(strdup(conditions[i].right_attr.relation_name),strdup(conditions[i].left_attr.relation_name));
+        std::string s1(conditions[i].left_attr.relation_name);
+        std::string s2(conditions[i].right_attr.relation_name);
+        std::string consumname=s1+s2;
+        std::string consumnamev=s2+s1;
         if (sameTablecountmap.count(consumname) == 0){
             //如果map中没有则添加表对和对应二维数组位置和数量的map
             //并作初始化

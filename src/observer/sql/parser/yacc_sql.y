@@ -10,13 +10,17 @@
 #include<stdlib.h>
 #include<string.h>
 
+// insert支持多条插入,修改ParserContext结构 by：xiaoyu
 typedef struct ParserContext {
   Query * ssql;
   size_t select_length;
   size_t condition_length;
   size_t from_length;
   size_t value_length;
+  size_t value_list_length;
+  size_t insert_value_length[MAX_NUM];
   Value values[MAX_NUM];
+  Value insert_values[MAX_NUM][MAX_NUM];
   Condition conditions[MAX_NUM];
   CompOp comp;
 	char id[MAX_NUM];
@@ -43,7 +47,10 @@ void yyerror(yyscan_t scanner, const char *str)
   context->from_length = 0;
   context->select_length = 0;
   context->value_length = 0;
-  context->ssql->sstr.insertion.value_num = 0;
+  for(size_t i = 0; i < context->value_list_length; i++){
+    context->ssql->sstr.insertion.value_num[i] = 0;
+  }
+  context->value_list_length = 0;
   printf("parse sql failed. error=%s", str);
 }
 
@@ -114,6 +121,8 @@ ParserContext *get_context(yyscan_t scanner)
 		NULL_A     /* @author: huahui @what for: null */
 		NULLABLE /* @author: huahui @what for: null */
 		IS_A      /* @author: huahui @what for: null */
+		UNIQUE  /* @author: fzh @what for: unique index */
+
 
 /* @author: huahui &what for: 聚合
  * 由于max(1.999)需要完整保留1.999，因此lex_sql.l文件中解析到FLOATS时需要保存float值和字符串
@@ -237,8 +246,13 @@ create_index:		/*create index 语句的语法解析树*/
     CREATE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON 
 		{
 			CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_index";
-			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5, $7);
+			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5, $7 ,0);
 		}
+	| CREATE UNIQUE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON
+	    {
+	        CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_unique_index";
+            create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6, $8 ,1);
+	    }
     ;
 
 drop_index:			/*drop index 语句的语法解析树*/
@@ -356,9 +370,10 @@ ID_get:
 	}
 	;
 
-	
-insert:				/*insert   语句的语法解析树*/
-    INSERT INTO ID VALUES LBRACE value value_list RBRACE SEMICOLON 
+
+/* @author: xiaoyu @what for: 选做题，插入多个值 ------------------------------------------------*/
+insert:				/* insert   语句的语法解析树*/
+    INSERT INTO ID VALUES value_tuple values_lists SEMICOLON
 		{
 			// CONTEXT->values[CONTEXT->value_length++] = *$6;
 
@@ -368,36 +383,59 @@ insert:				/*insert   语句的语法解析树*/
 			// for(i = 0; i < CONTEXT->value_length; i++){
 			// 	CONTEXT->ssql->sstr.insertion.values[i] = CONTEXT->values[i];
       // }
-			inserts_init(&CONTEXT->ssql->sstr.insertion, $3, CONTEXT->values, CONTEXT->value_length);
+            //CONTEXT->value_list_length++;
+			inserts_init(&CONTEXT->ssql->sstr.insertion, $3, CONTEXT->insert_values, CONTEXT->insert_value_length, CONTEXT->value_list_length);
 
       //临时变量清零
-      CONTEXT->value_length=0;
+      for(int i=0; i<CONTEXT->value_list_length; i++){
+        CONTEXT->insert_value_length[i] = 0;
+      }
+      CONTEXT->value_list_length = 0;
     }
+
+values_lists:
+    /* empty */{
+        //CONTEXT->value_list_length++;
+    }
+    | COMMA value_tuple values_lists{
+  	     //CONTEXT->value_list_length++;
+	  }
+    ;
+
+value_tuple:
+    /* empty */
+    | LBRACE value value_list RBRACE  {
+        CONTEXT->value_list_length++;
+	  }
+    ;
 
 value_list:
     /* empty */
-    | COMMA value value_list  { 
+    | COMMA value value_list{
   		// CONTEXT->values[CONTEXT->value_length++] = *$2;
 	  }
     ;
+
 value:
-    NUMBER {	
-  		value_init_integer(&CONTEXT->values[CONTEXT->value_length++], $1);
-	}
-    |FLOAT {
-  		value_init_float(&CONTEXT->values[CONTEXT->value_length++], ($1).floats);
-	}
+    // insert支持多条插入,修改CONTEXT结构 by：xiaoyu
+    NUMBER{	
+  		value_init_integer(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
+		}
+    |FLOAT{
+  		value_init_float(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], ($1).floats);
+		}
     |SSS {
-		$1 = substr($1,1,strlen($1)-2);
-  		value_init_string(&CONTEXT->values[CONTEXT->value_length++], $1);
-	}
+			$1 = substr($1,1,strlen($1)-2);
+  		value_init_string(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
+		}
 	|DATE {
 		$1 = substr($1,1,strlen($1)-2);
-  		value_init_date(&CONTEXT->values[CONTEXT->value_length++], $1);
+  		value_init_date(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
 	}
 	/* @author: huahui  @what for: null----------------------------------------------------------------*/
 	|NULL_A {
-		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+		// value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+		value_init_null(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++]); // 多条插入
 	}
 	/* -----------------------------------------------------------------------------------------------*/
     ;

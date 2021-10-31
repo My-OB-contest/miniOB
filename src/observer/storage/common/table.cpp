@@ -238,13 +238,18 @@ RC Table::insert_record(Trx *trx, Record *record) {
   }
 
   rc = insert_entry_of_indexes(record->data, record->rid);
-  if (rc != RC::SUCCESS) {
-    RC rc2 = delete_entry_of_indexes(record->data, record->rid, true);
-    if (rc2 != RC::SUCCESS) {
-      LOG_PANIC("Failed to rollback index data when insert index entries failed. table name=%s, rc=%d:%s",
-                name(), rc2, strrc(rc2));
+  if (rc != RC::SUCCESS ) {
+    RC rc2;
+    if(rc !=RC::RECORD_DUPLICATE_KEY){
+        rc2 = delete_entry_of_indexes(record->data, record->rid, true);
+        if (rc2 != RC::SUCCESS) {
+            LOG_PANIC("Failed to rollback index data when insert index entries failed. table name=%s, rc=%d:%s",
+                      name(), rc2, strrc(rc2));
+        }
     }
     rc2 = record_handler_->delete_record(&record->rid);
+    rc2 = trx->delete_record(this,record);
+
     if (rc2 != RC::SUCCESS) {
       LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
                 name(), rc2, strrc(rc2));
@@ -253,6 +258,36 @@ RC Table::insert_record(Trx *trx, Record *record) {
   }
   return rc;
 }
+RC Table::insert_records(Trx *trx, const size_t value_num[], const Value values[][MAX_NUM], int value_list_length) {
+  for(int i = 0; i < value_list_length; i++) {
+    if (value_num[i] <= 0 || nullptr == values[i]) {
+      LOG_ERROR("Invalid argument. value num=%d, values=%p", value_num, values);
+      return RC::INVALID_ARGUMENT;
+    }
+
+    char *record_data;
+    RC rc = make_record(value_num[i], values[i], record_data);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to create a record. rc=%d:%s", rc, strrc(rc));
+      trx->rollback();
+      return rc;
+    }
+
+    Record record;
+    record.data = record_data;
+    // record.valid = true;
+    rc = insert_record(trx, &record);
+    delete[] record_data;
+    if(rc!=RC::SUCCESS){
+      LOG_ERROR("Insert record failed in Table::insert_records.");
+      trx->rollback();
+      return rc;
+    }
+  }
+  return RC::SUCCESS;
+}
+
+//保留旧的用法
 RC Table::insert_record(Trx *trx, int value_num, const Value *values) {
   if (value_num <= 0 || nullptr == values ) {
     LOG_ERROR("Invalid argument. value num=%d, values=%p", value_num, values);
@@ -282,7 +317,7 @@ const TableMeta &Table::table_meta() const {
   return table_meta_;
 }
 
-RC Table::make_record(int value_num, const Value *values, char * &record_out) {
+RC Table::make_record(int value_num, const Value values[], char * &record_out) {
   // 检查字段类型是否一致
   if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
     return RC::SCHEMA_FIELD_MISSING;
@@ -474,6 +509,9 @@ public:
   }
 
   RC insert_index(const Record *record) {
+      if (index_->index_meta().isunique() == 1){
+          return index_->insert_unique_entry(record->data,&record->rid);
+      }
     return index_->insert_entry(record->data, &record->rid);
   }
 private:
@@ -485,7 +523,7 @@ static RC insert_index_record_reader_adapter(Record *record, void *context) {
   return inserter.insert_index(record);
 }
 
-RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_name) {
+RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_name,int isunique) {
   if (index_name == nullptr || common::is_blank(index_name) ||
       attribute_name == nullptr || common::is_blank(attribute_name)) {
     return RC::INVALID_ARGUMENT;
@@ -501,7 +539,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_n
   }
 
   IndexMeta new_index_meta;
-  RC rc = new_index_meta.init(index_name, *field_meta);
+  RC rc = new_index_meta.init(index_name, *field_meta,isunique);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -775,7 +813,11 @@ RC Table::rollback_delete(Trx *trx, const RID &rid) {
 RC Table::insert_entry_of_indexes(const char *record, const RID &rid) {
   RC rc = RC::SUCCESS;
   for (Index *index : indexes_) {
-    rc = index->insert_entry(record, &rid);
+    if(index->index_meta().isunique() == 1){
+        rc = index->insert_unique_entry(record,&rid);
+    }else{
+        rc = index->insert_entry(record, &rid);
+    }
     if (rc != RC::SUCCESS) {
       break;
     }

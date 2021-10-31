@@ -228,23 +228,31 @@ void selects_destroy(Selects *selects) {
   selects->condition_num = 0;
 }
 
-void inserts_init(Inserts *inserts, const char *relation_name, Value values[], size_t value_num) {
-  assert(value_num <= sizeof(inserts->values)/sizeof(inserts->values[0]));
+// insert支持多条插入 by：xiaoyu
+void inserts_init(Inserts *inserts, const char *relation_name, Value values[][MAX_NUM], size_t insert_value_length[], size_t value_list_length) {
+  for(size_t i = 0; i < value_list_length; i++) {
+    assert(insert_value_length[i] <= sizeof(inserts->values) / sizeof(inserts->values[0]));
 
-  inserts->relation_name = strdup(relation_name);
-  for (size_t i = 0; i < value_num; i++) {
-    inserts->values[i] = values[i];
+    for (size_t j = 0; j < insert_value_length[i]; j++) {
+      inserts->values[i][j] = values[i][j];
+    }
+    inserts->value_num[i] = insert_value_length[i];
   }
-  inserts->value_num = value_num;
+  inserts->value_list_length = value_list_length;
+  inserts->relation_name = strdup(relation_name);
 }
+
+// insert支持多条插入,修改Inserts结构 by：xiaoyu
 void inserts_destroy(Inserts *inserts) {
   free(inserts->relation_name);
   inserts->relation_name = nullptr;
 
-  for (size_t i = 0; i < inserts->value_num; i++) {
-    value_destroy(&inserts->values[i]);
+  for (size_t i = 0; i < inserts->value_list_length; i++) {
+    for (size_t j = 0; j < inserts->value_num[i]; j++) {
+      value_destroy(&inserts->values[i][j]);
+    }
+    inserts->value_num[i] = 0;
   }
-  inserts->value_num = 0;
 }
 
 void deletes_init_relation(Deletes *deletes, const char *relation_name) {
@@ -317,12 +325,18 @@ void drop_table_destroy(DropTable *drop_table) {
   drop_table->relation_name = nullptr;
 }
 
-void create_index_init(CreateIndex *create_index, const char *index_name, 
-                       const char *relation_name, const char *attr_name) {
+
+/* @author: fzh  @what for: unique index  --------------------------------------------------------------*/
+
+void create_index_init(CreateIndex *create_index, const char *index_name,const char *relation_name, const char *attr_name ,int isunique) {
   create_index->index_name = strdup(index_name);
   create_index->relation_name = strdup(relation_name);
   create_index->attribute_name = strdup(attr_name);
+  create_index->isunique = isunique;
 }
+
+/* ----------------------------------------------------------------------------------------------------*/
+
 void create_index_destroy(CreateIndex *create_index) {
   free(create_index->index_name);
   free(create_index->relation_name);
