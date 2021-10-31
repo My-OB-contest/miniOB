@@ -136,6 +136,7 @@ typedef struct {
   char *index_name;      // Index name
   char *relation_name;   // Relation name
   char *attribute_name;  // Attribute name
+  int   isunique;
 } CreateIndex;
 
 // struct of  drop_index
@@ -242,12 +243,15 @@ void updates_destroy(Updates *updates);
 void create_table_append_attribute(CreateTable *create_table, AttrInfo *attr_info);
 void create_table_init_name(CreateTable *create_table, const char *relation_name);
 void create_table_destroy(CreateTable *create_table);
+/* @author: fzh  @what for: unique index  --------------------------------------------------------------*/
+void create_index_init(
+        CreateIndex *create_index, const char *index_name, const char *relation_name, const char *attr_name,int isunique);
+/* ----------------------------------------------------------------------------------------------------*/
+
 
 void drop_table_init(DropTable *drop_table, const char *relation_name);
 void drop_table_destroy(DropTable *drop_table);
 
-void create_index_init(
-    CreateIndex *create_index, const char *index_name, const char *relation_name, const char *attr_name);
 void create_index_destroy(CreateIndex *create_index);
 
 void drop_index_init(DropIndex *drop_index, const char *index_name);
