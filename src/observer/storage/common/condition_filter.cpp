@@ -128,18 +128,29 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
   //  }
   // NOTE：这里没有实现不同类型的数据比较，比如整数跟浮点数之间的对比
   // 但是选手们还是要实现。这个功能在预选赛中会出现
-  if (type_left != type_right 
-     && !(type_left==AttrType::INTS && type_right==AttrType::FLOATS || type_left==AttrType::FLOATS && type_right==AttrType::INTS)) {
-    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
-  }
+  // if (type_left != type_right 
+  //    && !(type_left==AttrType::INTS && type_right==AttrType::FLOATS || type_left==AttrType::FLOATS && type_right==AttrType::INTS)) {    /* @author: huahui  @what for: 元数据校验, where中int和float兼容*/
+  //   return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  // }
 
-  return init(left, right, (type_left==AttrType::FLOATS || type_right==AttrType::FLOATS)?AttrType::FLOATS:type_left, condition.comp);
+  return init(left, right, (type_left==AttrType::FLOATS || type_right==AttrType::FLOATS)?AttrType::FLOATS:type_left, condition.comp);   /* @author: huahui  @what for: 元数据校验, where中int和float兼容*/
 }
 
 bool DefaultConditionFilter::filter(const Record &rec) const
 {
   char *left_value = nullptr;
   char *right_value = nullptr;
+
+  /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
+  // 解决类似于 where id is null 情况
+  if(comp_op_ == CompOp::IS) { // 此时比较符号右边肯定是null
+    if(rec.data[left_.null_tag_offset]) {
+      return true;
+    }else{
+      return false;
+    }
+  }
+  /* -------------------------------------------------------------------------------------------------------------*/
 
   if (left_.is_attr) {  // value
     if(rec.data[left_.null_tag_offset]) { /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
