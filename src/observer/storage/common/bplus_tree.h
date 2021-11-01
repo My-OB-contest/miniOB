@@ -21,7 +21,8 @@ See the Mulan PSL v2 for more details. */
 struct IndexFileHeader {
   int attr_length;
   int key_length;
-  AttrType attr_type;
+  AttrType attr_type[MAX_NUM];
+  int attr_num;
   PageNum root_page; // 初始时，root_page一定是1
   int node_num;
   int order;

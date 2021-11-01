@@ -523,7 +523,7 @@ static RC insert_index_record_reader_adapter(Record *record, void *context) {
   return inserter.insert_index(record);
 }
 
-RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_name,int isunique) {
+RC Table::create_index(Trx *trx, const char *index_name, char *const *attribute_name,int attr_num,int isunique) {
   if (index_name == nullptr || common::is_blank(index_name) ||
       attribute_name == nullptr || common::is_blank(attribute_name)) {
     return RC::INVALID_ARGUMENT;
