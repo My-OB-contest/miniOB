@@ -418,7 +418,7 @@ value_list:
 
 insert_value:
     // insert支持多条插入,修改CONTEXT结构 by：xiaoyu
-    NUMBER{	
+    NUMBER{
   		value_init_integer(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
 		}
     |FLOAT{

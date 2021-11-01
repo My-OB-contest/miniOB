@@ -413,6 +413,12 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
       if(rc2 != RC::SUCCESS) {
         return rc2;
       }
+      Table * table = DefaultHandler::get_default().find_table(db,selects.conditions[j].left_attr.relation_name);
+      const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].left_attr.attribute_name);
+      if (fieldMeta == nullptr){
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
+      left_at = fieldMeta->type();
     } else {
       // 检查date是否符合要求  (其实这个检验应该也没有必要)
       if(selects.conditions[j].left_value.type == AttrType::DATES) {
@@ -434,6 +440,12 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
       if(rc2 != RC::SUCCESS) {
         return rc2;
       }
+      Table * table = DefaultHandler::get_default().find_table(db,selects.conditions[j].right_attr.relation_name);
+      const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].right_attr.attribute_name);
+      if (fieldMeta == nullptr){
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
+      right_at = fieldMeta->type();
     } else {
       // 检查date是否符合要求  (其实这个检验应该也没有必要)
       if(selects.conditions[j].left_value.type == AttrType::DATES) {
