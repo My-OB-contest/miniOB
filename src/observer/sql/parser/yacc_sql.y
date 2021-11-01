@@ -425,7 +425,7 @@ insert_value:
   		value_init_float(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], ($1).floats);
 		}
     |SSS {
-			$1 = substr($1,1,strlen($1)-2);
+		$1 = substr($1,1,strlen($1)-2);
   		value_init_string(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
 		}
 	|DATE {
@@ -458,8 +458,7 @@ value:
 	}
 	/* @author: huahui  @what for: null----------------------------------------------------------------*/
 	|NULL_A {
-		// value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
-		value_init_null(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++]); // 多条插入
+		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
 	}
 	/* -----------------------------------------------------------------------------------------------*/
     ;
