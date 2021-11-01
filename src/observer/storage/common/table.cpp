@@ -507,15 +507,24 @@ class IndexInserter {
 public:
   explicit IndexInserter(Index *index) : index_(index) {
   }
-
+  explicit IndexInserter(Index *index, Table *table) : index_(index), table_(table) {
+  }
   RC insert_index(const Record *record) {
-      if (index_->index_meta().isunique() == 1){
-          return index_->insert_unique_entry(record->data,&record->rid);
-      }
+    /* @author: huahui  @what for: null字段 --------------------------------------------------------------------*/
+    const FieldMeta * field_meta = table_->table_meta().field(index_->index_meta().field());
+    if(record->data[field_meta->get_null_tag_offset()]){
+      LOG_ERROR("corresponding col of record for the index is null, cannot insert index item\n");
+      return RC::SUCCESS;
+    }
+    /* ---------------------------------------------------------------------------------------------------------*/
+    if (index_->index_meta().isunique() == 1){
+      return index_->insert_unique_entry(record->data,&record->rid);
+    }
     return index_->insert_entry(record->data, &record->rid);
   }
 private:
   Index * index_;
+  const Table * table_;  /* @author: huahui  @what for: null字段 --------------------------------------*/
 };
 
 static RC insert_index_record_reader_adapter(Record *record, void *context) {
@@ -555,7 +564,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_n
   }
 
   // 遍历当前的所有数据，插入这个索引
-  IndexInserter index_inserter(index);
+  IndexInserter index_inserter(index, this); /* null字段*/
   rc = scan_record(trx, nullptr, -1, &index_inserter, insert_index_record_reader_adapter);
   if (rc != RC::SUCCESS) {
     // rollback
@@ -813,6 +822,14 @@ RC Table::rollback_delete(Trx *trx, const RID &rid) {
 RC Table::insert_entry_of_indexes(const char *record, const RID &rid) {
   RC rc = RC::SUCCESS;
   for (Index *index : indexes_) {
+    /* @author: huahui  @what for: null字段 ----------------------------------------------------------------*/
+    // 如果是record的对应的字段是null，则不插入索引
+    const FieldMeta * field_meta = table_meta_.field(index->index_meta().field());
+    if(record[field_meta->get_null_tag_offset()]) {
+      LOG_ERROR("corresponding col of record for the index is null, cannot insert index item\n");
+      return RC::SUCCESS;
+    }
+    /* ----------------------------------------------------------------------------------------------------------*/
     if(index->index_meta().isunique() == 1){
         rc = index->insert_unique_entry(record,&rid);
     }else{
@@ -828,6 +845,14 @@ RC Table::insert_entry_of_indexes(const char *record, const RID &rid) {
 RC Table::delete_entry_of_indexes(const char *record, const RID &rid, bool error_on_not_exists) {
   RC rc = RC::SUCCESS;
   for (Index *index : indexes_) {
+    /* @author: huahui  @what for: null字段 ----------------------------------------------------------------*/
+    // 如果是record的对应的字段是null，则不插入索引
+    const FieldMeta * field_meta = table_meta_.field(index->index_meta().field());
+    if(record[field_meta->get_null_tag_offset()]) {
+      LOG_ERROR("corresponding col of record for the index is null, cannot delete index item\n");
+      return RC::SUCCESS;
+    }
+    /* ----------------------------------------------------------------------------------------------------------*/
     rc = index->delete_entry(record, &rid);
     if (rc != RC::SUCCESS) {
       if (rc != RC::RECORD_INVALID_KEY || !error_on_not_exists) {
@@ -889,6 +914,13 @@ IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter) {
   // remove dynamic_cast
   const DefaultConditionFilter *default_condition_filter = dynamic_cast<const DefaultConditionFilter *>(filter);
   if (default_condition_filter != nullptr) {
+    /* @author: huahui  @what for: null字段 ----------------------------------------------------------*/
+    // 如果时is null，则不用索引
+    if(default_condition_filter->comp_op() == CompOp::IS && !default_condition_filter->right().is_attr && default_condition_filter->right().is_null) {
+      LOG_ERROR("where clause of \" is null\" cannot use index to search\n");
+      return nullptr;
+    }
+    /* -------------------------------------------------------------------------------------------*/
     return find_index_for_scan(*default_condition_filter);
   }
 
