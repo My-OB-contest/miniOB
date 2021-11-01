@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #define __OBSERVER_STORAGE_COMMON_INDEX_META_H__
 
 #include <string>
+#include <vector>
 #include "rc.h"
 
 class TableMeta;
@@ -29,21 +30,23 @@ class IndexMeta {
 public:
   IndexMeta() = default;
 
-  RC init(const char *name, const FieldMeta &field,int isunique);
+  RC init(const char *name, std::vector<FieldMeta> &fields_meta,int isunique);
 
 public:
   const char *name() const;
-  const char *field() const;
-  const int isunique() const;
+  const char *field(int i) const;
 
+  const int isunique() const;
+  std::vector<std::string> fields();
   void desc(std::ostream &os) const;
 public:
   void to_json(Json::Value &json_value) const;
   static RC from_json(const TableMeta &table, const Json::Value &json_value, IndexMeta &index);
 
 private:
-  std::string       name_;
-  std::string       field_;
-  int               isunique_;
+  std::string                    name_;
+  std::vector<std::string>       fields_;
+  int                            field_num_;
+  int                            isunique_;
 };
 #endif // __OBSERVER_STORAGE_COMMON_INDEX_META_H__
