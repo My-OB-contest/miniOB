@@ -301,7 +301,7 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
         return RC::SCHEMA_TABLE_NOT_EXIST;
     }
     for (size_t j = 0; j < selects.attr_num ; ++j) {
-        if(!selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
+        if(selects.attributes[j].agg_type != AggType::NOTAGG && !selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
           continue;
         }
         if(selects.attributes[j].relation_name != nullptr && strcmp(selects.attributes[j].relation_name, selects.relations[0])!=0) {
@@ -394,7 +394,7 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
     }
   }
   for(size_t j=0; j<selects.attr_num; j++) {
-    if(!selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
+    if(selects.attributes[j].agg_type != AggType::NOTAGG && !selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
       continue;
     }
     RC rc2 = check_attr_for_multitable(db, selects, selects.attributes[j]);
