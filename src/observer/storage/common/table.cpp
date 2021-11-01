@@ -915,7 +915,7 @@ IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter) {
   const DefaultConditionFilter *default_condition_filter = dynamic_cast<const DefaultConditionFilter *>(filter);
   if (default_condition_filter != nullptr) {
     /* @author: huahui  @what for: null字段 ----------------------------------------------------------*/
-    // 如果时is null，则不用索引
+    // 如果是is null，则不用索引
     if(default_condition_filter->comp_op() == CompOp::IS && !default_condition_filter->right().is_attr && default_condition_filter->right().is_null) {
       LOG_ERROR("where clause of \" is null\" cannot use index to search\n");
       return nullptr;

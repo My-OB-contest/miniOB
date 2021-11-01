@@ -1551,7 +1551,10 @@ RC BplusTreeHandler::find_first_index_satisfied(CompOp compop, const char *key, 
   RC rc;
   int i,tmp;
   RID rid;
-  if(compop == LESS_THAN || compop == LESS_EQUAL || compop == NOT_EQUAL){
+
+  /* @author: huahui  @what for: null字段 -------------------------------------------------------------*/
+  // 只要是is not，就可以返回第一个叶子页来查询
+  if(compop == LESS_THAN || compop == LESS_EQUAL || compop == NOT_EQUAL || compop == CompOp::ISNOT) {
     rc = get_first_leaf_page(page_num);
     if(rc != SUCCESS){
       return rc;
@@ -1687,14 +1690,21 @@ RC BplusTreeScanner::open(CompOp comp_op,const char *value) {
   }
 
   comp_op_ = comp_op;
-
-  char *value_copy =(char *)malloc(index_handler_.file_header_.attr_length);
-  if(value_copy == nullptr){
-    LOG_ERROR("Failed to alloc memory for value. size=%d", index_handler_.file_header_.attr_length);
-    return RC::NOMEM;
+  /* @author: huahui  @what for: null字段 -------------------------------------------------------------------*/
+  // 当运算符是is not时，value_就是nullptr，表示is not null
+  if(comp_op_ == CompOp::ISNOT) {
+    value_ = nullptr;
+  }else{
+    char *value_copy =(char *)malloc(index_handler_.file_header_.attr_length);
+    if(value_copy == nullptr){
+      LOG_ERROR("Failed to alloc memory for value. size=%d", index_handler_.file_header_.attr_length);
+      return RC::NOMEM;
+    }
+    memcpy(value_copy, value, index_handler_.file_header_.attr_length);
+    value_ = value_copy; // free value_
   }
-  memcpy(value_copy, value, index_handler_.file_header_.attr_length);
-  value_ = value_copy; // free value_
+  /* ---------------------------------------------------------------------------------------------------------*/
+  
   rc = index_handler_.find_first_index_satisfied(comp_op, value, &next_page_num_, &index_in_node_);
   if(rc != SUCCESS){
     if(rc == RC::RECORD_EOF){
@@ -1715,7 +1725,7 @@ RC BplusTreeScanner::close() {
   if (!opened_) {
     return RC::RECORD_SCANCLOSED;
   }
-  free((void *)value_);
+  if(value_) free((void *)value_);  /* @author: huahui  @what for: null字段 -------------------------------*/
   value_ = nullptr;
   opened_ = false;
   return RC::SUCCESS;
@@ -1816,6 +1826,12 @@ RC BplusTreeScanner::get_next_idx_in_memory(RID *rid) {
  * -----------------------------------------------------------------------------------------------
  */
 bool BplusTreeScanner::satisfy_condition(const char *pkey) {
+  /* @author: huahui  @what for: null字段 --------------------------------------*/
+  if(comp_op_ == CompOp::ISNOT) {
+    return true;
+  }
+  /* -------------------------------------------------------------------------*/
+
   int i1=0,i2=0;
   float f1=0,f2=0;
   const char *s1=nullptr,*s2=nullptr;
@@ -1841,7 +1857,7 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
       s1=pkey;
       s2=value_;
       break;
-    case DATES: 
+    case DATES:  /* @author: huahui  @what for: date字段 --------------------------------------*/
       left_value2 = (const unsigned char *)pkey;
       right_value2 = (const unsigned char *)value_;
       left_dv = DateValue(left_value2);
@@ -1866,7 +1882,7 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)==0);
           break;
-        case DATES:
+        case DATES:             /* @author: huahui  @what for: date字段 --------------------------------------*/
           flag = (left_dv.compare(right_dv) == 0);
           break;
         default:
@@ -1884,7 +1900,7 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)<0);
           break;
-        case DATES:
+        case DATES:                   /* @author: huahui  @what for: date字段 --------------------------------------*/
           flag = (left_dv.compare(right_dv) < 0);
           break;
         default:
@@ -1902,7 +1918,7 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)>0);
           break;
-        case DATES:
+        case DATES:               /* @author: huahui  @what for: date字段 --------------------------------------*/
           flag = (left_dv.compare(right_dv) > 0);
           break;
         default:
@@ -1920,7 +1936,7 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)<=0);
           break;
-        case DATES:
+        case DATES:                /* @author: huahui  @what for: date字段 --------------------------------------*/
           flag = (left_dv.compare(right_dv) <= 0);
           break;
         default:
@@ -1938,7 +1954,7 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)>=0);
           break;
-        case DATES:
+        case DATES:                 /* @author: huahui  @what for: date字段 --------------------------------------*/
           flag = (left_dv.compare(right_dv) >= 0);
           break;
         default:
@@ -1956,7 +1972,7 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case CHARS:
           flag=(strncmp(s1,s2,attr_length)!=0);
           break;
-        case DATES:
+        case DATES:               /* @author: huahui  @what for: date字段 --------------------------------------*/
           flag = (left_dv.compare(right_dv) != 0);
         default:
           LOG_PANIC("Unknown attr type: %d", attr_type);
