@@ -142,9 +142,16 @@ bool DefaultConditionFilter::filter(const Record &rec) const
   char *right_value = nullptr;
 
   /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
-  // 解决类似于 where id is null 情况
+  // 解决类似于 where id is null 或者 where id is not null情况
   if(comp_op_ == CompOp::IS) { // 此时比较符号右边肯定是null
     if(rec.data[left_.null_tag_offset]) {
+      return true;
+    }else{
+      return false;
+    }
+  }
+  if(comp_op_ == CompOp::ISNOT) { // 此时比较符号右边肯定是null
+    if(!(rec.data[left_.null_tag_offset])) {
       return true;
     }else{
       return false;

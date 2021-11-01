@@ -49,7 +49,8 @@ typedef enum {
   GREAT_EQUAL,  //">="    4
   GREAT_THAN,   //">"     5
   IS,            // is 
-  NO_OP             /* @author: huahui  @what for: null */
+  ISNOT,         // is not  /* @author: huahui  @what for: null */
+  NO_OP                     /* @author: huahui  @what for: null */
 } CompOp;
  
 /* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/

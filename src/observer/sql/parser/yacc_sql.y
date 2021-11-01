@@ -888,6 +888,28 @@ condition:
 		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
 		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
 	}
+	| ID IS_A NOT NULL_A {
+		RelAttr left_attr;
+		relation_attr_init(&left_attr, NULL, $1);
+		CONTEXT->comp = ISNOT;
+		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
+
+		Condition condition;
+		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
+		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
+	}
+	| ID DOT ID IS_A NOT NULL_A {
+		RelAttr left_attr;
+		relation_attr_init(&left_attr, $1, $3);
+		CONTEXT->comp = ISNOT;
+		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
+
+		Condition condition;
+		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
+		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
+	}
 	/* ------------------------------------------------------------------------------------------------------------*/
     ;
 
