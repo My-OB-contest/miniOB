@@ -342,29 +342,6 @@ RC AggExeNode::init(Trx *trx, TupleSchema && tuple_schema, TupleSet && tuple_set
 RC AggExeNode::execute(TupleSet &res_tupleset) {
   res_tupleset.set_schema(tuple_schema_);
   int agg_num = tuple_schema_.fields().size();
-  /*if(tuple_set_.size() <= 0){ // 如果集合为空，只计算max(5),min(5),avg(5)的值，其他都为0
-    Tuple tuple;
-    for(int i=0;i<agg_num;i++) {
-      const TupleField &tuple_field = tuple_schema_.field(i);
-      if(tuple_field.get_is_attr() || (!tuple_field.get_is_attr() && tuple_field.getAggtype() == AggType::AGGCOUNT)) {
-        tuple.add(0);
-      } else if(tuple_field.getAggtype() == AggType::AGGMAX || tuple_field.getAggtype() == AggType::AGGMIN) {
-        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
-          tuple.add(tuple_field.get_agg_val().intv);
-        }else{
-          tuple.add((float)tuple_field.get_agg_val().floatv);
-        }
-      } else {
-        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
-          tuple.add((float)(tuple_field.get_agg_val().intv));
-        }else{
-          tuple.add((float)(tuple_field.get_agg_val().floatv));
-        }
-      }
-    }
-    res_tupleset.add(std::move(tuple));
-    return RC::SUCCESS;
-  }*/
   
   // 保存结果,如果是max, min, 就保存下标在first中，如果是count，就保存计数器在first中，如果是avg，就保存计数器和累加值在first和second中
   // 如果是max(5)，则保存5在first中，如果是min(5.6)则保存5.6在second中
@@ -399,6 +376,7 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
       if(strcmp(tuple_field.field_name(), "*") == 0) {
         res[i].first = tuple_set_.size();
       } else {
+        have_agg_attr = true;
         res[i].first = 0;
       }
     } else{
@@ -408,89 +386,71 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
 
   for(int i = 0; i < tuple_set_.size() && have_agg_attr; i++) {
     const Tuple &tuple = tuple_set_.get(i);
-    if(i == 0) {
-      for(int j = 0; j < agg_num; j++) {
-        const TupleField &tuple_field = tuple_schema_.field(j);
-        if(!tuple_field.get_is_attr()) {
-          continue;
-        }
-        AggType aggtype = tuple_field.getAggtype();
-        if(aggtype == AggType::NOTAGG) {
-          return RC::SQL_SYNTAX;
-        }
-        if(strcmp(tuple_field.field_name(), "*") == 0) { // 注意，这个时候聚合函数只能是count，否则在前面的判断阶段会出错
-          continue;
-        }
-        int idx = index_of_field(tuple_field);
-        /* @author: huahui  @what for: null --------------------------------------------------------*/
-        // 当聚合某个属性的时候，如果这个属性是null，可以直接跳过
-        if(strcmp(tuple_field.field_name(), "*")!=0 && std::dynamic_pointer_cast<NullValue>(tuple.get_pointer(idx))) {
-          continue;
-        }
-        /* -------------------------------------------------------------------------------------------*/
-        have_res[j] = 1;                                               /* @what for: null */
-        if(aggtype == AggType::AGGMAX || aggtype == AggType::AGGMIN) {
-          if(tuple_field.type() == AttrType::UNDEFINED){
-            return RC::SQL_SYNTAX;
-          }
-          res[j].first = 0;
-        }else if(aggtype == AggType::AGGCOUNT) {
-          res[j].first = 1; 
-        }else {
-          if(tuple_field.type() == AttrType::CHARS || tuple_field.type() == AttrType::DATES || tuple_field.type() == AttrType::UNDEFINED) {
-            return RC::SQL_SYNTAX;
-          }
-          res[j].first = 1;
-          res[j].second = 0.0;
-          res[j].second += getNum(tuple.get_pointer(idx), tuple_field.type());
-        }
+    for(int j = 0; j < agg_num; j++) {
+      const TupleField &tuple_field = tuple_schema_.field(j);
+      int idx = index_of_field(tuple_field);
+      if(!tuple_field.get_is_attr()) {
+        continue;
       }
-    }else{
-      for(int j = 0; j < agg_num; j++) {
-        const TupleField &tuple_field = tuple_schema_.field(j);
-        int idx = index_of_field(tuple_field);
-        if(!tuple_field.get_is_attr()) {
-          continue;
-        }
-        AggType aggtype = tuple_field.getAggtype();
-        if(aggtype == AggType::NOTAGG) {
+      AggType aggtype = tuple_field.getAggtype();
+      if(aggtype == AggType::NOTAGG) {
+        return RC::SQL_SYNTAX;
+      }
+      if(strcmp(tuple_field.field_name(), "*") == 0) { // 注意，这个时候聚合函数只能是count，否则在前面的判断阶段会出错
+        continue;
+      }
+      /* @author: huahui  @what for: null --------------------------------------------------------*/
+      // 当聚合某个属性的时候，如果这个属性是null，可以直接跳过
+      if(strcmp(tuple_field.field_name(), "*")!=0 && std::dynamic_pointer_cast<NullValue>(tuple.get_pointer(idx))) {
+        continue;
+      }
+      /* -------------------------------------------------------------------------------------------*/
+                                                   
+      if(aggtype == AggType::AGGMAX) {
+        if(tuple_field.type() == AttrType::UNDEFINED){
           return RC::SQL_SYNTAX;
         }
-        if(strcmp(tuple_field.field_name(), "*") == 0) { // 注意，这个时候聚合函数只能是count，否则在前面的判断阶段会出错
-          continue;
-        }
-        /* @author: huahui  @what for: null --------------------------------------------------------*/
-        // 当聚合某个属性的时候，如果这个属性是null，可以直接跳过
-        if(strcmp(tuple_field.field_name(), "*")!=0 && std::dynamic_pointer_cast<NullValue>(tuple.get_pointer(idx))) {
-          continue;
-        }
-        /* -------------------------------------------------------------------------------------------*/
-        have_res[j] = 1;                                                /* @what for: null */
-        if(aggtype == AggType::AGGMAX) {
-          if(tuple_field.type() == AttrType::UNDEFINED){
-            return RC::SQL_SYNTAX;
-          }
+        if(!have_res[j]) {
+          res[j].first = i;
+        }else{
           if(tuple.get_pointer(idx)->compare(tuple_set_.get(res[j].first).get(idx)) > 0) {
             res[j].first = i;
           }
-        }else if(aggtype == AggType::AGGMIN) {
-          if(tuple_field.type() == AttrType::UNDEFINED){
-            return RC::SQL_SYNTAX;
-          }
+        }
+      }else if(aggtype == AggType::AGGMIN) {
+        if(tuple_field.type() == AttrType::UNDEFINED){
+          return RC::SQL_SYNTAX;
+        }
+        if(!have_res[j]) {
+          res[j].first = i;
+        } else {
           if(tuple.get_pointer(idx)->compare(tuple_set_.get(res[j].first).get(idx)) < 0) {
             res[j].first = i;
           }
         }
-        else if(aggtype == AggType::AGGCOUNT) {
-          res[j].first += 1; // 这里没有考虑null的情况，以后再加
+      } else if(aggtype == AggType::AGGCOUNT) {
+        if(tuple_field.type() == AttrType::UNDEFINED){
+          return RC::SQL_SYNTAX;
+        }
+        if(!have_res[j]) {
+          res[j].first = 1; 
         }else {
-          if(tuple_field.type() == AttrType::CHARS || tuple_field.type() == AttrType::DATES || tuple_field.type() == AttrType::UNDEFINED) {
-            return RC::SQL_SYNTAX;
-          }
+          res[j].first += 1; 
+        }
+      }else {
+        if(tuple_field.type() == AttrType::CHARS || tuple_field.type() == AttrType::DATES || tuple_field.type() == AttrType::UNDEFINED) {
+          return RC::SQL_SYNTAX;
+        }
+        if(!have_res[j]) {
+          res[j].first = 1;
+          res[j].second = 0.0;
+          res[j].second += getNum(tuple.get_pointer(idx), tuple_field.type());
+        }else{
           res[j].first += 1;
           res[j].second += getNum(tuple.get_pointer(idx), tuple_field.type());
         }
       }
+      have_res[j] = 1;         /* @what for: null */
     }
   }
 
