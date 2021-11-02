@@ -122,6 +122,10 @@ void value_init_null(Value *value) {
 /* -----------------------------------------------------------------------------------------------*/
 void value_destroy(Value *value) {
   value->type = UNDEFINED;
+  /* @author: huahui  @what for: null字段 -------------------------------------------------------*/
+  if(value->is_null) {
+    return;
+  }
   free(value->data);
   value->data = nullptr;
 }
