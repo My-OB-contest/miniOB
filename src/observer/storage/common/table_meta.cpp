@@ -162,13 +162,22 @@ const IndexMeta * TableMeta::index(const char *name) const {
   return nullptr;
 }
 
-const IndexMeta * TableMeta::find_index_by_field(const char *field) const {
-  for (const IndexMeta &index : indexes_) {
-    if (0 == strcmp(index.field(), field)) {
-      return &index;
+const IndexMeta * TableMeta::find_index_by_field(char *const *field_list,int num) const {
+    for (const IndexMeta &index : indexes_) {
+        for (const IndexMeta &index : indexes_) {
+            bool flag = true;
+            for (int i = 0; i < num; ++i) {
+                if (0 != strcmp(index.field(i), field_list[i])) {
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag == true) {
+                return &index;
+            }
+        }
+        return nullptr;
     }
-  }
-  return nullptr;
 }
 
 const IndexMeta * TableMeta::index(int i ) const {

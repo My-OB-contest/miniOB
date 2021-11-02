@@ -37,7 +37,7 @@ RC BplusTreeHandler::sync() {
   return disk_buffer_pool_->flush_all_pages(file_id_);
 }
 
-RC BplusTreeHandler::create(const char *file_name, AttrType attr_type, int attr_length)
+RC BplusTreeHandler::create(const char *file_name, const std::vector<FieldMeta>  &fields_meta)
 {
   BPPageHandle page_handle;
   IndexNode *root;
@@ -73,11 +73,17 @@ RC BplusTreeHandler::create(const char *file_name, AttrType attr_type, int attr_
     return rc;
   }
   IndexFileHeader *file_header =(IndexFileHeader *)pdata;
-  file_header->attr_length = attr_length;
-  file_header->key_length = attr_length + sizeof(RID);
-  file_header->attr_type = attr_type;
+  int attr_sumlength=0;
+  for(int i = 0 ; i < fields_meta.size() ; ++i){
+      attr_sumlength+=fields_meta[i].len();
+      file_header->attr_length_list[i]=fields_meta[i].len();
+      file_header->attr_type[i]=fields_meta[i].type();
+  }
+  file_header->attr_length = attr_sumlength;
+  file_header->key_length = file_header->attr_length + sizeof(RID);
   file_header->node_num = 1;
-  file_header->order=((int)BP_PAGE_DATA_SIZE-sizeof(IndexFileHeader)-sizeof(IndexNode))/(attr_length+2*sizeof(RID));
+  file_header->attr_num = fields_meta.size();
+  file_header->order=((int)BP_PAGE_DATA_SIZE-sizeof(IndexFileHeader)-sizeof(IndexNode))/(file_header->attr_length+2*sizeof(RID));
   file_header->root_page = page_num;
 
   root = get_index_node(pdata);
@@ -205,7 +211,54 @@ int CompareKey(const char *pdata, const char *pkey,AttrType attr_type,int attr_l
   }
   return -2;//This means error happens
 }
-int CmpKey(AttrType attr_type, int attr_length, const char *pdata, const char *pkey)
+int CompareKey(const char *pdata, const char *pkey,AttrType *attr_type,int *attr_length,int attr_num,int pos) { // 简化
+    int i1,i2;
+    float f1,f2;
+    const char *s1,*s2;
+    switch(attr_type){
+        case INTS: {
+            i1 = *(int *) pdata;
+            i2 = *(int *) pkey;
+            if (i1 > i2)
+                return 1;
+            if (i1 < i2)
+                return -1;
+            if (i1 == i2)
+                return 0;
+        }
+            break;
+        case FLOATS: {
+            f1 = *(float *) pdata;
+            f2 = *(float *) pkey;
+            return float_compare(f1, f2);
+        }
+            break;
+        case CHARS: {
+            s1 = pdata;
+            s2 = pkey;
+            return strncmp(s1, s2, attr_length);
+        }
+            break;
+            /* @author: huahui @what for: date字段, 支持索引
+             * ---------------------------------------------------------------------------------
+             */
+        case DATES: {
+            const unsigned char *left_value2 = (const unsigned char *)pdata;
+            const unsigned char *right_value2 = (const unsigned char *)pkey;
+            DateValue left_dv = DateValue(left_value2);
+            DateValue right_dv = DateValue(right_value2);
+            return left_dv.compare(right_dv);
+        }
+            break;
+            /* -------------------------------------------------------------------------------*/
+        default:{
+            LOG_PANIC("Unknown attr type: %d", attr_type);
+        }
+    }
+    return -2;//This means error happens
+}
+
+int CmpKey(AttrType *attr_type, int attr_length, const char *pdata, const char *pkey)
 {
   int result = CompareKey(pdata, pkey, attr_type, attr_length);
   if (0 != result) {

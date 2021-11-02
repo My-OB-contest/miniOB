@@ -19,12 +19,12 @@ BplusTreeIndex::~BplusTreeIndex() noexcept {
   close();
 }
 
-RC BplusTreeIndex::create(const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta) {
+RC BplusTreeIndex::create(const char *file_name, const IndexMeta &index_meta, const std::vector<FieldMeta>  &fields_meta) {
   if (inited_) {
     return RC::RECORD_OPENNED;
   }
 
-  RC rc = Index::init(index_meta, field_meta);
+  RC rc = Index::init(index_meta, fields_meta);
   if (rc != RC::SUCCESS) {
     return rc;
   }

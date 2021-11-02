@@ -524,22 +524,30 @@ static RC insert_index_record_reader_adapter(Record *record, void *context) {
 }
 
 RC Table::create_index(Trx *trx, const char *index_name, char *const *attribute_name,int attr_num,int isunique) {
-  if (index_name == nullptr || common::is_blank(index_name) ||
-      attribute_name == nullptr || common::is_blank(attribute_name)) {
-    return RC::INVALID_ARGUMENT;
+  for(int i= 0 ;i < attr_num ; ++i){
+      if (index_name == nullptr || common::is_blank(index_name) ||
+          attribute_name[i] == nullptr || common::is_blank(attribute_name[i])) {
+          return RC::INVALID_ARGUMENT;
+      }
   }
+
   if (table_meta_.index(index_name) != nullptr ||
-      table_meta_.find_index_by_field((attribute_name))) {
+      table_meta_.find_index_by_field(attribute_name,attr_num)) {
     return RC::SCHEMA_INDEX_EXIST;
   }
 
-  const FieldMeta *field_meta = table_meta_.field(attribute_name);
-  if (!field_meta) {
-    return RC::SCHEMA_FIELD_MISSING;
+  std::vector<FieldMeta> fields_meta;
+  for(int i = 0; i<attr_num ; ++i){
+      const FieldMeta *field_meta = table_meta_.field(attribute_name[i]);
+      if (!field_meta) {
+          return RC::SCHEMA_FIELD_MISSING;
+      }
+      fields_meta.push_back(std::move(*field_meta));
   }
 
+
   IndexMeta new_index_meta;
-  RC rc = new_index_meta.init(index_name, *field_meta,isunique);
+  RC rc = new_index_meta.init(index_name, fields_meta,isunique);
   if (rc != RC::SUCCESS) {
     return rc;
   }
