@@ -371,6 +371,12 @@ bool TupleConditionFilter::filter(const Tuple *tupleright,int posr) const {
     if (tupleleft_ != nullptr&&tupleright_ != nullptr){
         LOG_ERROR("execute wrong filter method,you should init with one tuple");
     }
+    /* @author: huahui  @what for: null字段 -------------------------------------------------------------------------------------------------------------------*/
+    // 如果是null属性，则直接返回false
+    if(std::dynamic_pointer_cast<NullValue>(tupleleft_->get_pointer(posl_)) || std::dynamic_pointer_cast<NullValue>(tupleright->get_pointer(posr))) {
+      return false;
+    }
+    /* ----------------------------------------------------------------------------------------------------------------------------------------------------------*/
     int cmp_result=tupleleft_->get(posl_).compare(tupleright->get(posr));
 
     switch (comp_op_) {
@@ -397,6 +403,12 @@ bool TupleConditionFilter::filter() const {
     if (tupleleft_== nullptr||tupleright_== nullptr){
         LOG_ERROR("execute wrong filter method,you should init with two tuple");
     }
+    /* @author: huahui  @what for: null字段 -------------------------------------------------------------------------------------------------------------------*/
+    // 如果是null属性，则直接返回false
+    if(std::dynamic_pointer_cast<NullValue>(tupleleft_->get_pointer(posl_)) || std::dynamic_pointer_cast<NullValue>(tupleright_->get_pointer(posr_))) {
+      return false;
+    }
+    /* ----------------------------------------------------------------------------------------------------------------------------------------------------------*/
     int cmp_result=tupleleft_->get(posl_).compare(tupleright_->get(posr_));
 
     switch (comp_op_) {
