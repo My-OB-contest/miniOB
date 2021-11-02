@@ -41,12 +41,14 @@ DefaultConditionFilter::~DefaultConditionFilter()
 
 RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrType attr_type, CompOp comp_op)
 {
-    //fzh改，添加新可比较属性需要更改
-  if (attr_type < CHARS || attr_type > DATES ) {
-    LOG_ERROR("Invalid condition with unsupported attribute type: %d", attr_type);
-    return RC::INVALID_ARGUMENT;
+  //fzh改，添加新可比较属性需要更改
+  /* @author: huahui  @what for: null  ------------------------------------------------------------------*/
+  if(!left.is_null && !right.is_null){
+    if (attr_type < CHARS || attr_type > DATES ) {
+      LOG_ERROR("Invalid condition with unsupported attribute type: %d", attr_type);
+      return RC::INVALID_ARGUMENT;
+    }
   }
-
   if (comp_op < EQUAL_TO || comp_op >= NO_OP) {
     LOG_ERROR("Invalid condition with unsupported compare operation: %d", comp_op);
     return RC::INVALID_ARGUMENT;
@@ -142,19 +144,35 @@ bool DefaultConditionFilter::filter(const Record &rec) const
   char *right_value = nullptr;
 
   /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
-  // 解决类似于 where id is null 或者 where id is not null情况
+  // 解决类似于 where id is null 或者 where id is not null, where value is null, where value is not null情况
   if(comp_op_ == CompOp::IS) { // 此时比较符号右边肯定是null
-    if(rec.data[left_.null_tag_offset]) {
-      return true;
-    }else{
-      return false;
+    if(left_.is_attr){
+      if(rec.data[left_.null_tag_offset]) {
+        return true;
+      }else{
+        return false;
+      }
+    }else {
+      if(left_.is_null) {
+        return true;
+      }else {
+        return false;
+      }
     }
   }
   if(comp_op_ == CompOp::ISNOT) { // 此时比较符号右边肯定是null
-    if(!(rec.data[left_.null_tag_offset])) {
-      return true;
-    }else{
-      return false;
+    if(left_.is_attr) {
+      if(!(rec.data[left_.null_tag_offset])) {
+        return true;
+      }else{
+        return false;
+      }
+    }else {
+      if(left_.is_null) {
+        return false;
+      } else {
+        return true;
+      }
     }
   }
   /* -------------------------------------------------------------------------------------------------------------*/

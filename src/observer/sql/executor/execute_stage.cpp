@@ -488,6 +488,9 @@ RC ExecuteStage::update_check(const char *db, const Updates &updates) {
 
   // check conditon
   Table * table = DefaultHandler::get_default().find_table(db, updates.relation_name);
+  if(!table) {
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
   rc = check_condition(updates.condition_num, updates.conditions, table);
   if(rc != RC::SUCCESS) {
     return rc;
@@ -992,13 +995,13 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
       if (0 == strcmp("*", attr.attribute_name)) {
         /* @author: huahui  @what for: 聚合查询 多表查询  -----------------------------------------------*/
         // 列出这张表所有字段
-        TupleSchema::from_table(table, schema, (attr.relation_name!=nullptr));
+        TupleSchema::from_table(table, schema, (selects.relation_num>1));
         /* ----------------------------------------------------------------------------------------------*/
         break; // 没有校验，给出* 之后，再写字段的错误
       } else {
         /* @author: huahui  @what for: 聚合查询 多表查询  ---------------------------------------------------*/
         // 列出这张表相关字段
-        rc = schema_add_field(table, attr.attribute_name, schema, (attr.relation_name!=nullptr));
+        rc = schema_add_field(table, attr.attribute_name, schema, (selects.relation_num>1));
         /* ---------------------------------------------------------------------------------------------------*/
         if (rc != RC::SUCCESS) {
           return rc;

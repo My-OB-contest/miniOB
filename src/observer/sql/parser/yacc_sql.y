@@ -910,6 +910,26 @@ condition:
 		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
 		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
 	}
+	| value IS_A NULL_A {
+		Value *left_value = &CONTEXT->values[CONTEXT->value_length - 1];
+		CONTEXT->comp = IS;
+		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
+
+		Condition condition;
+		condition_init(&condition, CONTEXT->comp, 0, NULL, left_value, 0, NULL, right_value);
+		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
+	}
+	| value IS_A NOT NULL_A {
+		Value *left_value = &CONTEXT->values[CONTEXT->value_length - 1];
+		CONTEXT->comp = ISNOT;
+		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
+
+		Condition condition;
+		condition_init(&condition, CONTEXT->comp, 0, NULL, left_value, 0, NULL, right_value);
+		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
+	}
 	/* ------------------------------------------------------------------------------------------------------------*/
     ;
 
