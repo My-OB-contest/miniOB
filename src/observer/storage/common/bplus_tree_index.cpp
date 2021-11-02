@@ -82,6 +82,12 @@ RC BplusTreeIndex::delete_entry(const char *record, const RID *rid) {
 }
 
 IndexScanner *BplusTreeIndex::create_scanner(CompOp comp_op, const char *value) {
+  /* @author: huahui  @what for: null字段 -------------------------------------------------*/
+  // 如果是表达式中带有null，则返回nullptr
+  if(value == nullptr) {
+    return nullptr;
+  }
+  /* --------------------------------------------------------------------------------------*/
   BplusTreeScanner *bplus_tree_scanner = new BplusTreeScanner(index_handler_);
   RC rc = bplus_tree_scanner->open(comp_op, value);
   if (rc != RC::SUCCESS) {

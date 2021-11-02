@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "algorithm": "cpp",
+        "fstream": "cpp",
+        "sstream": "cpp",
+        "xiosbase": "cpp",
+        "xlocmes": "cpp"
     }
 }

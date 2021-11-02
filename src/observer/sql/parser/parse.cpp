@@ -118,6 +118,7 @@ void value_init_date(Value *value, const char *v){
 void value_init_null(Value *value) {
   value->is_null = 1;
   value->type = AttrType::UNDEFINED;
+  value->data = nullptr;
 }
 /* -----------------------------------------------------------------------------------------------*/
 void value_destroy(Value *value) {
