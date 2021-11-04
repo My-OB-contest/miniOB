@@ -19,28 +19,28 @@ BplusTreeIndex::~BplusTreeIndex() noexcept {
   close();
 }
 
-RC BplusTreeIndex::create(const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta) {
+RC BplusTreeIndex::create(const char *file_name, const IndexMeta &index_meta, const std::vector<FieldMeta>  &fields_meta) {
   if (inited_) {
     return RC::RECORD_OPENNED;
   }
 
-  RC rc = Index::init(index_meta, field_meta);
+  RC rc = Index::init(index_meta, fields_meta);
   if (rc != RC::SUCCESS) {
     return rc;
   }
 
-  rc = index_handler_.create(file_name, field_meta.type(), field_meta.len());
+  rc = index_handler_.create(file_name, fields_meta);
   if (RC::SUCCESS == rc) {
     inited_ = true;
   }
   return rc;
 }
 
-RC BplusTreeIndex::open(const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta) {
+RC BplusTreeIndex::open(const char *file_name, const IndexMeta &index_meta, const std::vector<FieldMeta>  &fields_meta) {
   if (inited_) {
     return RC::RECORD_OPENNED;
   }
-  RC rc = Index::init(index_meta, field_meta);
+  RC rc = Index::init(index_meta, fields_meta);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -59,18 +59,38 @@ RC BplusTreeIndex::close() {
   }
   return RC::SUCCESS;
 }
-
+/*
+ * fzh
+ * 多列索引适配将record的属性装配起来
+ */
 RC BplusTreeIndex::insert_entry(const char *record, const RID *rid) {
-  return index_handler_.insert_entry(record + field_meta_.offset(), rid);
+  int sumattr_length=0;
+  for(auto it : fields_meta_){
+      sumattr_length+=it.len();
+  }
+  char *pkey = (char *)malloc(sumattr_length);
+  for(auto it : fields_meta_){
+      memcpy(pkey,record+it.offset(),it.len());
+  }
+
+  return index_handler_.insert_entry(pkey, rid);
 }
 
 RC BplusTreeIndex::insert_unique_entry(const char *record, const RID *rid ) {
 
     RID ridtmp={-1,-1};
-    index_handler_.get_entry(record + field_meta_.offset() , &ridtmp);
+    int sumattr_length=0;
+    for(auto it : fields_meta_){
+        sumattr_length+=it.len();
+    }
+    char *pkey = (char *)malloc(sumattr_length);
+    for(auto it : fields_meta_){
+        memcpy(pkey,record+it.offset(),it.len());
+    }
+    index_handler_.get_entry(pkey, &ridtmp);
     RID ridtmp2={-1,-1};
     if(ridtmp == ridtmp2){
-        return index_handler_.insert_entry(record + field_meta_.offset(), rid);
+        return index_handler_.insert_entry(pkey, rid);
     } else{
         return RC::RECORD_DUPLICATE_KEY;
     }
@@ -78,9 +98,21 @@ RC BplusTreeIndex::insert_unique_entry(const char *record, const RID *rid ) {
 }
 
 RC BplusTreeIndex::delete_entry(const char *record, const RID *rid) {
-  return index_handler_.delete_entry(record + field_meta_.offset(), rid);
+    int sumattr_length=0;
+    for(auto it : fields_meta_){
+        sumattr_length+=it.len();
+    }
+    char *pkey = (char *)malloc(sumattr_length);
+    for(auto it : fields_meta_){
+        memcpy(pkey,record+it.offset(),it.len());
+    }
+    return index_handler_.delete_entry(pkey, rid);
 }
+/*-------------------------------------------------------------------------------*/
 
+/*
+ * 原来create_scanner保留给单条件的使用并重写多条件的create_scanner
+ */
 IndexScanner *BplusTreeIndex::create_scanner(CompOp comp_op, const char *value) {
   /* @author: huahui  @what for: null字段 -------------------------------------------------*/
   // 如果是表达式中带有null，则返回nullptr
@@ -99,6 +131,21 @@ IndexScanner *BplusTreeIndex::create_scanner(CompOp comp_op, const char *value) 
   BplusTreeIndexScanner *index_scanner = new BplusTreeIndexScanner(bplus_tree_scanner);
   return index_scanner;
 }
+
+IndexScanner *BplusTreeIndex::create_scanner(std::vector<CompOp> compop_list , std::vector<const char *> value_list){
+    BplusTreeScanner *bplus_tree_scanner = new BplusTreeScanner(index_handler_);
+    RC rc = bplus_tree_scanner->open(compop_list, value_list);
+    if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to open index scanner. rc=%d:%s", rc, strrc(rc));
+        delete bplus_tree_scanner;
+        return nullptr;
+    }
+
+    BplusTreeIndexScanner *index_scanner = new BplusTreeIndexScanner(bplus_tree_scanner);
+    return index_scanner;
+}
+
+
 
 RC BplusTreeIndex::sync() {
   return index_handler_.sync();

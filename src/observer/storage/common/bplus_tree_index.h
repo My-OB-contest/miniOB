@@ -23,8 +23,14 @@ public:
   BplusTreeIndex() = default;
   virtual ~BplusTreeIndex() noexcept;
 
-  RC create(const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta);
-  RC open(const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta);
+
+  /*
+   * fzh
+   * 适配多列索引，使用const std::vector<FieldMeta>  &fields_meta
+   */
+  RC create(const char *file_name, const IndexMeta &index_meta, const std::vector<FieldMeta>  &fields_meta);
+  RC open(const char *file_name, const IndexMeta &index_meta, const std::vector<FieldMeta>  &fields_meta);
+  /*------------------------------------------------------------------------*/
   RC close();
 
   RC insert_entry(const char *record, const RID *rid) override;
@@ -32,7 +38,12 @@ public:
   RC delete_entry(const char *record, const RID *rid) override;
 
   IndexScanner *create_scanner(CompOp comp_op, const char *value) override;
-
+  /*
+  * fzh
+  * 适配多列索引，使用对应数组
+  */
+  IndexScanner *create_scanner(std::vector<CompOp> compop_list , std::vector<const char *> value_list) override;
+  /*------------------------------------------------------------------------*/
   RC sync() override;
 
 private:

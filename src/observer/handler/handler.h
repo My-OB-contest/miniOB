@@ -118,10 +118,11 @@ typedef struct {
 
 // struct of create_index
 typedef struct {
-  char *indexName; // Index name
-  char *relName;   // Relation name
-  char *attrName;  // Attribute name
-  int isunique;
+    char *index_name;      // Index name
+    char *relation_name;   // Relation name
+    char *attribute_name[MAX_NUM];  // Attribute name
+    int   isunique;
+    int   attr_num;
 } CreateIndex;
 
 // struct of  drop_index

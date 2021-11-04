@@ -161,14 +161,53 @@ const IndexMeta * TableMeta::index(const char *name) const {
   }
   return nullptr;
 }
-
-const IndexMeta * TableMeta::find_index_by_field(const char *field) const {
-  for (const IndexMeta &index : indexes_) {
-    if (0 == strcmp(index.field(), field)) {
-      return &index;
+const IndexMeta * TableMeta::find_index_by_field_set(std::set<std::string> field_name_set) const{
+    for (const IndexMeta &index : indexes_) {
+        if (field_name_set.size() != index.field_num()){
+            continue;
+        }
+        bool flag = true;
+        for (int i = 0; i < index.field_num(); ++i) {
+            if( 0 == field_name_set.count(index.field(i))){
+                flag = false;
+                break;
+            }
+        }
+        if (flag == true) {
+            return &index;
+        }
     }
-  }
-  return nullptr;
+    return nullptr;
+}
+
+const IndexMeta * TableMeta::find_index_by_field(const char *field_name) const {
+    for (const IndexMeta &index : indexes_) {
+        if (1 != index.field_num()){
+            continue;
+        }
+        if (strcmp(index.field(0),field_name) == 0){
+            return &index;
+        }
+    }
+    return nullptr;
+}
+const IndexMeta * TableMeta::find_index_by_field_list(char *const *field_list,int num) const {
+    for (const IndexMeta &index : indexes_) {
+        if (num != index.field_num()){
+            continue;
+        }
+        bool flag = true;
+        for (int i = 0; i < num; ++i) {
+            if (0 != strcmp(index.field(i), field_list[i])) {
+                flag = false;
+                break;
+            }
+        }
+        if (flag == true) {
+            return &index;
+        }
+    }
+    return nullptr;
 }
 
 const IndexMeta * TableMeta::index(int i ) const {
