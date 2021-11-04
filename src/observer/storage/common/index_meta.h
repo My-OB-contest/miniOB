@@ -35,7 +35,7 @@ public:
 public:
   const char *name() const;
   const char *field(int i) const;
-
+  const int field_num() const;
   const int isunique() const;
   std::vector<std::string> fields();
   void desc(std::ostream &os) const;

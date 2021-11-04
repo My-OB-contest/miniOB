@@ -78,20 +78,24 @@ public:
    * 参数pData指向要插入的属性值，参数rid标识该索引项对应的元组，
    * 即向索引中插入一个值为（*pData，rid）的键值对
    */
-  RC insert_entry(const char *pkey, const RID *rid);
+   /*
+    * fzh
+    * 去除const，适配使用自己new出的组合value
+    */
+  RC insert_entry(char *pkey, const RID *rid);
 
   /**
    * 从IndexHandle句柄对应的索引中删除一个值为（*pData，rid）的索引项
    * @return RECORD_INVALID_KEY 指定值不存在
    */
-  RC delete_entry(const char *pkey, const RID *rid);
+  RC delete_entry(char *pkey, const RID *rid);
 
   /**
    * 获取指定值的record
    * @param rid  返回值，记录记录所在的页面号和slot
    */
-  RC get_entry(const char *pkey, RID *rid);
-
+  RC get_entry(char *pkey, RID *rid);
+  /*---------------------------------------------------------------*/
   RC sync();
 public:
   RC print();
@@ -137,6 +141,14 @@ public:
    */
   RC open(CompOp comp_op, const char *value);
 
+    /*
+    * fzh
+    * 多列索引支持，重载open方法
+    */
+  RC open(std::vector<CompOp> compop_list , std::vector<const char *> value_list);
+
+  /*---------------------------------------------------------------------*/
+
   /**
    * 用于继续索引扫描，获得下一个满足条件的索引项，
    * 并返回该索引项对应的记录的ID
@@ -157,12 +169,17 @@ public:
 private:
   RC get_next_idx_in_memory(RID *rid);
   RC find_idx_pages();
-  bool satisfy_condition(const char *key);
+  bool satisfy_condition(const char *key , int pos);
 
 private:
   BplusTreeHandler   & index_handler_;
   bool opened_ = false;
-  CompOp comp_op_ = NO_OP;                      // 用于比较的操作符
+  /*
+   * fzh
+   * 多列索引支持，换为comop数组
+   */
+  std::vector<CompOp> comp_op_list_;                      // 用于比较的操作符
+  /*-------------------------------------------------------------*/
   const char *value_ = nullptr;		              // 与属性行比较的值
   int num_fixed_pages_ = -1;                    // 固定在缓冲区中的页，与指定的页面固定策略有关
   int pinned_page_count_ = 0;                   // 实际固定在缓冲区的页面数

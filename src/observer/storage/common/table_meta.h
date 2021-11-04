@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include "rc.h"
 #include "storage/common/field_meta.h"
@@ -46,7 +47,9 @@ public:
   int sys_field_num() const;
 
   const IndexMeta * index(const char *name) const;
-  const IndexMeta * find_index_by_field(char *const *field_list,int num) const;
+  const IndexMeta * find_index_by_field_set(std::set<std::string> field_name_set) const;
+  const IndexMeta * find_index_by_field(const char *field_name) const;
+  const IndexMeta * find_index_by_field_list(char *const *field_list,int num) const;
   const IndexMeta * index(int i) const;
   int index_num() const;
 

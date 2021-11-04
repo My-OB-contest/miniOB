@@ -107,6 +107,9 @@ const char *IndexMeta::name() const {
 const char *IndexMeta::field(int i) const {
   return fields_[i].c_str();
 }
+const int IndexMeta::field_num() const{
+    return field_num_;
+}
 
 const int IndexMeta::isunique() const {
     return isunique_;

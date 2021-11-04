@@ -48,6 +48,8 @@ public:
 
   virtual IndexScanner *create_scanner(CompOp comp_op, const char *value) = 0;
 
+  virtual IndexScanner *create_scanner(std::vector<CompOp> compop_list , std::vector<const char *> value_list) = 0;
+
   virtual RC sync() = 0;
 
 protected:
