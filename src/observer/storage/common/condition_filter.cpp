@@ -41,12 +41,14 @@ DefaultConditionFilter::~DefaultConditionFilter()
 
 RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrType attr_type, CompOp comp_op)
 {
-    //fzh改，添加新可比较属性需要更改
+  //fzh改，添加新可比较属性需要更改
+  /* @author: huahui  @what for: null  ------------------------------------------------------------------*/
+  if(!left.is_null && !right.is_null){
     if (attr_type < CHARS || attr_type > DATES ) {
-    LOG_ERROR("Invalid condition with unsupported attribute type: %d", attr_type);
-    return RC::INVALID_ARGUMENT;
+      LOG_ERROR("Invalid condition with unsupported attribute type: %d", attr_type);
+      return RC::INVALID_ARGUMENT;
+    }
   }
-
   if (comp_op < EQUAL_TO || comp_op >= NO_OP) {
     LOG_ERROR("Invalid condition with unsupported compare operation: %d", comp_op);
     return RC::INVALID_ARGUMENT;
@@ -142,12 +144,35 @@ bool DefaultConditionFilter::filter(const Record &rec) const
   char *right_value = nullptr;
 
   /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
-  // 解决类似于 where id is null 情况
+  // 解决类似于 where id is null 或者 where id is not null, where value is null, where value is not null情况
   if(comp_op_ == CompOp::IS) { // 此时比较符号右边肯定是null
-    if(rec.data[left_.null_tag_offset]) {
-      return true;
-    }else{
-      return false;
+    if(left_.is_attr){
+      if(rec.data[left_.null_tag_offset]) {
+        return true;
+      }else{
+        return false;
+      }
+    }else {
+      if(left_.is_null) {
+        return true;
+      }else {
+        return false;
+      }
+    }
+  }
+  if(comp_op_ == CompOp::ISNOT) { // 此时比较符号右边肯定是null
+    if(left_.is_attr) {
+      if(!(rec.data[left_.null_tag_offset])) {
+        return true;
+      }else{
+        return false;
+      }
+    }else {
+      if(left_.is_null) {
+        return false;
+      } else {
+        return true;
+      }
     }
   }
   /* -------------------------------------------------------------------------------------------------------------*/
@@ -346,6 +371,12 @@ bool TupleConditionFilter::filter(const Tuple *tupleright,int posr) const {
     if (tupleleft_ != nullptr&&tupleright_ != nullptr){
         LOG_ERROR("execute wrong filter method,you should init with one tuple");
     }
+    /* @author: huahui  @what for: null字段 -------------------------------------------------------------------------------------------------------------------*/
+    // 如果是null属性，则直接返回false
+    if(std::dynamic_pointer_cast<NullValue>(tupleleft_->get_pointer(posl_)) || std::dynamic_pointer_cast<NullValue>(tupleright->get_pointer(posr))) {
+      return false;
+    }
+    /* ----------------------------------------------------------------------------------------------------------------------------------------------------------*/
     int cmp_result=tupleleft_->get(posl_).compare(tupleright->get(posr));
 
     switch (comp_op_) {
@@ -372,6 +403,12 @@ bool TupleConditionFilter::filter() const {
     if (tupleleft_== nullptr||tupleright_== nullptr){
         LOG_ERROR("execute wrong filter method,you should init with two tuple");
     }
+    /* @author: huahui  @what for: null字段 -------------------------------------------------------------------------------------------------------------------*/
+    // 如果是null属性，则直接返回false
+    if(std::dynamic_pointer_cast<NullValue>(tupleleft_->get_pointer(posl_)) || std::dynamic_pointer_cast<NullValue>(tupleright_->get_pointer(posr_))) {
+      return false;
+    }
+    /* ----------------------------------------------------------------------------------------------------------------------------------------------------------*/
     int cmp_result=tupleleft_->get(posl_).compare(tupleright_->get(posr_));
 
     switch (comp_op_) {

@@ -114,6 +114,12 @@ RC BplusTreeIndex::delete_entry(const char *record, const RID *rid) {
  * 原来create_scanner保留给单条件的使用并重写多条件的create_scanner
  */
 IndexScanner *BplusTreeIndex::create_scanner(CompOp comp_op, const char *value) {
+  /* @author: huahui  @what for: null字段 -------------------------------------------------*/
+  // 如果是表达式中带有null，则返回nullptr
+  if(value == nullptr) {
+    return nullptr;
+  }
+  /* --------------------------------------------------------------------------------------*/
   BplusTreeScanner *bplus_tree_scanner = new BplusTreeScanner(index_handler_);
   RC rc = bplus_tree_scanner->open(comp_op, value);
   if (rc != RC::SUCCESS) {

@@ -301,7 +301,7 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
         return RC::SCHEMA_TABLE_NOT_EXIST;
     }
     for (size_t j = 0; j < selects.attr_num ; ++j) {
-        if(!selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
+        if(selects.attributes[j].agg_type != AggType::NOTAGG && !selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
           continue;
         }
         if(selects.attributes[j].relation_name != nullptr && strcmp(selects.attributes[j].relation_name, selects.relations[0])!=0) {
@@ -394,7 +394,7 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
     }
   }
   for(size_t j=0; j<selects.attr_num; j++) {
-    if(!selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
+    if(selects.attributes[j].agg_type != AggType::NOTAGG && !selects.attributes[j].is_attr) { // 比如当前是count(1)，那么就直接跳过这个聚合属性，不用校验
       continue;
     }
     RC rc2 = check_attr_for_multitable(db, selects, selects.attributes[j]);
@@ -413,6 +413,12 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
       if(rc2 != RC::SUCCESS) {
         return rc2;
       }
+      Table * table = DefaultHandler::get_default().find_table(db,selects.conditions[j].left_attr.relation_name);
+      const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].left_attr.attribute_name);
+      if (fieldMeta == nullptr){
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
+      left_at = fieldMeta->type();
     } else {
       // 检查date是否符合要求  (其实这个检验应该也没有必要)
       if(selects.conditions[j].left_value.type == AttrType::DATES) {
@@ -434,6 +440,12 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
       if(rc2 != RC::SUCCESS) {
         return rc2;
       }
+      Table * table = DefaultHandler::get_default().find_table(db,selects.conditions[j].right_attr.relation_name);
+      const FieldMeta * fieldMeta = table->table_meta().field(selects.conditions[j].right_attr.attribute_name);
+      if (fieldMeta == nullptr){
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
+      right_at = fieldMeta->type();
     } else {
       // 检查date是否符合要求  (其实这个检验应该也没有必要)
       if(selects.conditions[j].left_value.type == AttrType::DATES) {
@@ -476,6 +488,9 @@ RC ExecuteStage::update_check(const char *db, const Updates &updates) {
 
   // check conditon
   Table * table = DefaultHandler::get_default().find_table(db, updates.relation_name);
+  if(!table) {
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
   rc = check_condition(updates.condition_num, updates.conditions, table);
   if(rc != RC::SUCCESS) {
     return rc;
@@ -980,13 +995,13 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
       if (0 == strcmp("*", attr.attribute_name)) {
         /* @author: huahui  @what for: 聚合查询 多表查询  -----------------------------------------------*/
         // 列出这张表所有字段
-        TupleSchema::from_table(table, schema, (attr.relation_name!=nullptr));
+        TupleSchema::from_table(table, schema, (selects.relation_num>1));
         /* ----------------------------------------------------------------------------------------------*/
         break; // 没有校验，给出* 之后，再写字段的错误
       } else {
         /* @author: huahui  @what for: 聚合查询 多表查询  ---------------------------------------------------*/
         // 列出这张表相关字段
-        rc = schema_add_field(table, attr.attribute_name, schema, (attr.relation_name!=nullptr));
+        rc = schema_add_field(table, attr.attribute_name, schema, (selects.relation_num>1));
         /* ---------------------------------------------------------------------------------------------------*/
         if (rc != RC::SUCCESS) {
           return rc;
