@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <limits.h>
 #include <string.h>
+#include <set>
 #include <algorithm>
 
 #include "storage/common/table.h"
@@ -170,7 +171,7 @@ RC Table::open(const char *meta_file, const char *base_dir) {
                       name(), index_meta->name(), index_meta->field(j));
             return RC::GENERIC_ERROR;
         }
-        fields_meta.push_back(std::move(*field_meta));
+        fields_meta.push_back(*field_meta);
     }
 
     BplusTreeIndex *index = new BplusTreeIndex();
@@ -925,7 +926,8 @@ IndexScanner *Table::find_index_for_scan (const CompositeConditionFilter &filter
                       field_cond_desc->attr_offset, name());
             return nullptr;
         }
-        field_name_set.insert(field_meta->name());
+        std::string  tmpstr(field_meta->name());
+        field_name_set.insert(tmpstr);
     }
     const IndexMeta *index_meta  = table_meta_.find_index_by_field_set(field_name_set);
     if (nullptr == index_meta) {
