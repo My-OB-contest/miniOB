@@ -543,7 +543,7 @@ static RC insert_index_record_reader_adapter(Record *record, void *context) {
 }
 
 RC Table::create_index(Trx *trx, const char *index_name, char *const *attribute_name,int attr_num,int isunique) {
-  for(int i= 0 ;i < attr_num ; ++i){
+  for(int i= attr_num-1 ;i >= 0 ; --i){
       if (index_name == nullptr || common::is_blank(index_name) ||
           attribute_name[i] == nullptr || common::is_blank(attribute_name[i])) {
           return RC::INVALID_ARGUMENT;
@@ -556,7 +556,7 @@ RC Table::create_index(Trx *trx, const char *index_name, char *const *attribute_
   }
 
   std::vector<FieldMeta> fields_meta;
-  for(int i = 0; i<attr_num ; ++i){
+  for(int i= attr_num-1 ;i >= 0 ; --i){
       const FieldMeta *field_meta = table_meta_.field(attribute_name[i]);
       if (!field_meta) {
           return RC::SCHEMA_FIELD_MISSING;
@@ -926,7 +926,15 @@ IndexScanner *Table::find_index_for_scan (const CompositeConditionFilter &filter
             return nullptr;
         }
         std::string  tmpstr(field_meta->name());
-        field_name_vector.push_back(tmpstr);
+        bool uniqueflag = true;
+        for (auto it : field_name_vector) {
+            if (strcmp(it.c_str(),tmpstr.c_str())==0){
+                uniqueflag = false;
+            }
+        }
+        if (uniqueflag == true){
+            field_name_vector.push_back(tmpstr);
+        }
     }
     const IndexMeta *index_meta  = table_meta_.find_index_by_field_vector(field_name_vector);
     if (nullptr == index_meta) {
@@ -973,7 +981,7 @@ IndexScanner *Table::find_index_for_scan (const CompositeConditionFilter &filter
         }
 
     }
-    index->create_scanner(comop_list,value_list);
+    return index->create_scanner(comop_list,value_list);
 }
 /*---------------------------------------------------------------------------------------*/
 
@@ -1032,10 +1040,10 @@ IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter) {
   const CompositeConditionFilter *composite_condition_filter = dynamic_cast<const CompositeConditionFilter *>(filter);
   //先找多列索引
   if (composite_condition_filter != nullptr) {
-    IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
-    if (scanner != nullptr){
-        return scanner;
-    }
+    //IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
+    //if (scanner != nullptr){
+    //    return scanner;
+   // }
     int filter_num = composite_condition_filter->filter_num();
     for (int i = 0; i < filter_num; i++) {
       IndexScanner *scanner= find_index_for_scan(&composite_condition_filter->filter(i));

@@ -1653,13 +1653,13 @@ RC BplusTreeHandler::find_first_index_satisfied(CompOp compop, const char *key, 
   }
   rid.page_num = -1;
   rid.slot_num = -1;
-    pkey=(char *)malloc(file_header_.attr_length_list[0]+sizeof(RID));
+  pkey=(char *)malloc(file_header_.attr_length_list[0]+sizeof(RID));
   if(pkey == nullptr){
     LOG_ERROR("Failed to alloc memory for key. size=%d", file_header_.attr_length_list[0]+sizeof(RID));
     return RC::NOMEM;
   }
-  memcpy(pkey, key, file_header_.attr_length_list[0]);
-  memcpy(pkey + file_header_.attr_length_list[0], &rid, sizeof(RID));
+  memcpy(pkey, key, file_header_.attr_length);
+  memcpy(pkey + file_header_.attr_length, &rid, sizeof(RID));
 
   rc = find_leaf(pkey, &leaf_page);
   if(rc != SUCCESS){
@@ -1682,7 +1682,7 @@ RC BplusTreeHandler::find_first_index_satisfied(CompOp compop, const char *key, 
 
     node = get_index_node(pdata);
     for(i = 0; i < node->key_num; i++){
-      tmp=CompareKey(node->keys+i*file_header_.key_length,key,file_header_.attr_type,file_header_.attr_length_list,file_header_.attr_num,0);
+      tmp=CompareKey(node->keys+i*file_header_.key_length,key,file_header_.attr_type,file_header_.attr_length_list,1,0);
       if(compop == EQUAL_TO ||compop == GREAT_EQUAL){
         if(tmp>=0){
           rc = disk_buffer_pool_->get_page_num(&page_handle, page_num);
@@ -1784,12 +1784,15 @@ RC BplusTreeScanner::open(std::vector<CompOp> compop_list , std::vector<const ch
         LOG_ERROR("Failed to alloc memory for value. size=%d", index_handler_.file_header_.attr_length);
         return RC::NOMEM;
     }
+    int size=0;
     for (int i = 0; i < value_list.size(); ++i) {
         if (value_list[i]== nullptr){
-            memset(value_copy,0,index_handler_.file_header_.attr_length_list[i]);
+            memset(value_copy+size,0,index_handler_.file_header_.attr_length_list[i]);
+            size=size+index_handler_.file_header_.attr_length_list[i];
         }
         else{
-            memcpy(value_copy, value_list[i], index_handler_.file_header_.attr_length_list[i]);
+            memcpy(value_copy+size, value_list[i], index_handler_.file_header_.attr_length_list[i]);
+            size=size+index_handler_.file_header_.attr_length_list[i];
         }
     }
     value_ = value_copy; // free value_
