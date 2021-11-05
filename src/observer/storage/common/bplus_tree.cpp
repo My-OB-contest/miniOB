@@ -970,7 +970,6 @@ RC BplusTreeHandler::get_entry(char *pkey,RID *rid) {
   }
   memcpy(key,pkey,file_header_.attr_length);
   memcpy(key+file_header_.attr_length,rid,sizeof(RID));
-  free(pkey);
   rc=find_leaf(key,&leaf_page);
   if(rc!=SUCCESS){
     free(key);

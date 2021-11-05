@@ -92,6 +92,7 @@ RC BplusTreeIndex::insert_unique_entry(const char *record, const RID *rid ) {
     if(ridtmp == ridtmp2){
         return index_handler_.insert_entry(pkey, rid);
     } else{
+        free(pkey);
         return RC::RECORD_DUPLICATE_KEY;
     }
 
