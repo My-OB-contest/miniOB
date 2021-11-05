@@ -161,14 +161,21 @@ const IndexMeta * TableMeta::index(const char *name) const {
   }
   return nullptr;
 }
-const IndexMeta * TableMeta::find_index_by_field_set(std::set<std::string> field_name_set) const{
+const IndexMeta * TableMeta::find_index_by_field_vector(std::vector<std::string> field_name_vector) const{
     for (const IndexMeta &index : indexes_) {
-        if (field_name_set.size() != index.field_num()){
+        if (field_name_vector.size() != index.field_num()){
             continue;
         }
         bool flag = true;
         for (int i = 0; i < index.field_num(); ++i) {
-            if( 0 == field_name_set.count(index.field(i))){
+            bool flag_tmp = false;
+            for(auto it : field_name_vector){
+                if(strcmp(it.c_str(),index.field(i)) == 0){
+                    flag_tmp = true;
+                    break;
+                }
+            }
+            if (flag_tmp == false){
                 flag = false;
                 break;
             }

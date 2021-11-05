@@ -14,7 +14,6 @@ See the Mulan PSL v2 for more details. */
 
 #include <limits.h>
 #include <string.h>
-#include <set>
 #include <algorithm>
 
 #include "storage/common/table.h"
@@ -902,7 +901,7 @@ Index *Table::find_index(const char *index_name) const {
  * 后面构造scanner使用
 */
 IndexScanner *Table::find_index_for_scan (const CompositeConditionFilter &filters){
-    std::set<std::string> field_name_set;
+    std::vector<std::string> field_name_vector;
     for (int i = 0; i <filters.filter_num(); ++i) {
         const DefaultConditionFilter *filter =dynamic_cast<const DefaultConditionFilter *>(&(filters.filter(i)));
         if (filter== nullptr){
@@ -927,9 +926,9 @@ IndexScanner *Table::find_index_for_scan (const CompositeConditionFilter &filter
             return nullptr;
         }
         std::string  tmpstr(field_meta->name());
-        field_name_set.insert(tmpstr);
+        field_name_vector.push_back(tmpstr);
     }
-    const IndexMeta *index_meta  = table_meta_.find_index_by_field_set(field_name_set);
+    const IndexMeta *index_meta  = table_meta_.find_index_by_field_vector(field_name_vector);
     if (nullptr == index_meta) {
         return nullptr;
     }
@@ -1033,10 +1032,10 @@ IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter) {
   const CompositeConditionFilter *composite_condition_filter = dynamic_cast<const CompositeConditionFilter *>(filter);
   //先找多列索引
   if (composite_condition_filter != nullptr) {
-//    IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
-//    if (scanner != nullptr){
-//        return scanner;
-//    }
+    IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
+    if (scanner != nullptr){
+        return scanner;
+    }
     int filter_num = composite_condition_filter->filter_num();
     for (int i = 0; i < filter_num; i++) {
       IndexScanner *scanner= find_index_for_scan(&composite_condition_filter->filter(i));
