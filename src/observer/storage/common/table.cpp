@@ -1033,10 +1033,10 @@ IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter) {
   const CompositeConditionFilter *composite_condition_filter = dynamic_cast<const CompositeConditionFilter *>(filter);
   //先找多列索引
   if (composite_condition_filter != nullptr) {
-    IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
-    if (scanner != nullptr){
-        return scanner;
-    }
+//    IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
+//    if (scanner != nullptr){
+//        return scanner;
+//    }
     int filter_num = composite_condition_filter->filter_num();
     for (int i = 0; i < filter_num; i++) {
       IndexScanner *scanner= find_index_for_scan(&composite_condition_filter->filter(i));

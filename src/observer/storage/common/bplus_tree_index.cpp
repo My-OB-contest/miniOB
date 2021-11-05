@@ -151,7 +151,7 @@ RC BplusTreeIndex::sync() {
   return index_handler_.sync();
 }
 
-////////////////////////////////////////////////////////////////////////////////
+
 BplusTreeIndexScanner::BplusTreeIndexScanner(BplusTreeScanner *tree_scanner) :
     tree_scanner_(tree_scanner) {
 }
