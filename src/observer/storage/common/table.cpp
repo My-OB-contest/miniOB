@@ -972,6 +972,7 @@ IndexScanner *Table::find_index_for_scan (const CompositeConditionFilter &filter
         }
 
     }
+    index->create_scanner(comop_list,value_list);
 }
 /*---------------------------------------------------------------------------------------*/
 
