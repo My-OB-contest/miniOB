@@ -231,7 +231,17 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       }else{
         right = *(float *)right_value;
       }
-      cmp_result = (int)(left - right);
+      if(abs(left - right) < 1e-5)
+      {
+          cmp_result = 0;
+      } else{
+          if (left-right > 0){
+              cmp_result = 1;
+          }
+          if (left-right < 0){
+              cmp_result = -1;
+          }
+      }
     } break;
     /* ------------------------------------------------------------------------------*/
     case DATES: {
