@@ -2134,6 +2134,7 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey,int pos) {
     const unsigned char *left_value2 = nullptr;
     const unsigned char *right_value2 = nullptr;
     int valueoffset=0;
+    int attr_length = index_handler_.file_header_.attr_length_list[pos];
     for(int i = 0 ; i < pos ;++i){
         valueoffset=valueoffset+index_handler_.file_header_.attr_length_list[pos];
     }
@@ -2171,7 +2172,6 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey,int pos) {
             LOG_PANIC("Unknown attr type: %d", attr_type);
     }
     bool flag=false;
-    int attr_length = index_handler_.file_header_.attr_length_list[pos];
     switch(comp_op_list_[pos]){
         case EQUAL_TO:
             switch(attr_type){
