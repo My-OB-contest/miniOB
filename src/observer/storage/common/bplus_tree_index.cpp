@@ -86,8 +86,10 @@ RC BplusTreeIndex::insert_unique_entry(const char *record, const RID *rid ) {
         sumattr_length+=it.len();
     }
     char *pkey = (char *)malloc(sumattr_length);
+    sumattr_length=0;
     for(auto it : fields_meta_){
-        memcpy(pkey,record+it.offset(),it.len());
+        memcpy(pkey+sumattr_length,record+it.offset(),it.len());
+        sumattr_length+=it.len();
     }
     index_handler_.get_entry(pkey, &ridtmp);
     RID ridtmp2={-1,-1};
@@ -106,8 +108,10 @@ RC BplusTreeIndex::delete_entry(const char *record, const RID *rid) {
         sumattr_length+=it.len();
     }
     char *pkey = (char *)malloc(sumattr_length);
+    sumattr_length=0;
     for(auto it : fields_meta_){
-        memcpy(pkey,record+it.offset(),it.len());
+        memcpy(pkey+sumattr_length,record+it.offset(),it.len());
+        sumattr_length+=it.len();
     }
     return index_handler_.delete_entry(pkey, rid);
 }
