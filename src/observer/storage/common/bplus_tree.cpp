@@ -2133,6 +2133,10 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey,int pos) {
     const char *s1=nullptr,*s2=nullptr;
     const unsigned char *left_value2 = nullptr;
     const unsigned char *right_value2 = nullptr;
+    int valueoffset=0;
+    for(int i = 0 ; i < pos ;++i){
+        valueoffset=valueoffset+index_handler_.file_header_.attr_length_list[pos];
+    }
     DateValue left_dv, right_dv;
     if(comp_op_list_[pos] == NO_OP || comp_op_list_[pos] ==ISNOT){
         if(pos == index_handler_.file_header_.attr_num-1){
@@ -2147,19 +2151,19 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey,int pos) {
     switch(attr_type){
         case INTS:
             i1=*(int *)pkey;
-            i2=*(int *)value_;
+            i2=*(int *)(value_+valueoffset);
             break;
         case FLOATS:
             f1=*(float *)pkey;
-            f2=*(float *)value_;
+            f2=*(float *)(value_+valueoffset);
             break;
         case CHARS:
             s1=pkey;
-            s2=value_;
+            s2=value_+valueoffset;
             break;
         case DATES:
             left_value2 = (const unsigned char *)pkey;
-            right_value2 = (const unsigned char *)value_;
+            right_value2 = (const unsigned char *)(value_+valueoffset);
             left_dv = DateValue(left_value2);
             right_dv = DateValue(right_value2);
             break;

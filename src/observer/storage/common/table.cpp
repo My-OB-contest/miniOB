@@ -475,13 +475,20 @@ RC Table::scan_record(Trx *trx, ConditionFilter *filter, int limit, void *contex
 RC Table::scan_record_by_index(Trx *trx, IndexScanner *scanner, ConditionFilter *filter, int limit, void *context,
                                RC (*record_reader)(Record *, void *)) {
   RC rc = RC::SUCCESS;
-  RID rid;
+  RID rid={0,0};
   Record record;
   int record_count = 0;
   while (record_count < limit) {
+    RID rid_cmp;
+    rid_cmp.page_num=rid.page_num;
+    rid_cmp.slot_num=rid.slot_num;
     rc = scanner->next_entry(&rid);
     if (rc != RC::SUCCESS) {
       if (RC::RECORD_EOF == rc) {
+        rc = RC::SUCCESS;
+        break;
+      }
+      if (RC::RECORD_NO_MORE_IDX_IN_MEM == rc && rid_cmp == rid){
         rc = RC::SUCCESS;
         break;
       }
@@ -1040,10 +1047,10 @@ IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter) {
   const CompositeConditionFilter *composite_condition_filter = dynamic_cast<const CompositeConditionFilter *>(filter);
   //先找多列索引
   if (composite_condition_filter != nullptr) {
-    //IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
-    //if (scanner != nullptr){
-    //    return scanner;
-   // }
+    IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
+    if (scanner != nullptr){
+        return scanner;
+    }
     int filter_num = composite_condition_filter->filter_num();
     for (int i = 0; i < filter_num; i++) {
       IndexScanner *scanner= find_index_for_scan(&composite_condition_filter->filter(i));
