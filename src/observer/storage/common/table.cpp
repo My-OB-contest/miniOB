@@ -1047,11 +1047,21 @@ IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter) {
   const CompositeConditionFilter *composite_condition_filter = dynamic_cast<const CompositeConditionFilter *>(filter);
   //先找多列索引
   if (composite_condition_filter != nullptr) {
+    int filter_num = composite_condition_filter->filter_num();
+    for (int i = 0; i < filter_num; i++) {
+        const DefaultConditionFilter *filter =dynamic_cast<const DefaultConditionFilter *>(&(composite_condition_filter->filter(i)));
+        if (filter== nullptr){
+            return nullptr;
+        }
+        if(filter->comp_op() == CompOp::IS && !filter->right().is_attr && filter->right().is_null) {
+            LOG_ERROR("where clause of \" is null\" cannot use index to search\n");
+            return nullptr;
+        }
+    }
     IndexScanner *scanner = find_index_for_scan(*composite_condition_filter);
     if (scanner != nullptr){
         return scanner;
     }
-    int filter_num = composite_condition_filter->filter_num();
     for (int i = 0; i < filter_num; i++) {
       IndexScanner *scanner= find_index_for_scan(&composite_condition_filter->filter(i));
       if (scanner != nullptr) {
