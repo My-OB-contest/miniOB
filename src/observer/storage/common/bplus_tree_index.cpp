@@ -72,7 +72,7 @@ RC BplusTreeIndex::insert_entry(const char *record, const RID *rid) {
   sumattr_length=0;
   for(auto it : fields_meta_){
       memcpy(pkey+sumattr_length,record+it.offset(),it.len());
-      sumattr_length=+it.len();
+      sumattr_length+=it.len();
   }
 
   return index_handler_.insert_entry(pkey, rid);
