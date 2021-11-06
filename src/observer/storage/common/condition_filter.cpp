@@ -20,14 +20,6 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/table.h"
 
 using namespace common;
-int float_compare(float f1, float f2) {
-    float result = f1 - f2;
-    if (result < 1e-6 && result > -1e-6) {
-        return 0;
-    }
-    return result > 0 ? 1: -1;
-}
-
 ConditionFilter::~ConditionFilter()
 {}
 
@@ -238,7 +230,7 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       }else{
         right = *(float *)right_value;
       }
-      /*if(abs(left - right) < 1e-5)
+      if((left - right < 1e-6) && (left -right > -1e-6) )
       {
           cmp_result = 0;
       } else{
@@ -248,8 +240,8 @@ bool DefaultConditionFilter::filter(const Record &rec) const
           if (left-right < 0){
               cmp_result = -1;
           }
-      }*/
-      cmp_result = float_compare(left,right);
+      }
+
     } break;
     /* ------------------------------------------------------------------------------*/
     case DATES: {
