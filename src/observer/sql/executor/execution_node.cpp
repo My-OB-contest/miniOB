@@ -918,6 +918,10 @@ RC ExpSelectExeNode::init() {
   // 判断每个ExpList是否合法
   for(int i = 0; i < adv_selects_.attr_num; i++) {
     const RelAttrExp &relattrexp = adv_selects_.attr_exps[i];
+    if(relattrexp.agg_type != AggType::NOTAGG) {
+      LOG_ERROR("expression, single-attr or star cannot be with agg attr\n");
+      return RC::SQL_SYNTAX;
+    }
     rc = check_explist(relattrexp.explist);
     if(rc != RC::SUCCESS) {
       return rc;
