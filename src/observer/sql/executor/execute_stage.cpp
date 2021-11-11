@@ -1145,7 +1145,7 @@ RC ExecuteStage::do_advselects(Trx *trx, const AdvSelects &adv_selects, const ch
     return rc;
   }
 
-  // delete esnode;
+  delete esnode;
   return RC::SUCCESS;
 }
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/

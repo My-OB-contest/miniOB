@@ -1008,7 +1008,8 @@ RC ExpSelectExeNode::execute(TupleSet &res_tupleset) {
 
   res_tupleset.set_schema(res_schema);
   for(int i = 0; i < tuple_sets[0].size(); i++) {
-    if(filter_->filter(tuple_sets[0].get(i))) {
+    if(true) {
+    // if(filter_->filter(tuple_sets[0].get(i))) {
       Tuple tuple;
       for(int j = 0; j < res_tupleset.get_schema().fields().size(); j++) {
         const TupleField &tuple_field = res_tupleset.get_schema().field(j);
