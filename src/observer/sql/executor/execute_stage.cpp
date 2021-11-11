@@ -572,8 +572,8 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Trx *trx = session->current_trx();
   const AdvSelects &adv_selects = sql->sstr.adv_selection;
   Selects selects;
-  // if(!convert_to_selects(adv_selects, selects)) {
-  if(true){
+  if(!convert_to_selects(adv_selects, selects)) {
+  // if(true){
     // 走表达式路线;
     // TupleSet res_tupleset;
     // std::stringstream ss;
