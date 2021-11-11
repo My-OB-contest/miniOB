@@ -576,15 +576,14 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     // 走表达式路线;
     TupleSet res_tupleset;
     std::stringstream ss;
-    // rc = do_advselects(trx, adv_selects, db, res_tupleset);
-    // if(rc != RC::SUCCESS) {
-    //   end_trx_if_need(session, trx, false);
-    //   return rc;
-    // }
-    // res_tupleset.print(ss);
-    // session_event->set_response(ss.str());
-    // end_trx_if_need(session, trx, true);
-    session_event->set_response("the res is weird\n");
+    rc = do_advselects(trx, adv_selects, db, res_tupleset);
+    if(rc != RC::SUCCESS) {
+      end_trx_if_need(session, trx, false);
+      return rc;
+    }
+    res_tupleset.print(ss);
+    session_event->set_response(ss.str());
+    end_trx_if_need(session, trx, true);
     return RC::SUCCESS;
   }
 
@@ -1135,10 +1134,10 @@ RC ExecuteStage::do_advselects(Trx *trx, const AdvSelects &adv_selects, const ch
   ExpSelectExeNode *esnode = new ExpSelectExeNode(trx, adv_selects, db);
   RC rc = RC::SUCCESS;
 
-  rc = esnode->init();
-  if(rc != RC::SUCCESS) {
-    return rc;
-  }
+  // rc = esnode->init();
+  // if(rc != RC::SUCCESS) {
+  //   return rc;
+  // }
   rc = esnode->execute(res_tupleset);
   if(rc != RC::SUCCESS) {
     LOG_ERROR("ExpSelectExeNode::execute() runs wrong \n");
