@@ -21,7 +21,7 @@ typedef struct ParserContext {
   size_t insert_value_length[MAX_NUM];
   Value values[MAX_NUM];
   Value insert_values[MAX_NUM][MAX_NUM];
-  Condition conditions[MAX_NUM];
+  ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
   CompOp comp;
 	char id[MAX_NUM];
 } ParserContext;
@@ -514,7 +514,7 @@ delete:		/*  delete 语句的语法解析树*/
 			CONTEXT->ssql->flag = SCF_DELETE;//"delete";
 			deletes_init_relation(&CONTEXT->ssql->sstr.deletion, $3);
 			deletes_set_conditions(&CONTEXT->ssql->sstr.deletion, 
-					CONTEXT->conditions, CONTEXT->condition_length);
+					CONTEXT->condition_exps, CONTEXT->condition_length);
 			CONTEXT->condition_length = 0;	
     }
     ;
@@ -524,7 +524,7 @@ update:			/*  update 语句的语法解析树*/
 			CONTEXT->ssql->flag = SCF_UPDATE;//"update";
 			Value *value = &CONTEXT->values[0];
 			updates_init(&CONTEXT->ssql->sstr.update, $2, $4, value, 
-					CONTEXT->conditions, CONTEXT->condition_length);
+					CONTEXT->condition_exps, CONTEXT->condition_length);
 			CONTEXT->condition_length = 0;
 		}
     ;
@@ -988,6 +988,7 @@ select:
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
     CONTEXT->ssql->flag=SCF_SELECT;
+    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
     //临时变量清零
     CONTEXT->condition_length=0;
     CONTEXT->from_length=0;
@@ -1429,7 +1430,7 @@ condition_exp:
     cond_exp.left = explist_left;
     cond_exp.right = explist_right;
     cond_exp.comp = CONTEXT->comp;
-    advselects_append_conditionexp(&CONTEXT->ssql->sstr.adv_selection, &cond_exp);
+    CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
   }
   /* @author: huahui  @what for: null ------------------------------------------------------------------------*/
 	| exp_list IS_A NULL_A {
@@ -1442,7 +1443,7 @@ condition_exp:
 		cond_exp.left = explist_left;
 		cond_exp.right = explist_right;
 		cond_exp.comp = IS;
-		advselects_append_conditionexp(&CONTEXT->ssql->sstr.adv_selection, &cond_exp);
+		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
 	}
 	| exp_list IS_A NOT NULL_A {
 		ExpList *explist_left = (ExpList *)($1);
@@ -1454,7 +1455,7 @@ condition_exp:
 		cond_exp.left = explist_left;
 		cond_exp.right = explist_right;
 		cond_exp.comp = ISNOT;
-		advselects_append_conditionexp(&CONTEXT->ssql->sstr.adv_selection, &cond_exp);
+		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
 	}
 	/* ------------------------------------------------------------------------------------------------------------*/
     ;

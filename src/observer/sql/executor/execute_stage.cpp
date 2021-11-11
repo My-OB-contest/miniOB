@@ -180,6 +180,7 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
               rc =check_date_from_values(1,(const Value *)&(sql->sstr.update.conditions->right_value));
           }
       }*/
+      convert_condexps_to_conds(sql->sstr.update.condition_num, sql->sstr.update.condition_exps, sql->sstr.update.conditions); /* @what for: expression */
       RC rc = update_check(current_db, sql->sstr.update);
       if(rc != RC::SUCCESS){
         char err[207];
@@ -200,7 +201,20 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
     }
     break;
     /*end ----------------------------------------------------------------------------------------------*/
-    case SCF_DELETE:
+    case SCF_DELETE:{
+      /* @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+      convert_condexps_to_conds(sql->sstr.deletion.condition_num, sql->sstr.deletion.condition_exps, sql->sstr.deletion.conditions); 
+      StorageEvent *storage_event = new (std::nothrow) StorageEvent(exe_event);
+      if (storage_event == nullptr) {
+        LOG_ERROR("Failed to new StorageEvent");
+        event->done_immediate();
+        return;
+      }
+
+      default_storage_stage_->handle_event(storage_event);
+      /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+    }
+    break;
     case SCF_CREATE_TABLE:
     case SCF_SHOW_TABLES:
     case SCF_DESC_TABLE:
@@ -968,6 +982,60 @@ RC ExecuteStage::check_condition(int condition_num, const Condition *conditions,
 /* --------------------------------------------------------------------------------------------------------------*/
 
 /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+bool ExecuteStage::convert_condexps_to_conds(int condition_num, ConditionExp condition_exps[], Condition conds[]) {
+  bool flag;
+
+  for(int i=0; i<condition_num; i++) {
+    const ConditionExp &condexp = condition_exps[i];
+    Condition cond;
+    if(condexp.left->num == 1) {
+      const Exp *exp = condexp.left->exp;
+      if(!exp->have_brace && !exp->have_negative) {
+        cond.left_is_attr = exp->is_attr;
+        if(exp->is_attr) {
+          RelAttr attr;
+          relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			  cond.left_attr = attr;
+        } else {
+          cond.left_value = exp->value;
+        }
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+
+    if(condexp.right->num == 1) {
+      const Exp *exp = condexp.right->exp;
+      if(!exp->have_brace && !exp->have_negative) {
+        cond.right_is_attr = exp->is_attr;
+        if(exp->is_attr) {
+          RelAttr attr;
+          relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			  cond.right_attr = attr;
+        } else {
+          cond.right_value = exp->value;
+        }
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+
+    cond.comp = condexp.comp;
+
+    conds[i] = cond;
+  }
+
+  return false;
+}
+
 // 如果所有select中的RelAttrExp能够转换为RelAttr并且所有where中的ConditioExp能够转换为Condtion，则转换，并返回true；否则，就返回false
 bool ExecuteStage::convert_to_selects(const AdvSelects &adv_selects, Selects &selects) {
   memset(&selects, 0, sizeof(selects));

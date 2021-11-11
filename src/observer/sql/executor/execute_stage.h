@@ -91,6 +91,7 @@ protected:
   /* --------------------------------------------------------------------------------------------------------------*/
 
   /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  bool convert_condexps_to_conds(int condition_num, ConditionExp condition_exps[], Condition conds[]);
   bool convert_to_selects(const AdvSelects &adv_selects, Selects &selects);
   RC do_advselects(Trx *trx, const AdvSelects &adv_selects, const char *db, TupleSet &res_tupleset);
   /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/

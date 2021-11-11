@@ -193,7 +193,8 @@ typedef struct {
 typedef struct {
   char *relation_name;            // Relation to delete from
   size_t condition_num;           // Length of conditions in Where clause
-  Condition conditions[MAX_NUM];  // conditions in Where clause
+  Condition conditions[MAX_NUM];
+  ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
 } Deletes;
 
 // struct of update
@@ -202,7 +203,8 @@ typedef struct {
   char *attribute_name;           // Attribute to update
   Value value;                    // update value
   size_t condition_num;           // Length of conditions in Where clause
-  Condition conditions[MAX_NUM];  // conditions in Where clause
+  Condition conditions[MAX_NUM];
+  ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
 } Updates;
 
 typedef struct {
@@ -328,6 +330,8 @@ void condition_init(Condition *condition, CompOp comp, int left_is_attr, RelAttr
     int right_is_attr, RelAttr *right_attr, Value *right_value);
 void condition_destroy(Condition *condition);
 
+void conditionexp_destroy(const ConditionExp *cond_exp);  /* @what for: expression*/
+
 
 void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type, size_t length);
 void attr_info_destroy(AttrInfo *attr_info);
@@ -348,7 +352,7 @@ void advselects_destroy(AdvSelects *adv_selects);   // 将AdvSelects销毁掉
 // 对selects_append_attribute的替换，将RelAttrExp压入到adv_selection.attr_exps中
 void advselects_append_relattrexp(AdvSelects *adv_selection, RelAttrExp *exp);
 // 向AdvSelects中的condition_exps中push一个ConditionExp
-void advselects_append_conditionexp(AdvSelects *adv_selection, ConditionExp *cond_exp);
+void advselects_append_conditionexps(AdvSelects *adv_selection, ConditionExp cond_exps[], size_t condition_num);
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 // insert支持多条插入 by：xiaoyu
@@ -356,11 +360,12 @@ void inserts_init(Inserts *inserts, const char *relation_name, Value values[][MA
 void inserts_destroy(Inserts *inserts);
 
 void deletes_init_relation(Deletes *deletes, const char *relation_name);
-void deletes_set_conditions(Deletes *deletes, Condition conditions[], size_t condition_num);
+void deletes_set_conditions(Deletes *deletes, ConditionExp cond_exps[], size_t condition_num);  /* @what for: expression*/
 void deletes_destroy(Deletes *deletes);
 
+/* @what for: expression*/
 void updates_init(Updates *updates, const char *relation_name, const char *attribute_name, Value *value,
-    Condition conditions[], size_t condition_num);
+    ConditionExp cond_exps[], size_t condition_num);
 void updates_destroy(Updates *updates);
 
 void create_table_append_attribute(CreateTable *create_table, AttrInfo *attr_info);

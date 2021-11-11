@@ -238,6 +238,12 @@ void condition_destroy(Condition *condition) {
   }
 }
 
+/* @what for: expression*/
+void conditionexp_destroy(const ConditionExp *cond_exp) {
+  if(cond_exp->left) explist_destroy(cond_exp->left);
+  if(cond_exp->right) explist_destroy(cond_exp->right);
+}
+
 void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type, size_t length) {
   attr_info->name = strdup(name);
   attr_info->type = type;
@@ -352,9 +358,11 @@ void advselects_append_relattrexp(AdvSelects *adv_selection, RelAttrExp *exp) {
   adv_selection->attr_exps[adv_selection->attr_num++] = *exp;
 }
 // 向AdvSelects中的condition_exps中push一个ConditionExp
-void advselects_append_conditionexp(AdvSelects *adv_selection, ConditionExp *cond_exp) {
-  assert(adv_selection->condition_num < sizeof(adv_selection->condition_exps)/sizeof(adv_selection->condition_exps[0]));
-  adv_selection->condition_exps[adv_selection->condition_num++] = *cond_exp;
+void advselects_append_conditionexps(AdvSelects *adv_selection, ConditionExp cond_exps[], size_t condition_num) {
+  assert(condition_num <= sizeof(adv_selection->condition_exps)/sizeof(adv_selection->condition_exps[0]));
+  for(size_t i = 0; i < condition_num; i++) {
+    adv_selection->condition_exps[adv_selection->condition_num++] = cond_exps[i];
+  }
 }
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
@@ -389,31 +397,34 @@ void deletes_init_relation(Deletes *deletes, const char *relation_name) {
   deletes->relation_name = strdup(relation_name);
 }
 
-void deletes_set_conditions(Deletes *deletes, Condition conditions[], size_t condition_num) {
-  assert(condition_num <= sizeof(deletes->conditions)/sizeof(deletes->conditions[0]));
+void deletes_set_conditions(Deletes *deletes, ConditionExp cond_exps[], size_t condition_num) {
+  assert(condition_num <= sizeof(deletes->condition_exps)/sizeof(deletes->condition_exps[0]));
   for (size_t i = 0; i < condition_num; i++) {
-    deletes->conditions[i] = conditions[i];
+    deletes->condition_exps[i] = cond_exps[i];
   }
   deletes->condition_num = condition_num;
 }
+
+/* @what for: expression*/
 void deletes_destroy(Deletes *deletes) {
   for (size_t i = 0; i < deletes->condition_num; i++) {
-    condition_destroy(&deletes->conditions[i]);
+    conditionexp_destroy(&deletes->condition_exps[i]);
   }
   deletes->condition_num = 0;
   free(deletes->relation_name);
   deletes->relation_name = nullptr;
 }
 
+/* @what for: expression*/
 void updates_init(Updates *updates, const char *relation_name, const char *attribute_name,
-                  Value *value, Condition conditions[], size_t condition_num) {
+                  Value *value, ConditionExp cond_exps[], size_t condition_num) {
   updates->relation_name = strdup(relation_name);
   updates->attribute_name = strdup(attribute_name);
   updates->value = *value;
 
-  assert(condition_num <= sizeof(updates->conditions)/sizeof(updates->conditions[0]));
+  assert(condition_num <= sizeof(updates->condition_exps)/sizeof(updates->condition_exps[0]));
   for (size_t i = 0; i < condition_num; i++) {
-    updates->conditions[i] = conditions[i];
+    updates->condition_exps[i] = cond_exps[i];
   }
   updates->condition_num = condition_num;
 }
@@ -425,9 +436,10 @@ void updates_destroy(Updates *updates) {
   updates->attribute_name = nullptr;
 
   value_destroy(&updates->value);
-
+  
+  /* @what for: expression*/
   for (size_t i = 0; i < updates->condition_num; i++) {
-    condition_destroy(&updates->conditions[i]);
+    conditionexp_destroy(&updates->condition_exps[i]);
   }
   updates->condition_num = 0;
 }
