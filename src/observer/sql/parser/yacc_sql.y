@@ -1000,6 +1000,7 @@ select:
      AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
      adv_selects->relations[adv_selects->relation_num++] = strdup($4);
      CONTEXT->ssql->flag=SCF_SELECT;
+     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
      //临时变量清零
      CONTEXT->condition_length=0;
      CONTEXT->from_length=0;

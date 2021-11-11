@@ -133,7 +133,7 @@ typedef struct ExpList {
 // select count(i), avg(f) from t;
 // ----------------------------------------------
 // 当agg_type!=NOTAGG 或者 is_star==1 或者 num==1并且没有括号并且没有负号 则说明这个RelAttrExp是简单的，就可以转换为RelAttr结构
-// RelAttrExp有三种种类：1. star 2. 表达式 3. 非数值类型,如日期和字符串
+// RelAttrExp有四种种类：1. star 2. 表达式 3. 非数值类型,如日期和字符串 4. 聚合
 typedef struct {
   AggType agg_type;   // 标识是否是聚合查询以及是什么聚合查询，NOTAGG表示不是
   // agg_type == NOTAGG

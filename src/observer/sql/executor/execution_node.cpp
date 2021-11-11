@@ -830,12 +830,118 @@ ExpSelectExeNode::~ExpSelectExeNode(){
   if(filter_) delete filter_;
 };
 
+// 检查Exp是否合法
+RC ExpSelectExeNode::check_exp(Exp *exp) {
+  RC rc = RC::SUCCESS;
+  if(exp->left_exp) {
+    rc = check_exp(exp->left_exp);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+  if(exp->have_brace) {
+    rc = check_explist(exp->explist);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+  if(exp->is_attr) {
+    // 检查属性中不带表名的错误
+    if(adv_selects_.relation_num>1 && !exp->relation_name) {
+      LOG_ERROR("multi-table selects must contain table name in attr\n");
+      return RC::SQL_SYNTAX;
+    }
+    if(adv_selects_.relation_num > 1) {
+      int in_relations = 0;
+      for(int i = 0; i < adv_selects_.relation_num; i++) {
+        if(strcmp(exp->relation_name, adv_selects_.relations[i]) == 0) {
+          in_relations = 1;
+          break;
+        }
+      }
+      // 检查表不存在的错误
+      if(!in_relations) {
+        LOG_ERROR("%s not exists in relations\n", exp->relation_name);
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+      }
+    }
+    if(adv_selects_.relation_num == 1) {
+      if(exp->relation_name) {
+        if(strcmp(exp->relation_name, adv_selects_.relations[0]) != 0) {
+          // 检查表不存在的错误
+          LOG_ERROR("%s not exists in relations\n", exp->relation_name);
+          return RC::SCHEMA_TABLE_NOT_EXIST;
+        }
+      }
+    }
+    Table *table = DefaultHandler::get_default().find_table(db_, exp->relation_name ? exp->relation_name : adv_selects_.relations[0]);
+    const FieldMeta *field_meta = table->table_meta().field(exp->attribute_name);
+    // 检查属性不存在的错误
+    if(!field_meta) {
+      LOG_ERROR("col:%s not exists in table:%s", exp->attribute_name, table->name());
+      return RC::SCHEMA_FIELD_NOT_EXIST;
+    }
+  }
+  return RC::SUCCESS;
+}
+// 检查ExpList是否合法
+RC ExpSelectExeNode::check_explist(ExpList *explist) {
+  RC rc = RC::SUCCESS;
+  if(!explist) {
+    return RC::SUCCESS;
+  }
+  if(explist->left_explist) {
+    rc = check_explist(explist->left_explist);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+  rc = check_exp(explist->exp);
+  if(rc != RC::SUCCESS) {
+    return rc;
+  }
+  return RC::SUCCESS;
+}
 RC ExpSelectExeNode::init() {
   filter_ = nullptr;
-  // your code
+
+  RC rc = RC::SUCCESS;
+  // 表是否存在
+  for(int i = 0; i < adv_selects_.relation_num; i++) {
+    Table *table = DefaultHandler::get_default().find_table(db_, adv_selects_.relations[i]);
+    if(!table) {
+      LOG_ERROR("%s not exists", adv_selects_.relations[i]);
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+  }
+  
+  // 判断每个ExpList是否合法
+  for(int i = 0; i < adv_selects_.attr_num; i++) {
+    const RelAttrExp &relattrexp = adv_selects_.attr_exps[i];
+    rc = check_explist(relattrexp.explist);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+
+  for(int i = 0; i < adv_selects_.condition_num; i++) {
+    const ConditionExp &cond_exp = adv_selects_.condition_exps[i];
+    rc = check_explist(cond_exp.left);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+    rc = check_explist(cond_exp.right);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+
+  // 没有检查表达式中出现string, date的情况
+  // 没有检查聚合和表达式或单属性或star同时出现的情况
+  // 没有检查条件中左右类型不相容的情况
+  return RC::SUCCESS;
 }
 
-// 返回的res_tupleset不含有schema，因为表达式和TupleSchema结构不兼容
 RC ExpSelectExeNode::execute(TupleSet &res_tupleset) {
   RC rc = RC::SUCCESS;
 
@@ -930,7 +1036,7 @@ RC ExpSelectExeNode::execute(TupleSet &res_tupleset) {
 
 void ExpSelectExeNode::cart(std::vector<TupleSet> &tuple_sets){
     while (tuple_sets.size() > 1){
-        //tuple_set在tuple_sets中是反的
+        //tuple_set在tuple_sets中是反的                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
         std::vector<TupleSet>::iterator itleft = tuple_sets.end()-1;
         std::vector<TupleSet>::iterator itright = tuple_sets.end()-2;
         TupleSet tmptupset;

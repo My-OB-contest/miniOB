@@ -1134,7 +1134,10 @@ RC ExecuteStage::do_advselects(Trx *trx, const AdvSelects &adv_selects, const ch
   ExpSelectExeNode *esnode = new ExpSelectExeNode(trx, adv_selects, db);
   RC rc = RC::SUCCESS;
 
-  esnode->init();
+  rc = esnode->init();
+  if(rc != RC::SUCCESS) {
+    return rc;
+  }
   rc = esnode->execute(res_tupleset);
   if(rc != RC::SUCCESS) {
     LOG_ERROR("ExpSelectExeNode::execute() runs wrong \n");

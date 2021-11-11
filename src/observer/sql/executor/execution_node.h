@@ -130,6 +130,8 @@ private:
   const char *db_;
 private:
   void cart(std::vector<TupleSet> &tuple_sets);
+  RC check_explist(ExpList *explist);
+  RC check_exp(Exp *exp);
 };
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
