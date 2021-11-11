@@ -63,9 +63,54 @@ std::string TupleField::to_string() const {
   return std::string(table_name_) + "." + field_name_ + std::to_string(type_);
 }
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
+ */
+void print_exp(Exp *exp, std::ostream &os) {
+  if(exp->left_exp) {
+    print_exp(exp->left_exp, os);
+    os << calopToStr(exp->calop);
+  }
+  if(!exp->left_exp && exp->have_negative) {
+    os << "-";
+  }
+  if(exp->have_brace) {
+    os << "(";
+    print_explist(exp->explist, os);
+    os << ")";
+  } else if(exp->is_attr) {
+    if(exp->relation_name) {
+      os << exp->relation_name << ".";
+    }
+    os << exp->attribute_name;
+  } else {
+    if(exp->value.type == AttrType::INTS) {
+      os << *(int *)(exp->value.data);
+    } else {
+      char *s2 = (char *)(exp->value.data);
+      os << (s2 + sizeof(float));
+    }
+  }
+}
+
+void print_explist(ExpList *explist, std::ostream &os) {
+  if(explist->left_explist) {
+    print_explist(explist->left_explist, os);
+    os << calopToStr(explist->calop);
+  }
+  print_exp(explist->exp, os);
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 /* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------
  */
 void TupleField::print(std::ostream &os) const {
+  /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  if(is_explist_) {
+    print_explist(explist_, os);
+    return;
+  }
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
   if(!is_attr_) {
     char *s = aggtypeToStr(aggtype_);
     if(agg_val_type_ == AggValType::AGGNUMBER) {
@@ -108,6 +153,13 @@ AggVal TupleField::get_agg_val() const {
 }
 /* ---------------------------------------------------------------------------------------------*/
 
+/* @author: huahui  @what for: expression */
+int TupleField::get_is_explist() const {
+  return is_explist_;
+}
+ExpList *TupleField::get_explist() const {
+  return explist_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------
@@ -155,6 +207,7 @@ void TupleSchema::add(bool have_table_name, AggType aggtype, bool is_attr, AggVa
 
 void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const char *field_name) {
   for (const auto &field: fields_) {
+    if(field.get_is_explist()) continue;  // @what for: expression
     if (0 == strcmp(field.table_name(), table_name) &&
         0 == strcmp(field.field_name(), field_name)) {
       return;
@@ -168,6 +221,7 @@ void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const
  */
 void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const char *field_name, bool have_table_name) {
   for (const auto &field: fields_) {
+    if(field.get_is_explist()) continue;  // @what for: expression
     if (0 == strcmp(field.table_name(), table_name) &&
         0 == strcmp(field.field_name(), field_name)) {
       return;
@@ -177,6 +231,13 @@ void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const
   add(type, table_name, field_name, have_table_name);
 }
 /* --------------------------------------------------------------------------------------------------------------------------*/
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+void TupleSchema::add_explist(ExpList *explist) {
+  fields_.emplace_back(explist);
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 
 void TupleSchema::append(const TupleSchema &other) {
   fields_.reserve(fields_.size() + other.fields_.size());
@@ -189,6 +250,7 @@ int TupleSchema::index_of_field(const char *table_name, const char *field_name) 
   const int size = fields_.size();
   for (int i = 0; i < size; i++) {
     const TupleField &field = fields_[i];
+    if(field.get_is_explist()) continue;  // @what for: expression
     if (0 == strcmp(field.table_name(), table_name) && 0 == strcmp(field.field_name(), field_name)) {
       return i;
     }
@@ -199,30 +261,9 @@ int TupleSchema::index_of_field(const char *table_name, const char *field_name) 
 /* @author: huahui @what for: 聚合查询, 多表查询  
  * ------------------------------------------------------------------------------------------------*/
 void TupleSchema::print(std::ostream &os) const {
-  /*if (fields_.empty()) {
-    os << "No schema";
+  if(fields_.size() <= 0) {
     return;
   }
-
-  // 判断有多张表还是只有一张表
-  std::set<std::string> table_names;
-  for (const auto &field: fields_) {
-    table_names.insert(field.table_name());
-  }
-
-  for (std::vector<TupleField>::const_iterator iter = fields_.begin(), end = --fields_.end();
-       iter != end; ++iter) {
-    if (table_names.size() > 1) {
-      os << iter->table_name() << ".";
-    }
-    os << iter->field_name() << " | ";
-  }
-
-  if (table_names.size() > 1) {
-    os << fields_.back().table_name() << ".";
-  }
-  os << fields_.back().field_name() << std::endl;*/
-
   for (std::vector<TupleField>::const_iterator iter = fields_.begin(), end = --fields_.end();
        iter != end; ++iter) {
     iter->print(os);

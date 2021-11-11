@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "record_manager.h"
 #include "common/log/log.h"
 #include "storage/common/table.h"
+#include <math.h>
 
 using namespace common;
 
@@ -481,3 +482,121 @@ bool CompositeConditionFilter::filter(const Record &rec) const
   }
   return true;
 }
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+
+ConditionExpsFilter::ConditionExpsFilter(){};
+ConditionExpsFilter::~ConditionExpsFilter(){};
+
+RC ConditionExpsFilter::init(int condition_num, const ConditionExp *cond_exp, const TupleSchema &tuple_schema, 
+          RC (*cal_explist)(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value)) {
+  for(int i = 0; i < condition_num; i++) {
+    cond_exps_.emplace_back(&(cond_exp[i]));
+  }
+  tuple_schema_ = tuple_schema;
+  cal_explist_ = cal_explist;
+}
+
+bool ConditionExpsFilter::filter(const Tuple &tuple) const {
+  for(int i = 0; i < cond_exps_.size(); i++) {
+    Value vleft, vright;
+    RC rc = RC::SUCCESS;
+    rc = cal_explist_(cond_exps_[i]->left, tuple, tuple_schema_, vleft);
+    if(rc != RC::SUCCESS) {
+      LOG_ERROR("ConditionExpsFilter::filter error, return false\n");
+      return false;
+    }
+    rc = cal_explist_(cond_exps_[i]->right, tuple, tuple_schema_, vright);
+    if(rc != RC::SUCCESS) {
+      LOG_ERROR("ConditionExpsFilter::filter error, return false\n");
+      value_destroy(&vleft);
+      return false;
+    }
+    
+    if(vleft.is_null || vright.is_null) { 
+      if(cond_exps_[i]->comp != CompOp::IS && cond_exps_[i]->comp != CompOp::ISNOT) {
+        value_destroy(&vleft);
+        value_destroy(&vright);
+        return false;
+      }
+      if(cond_exps_[i]->comp == CompOp::IS && !vleft.is_null) {
+        value_destroy(&vleft);
+        value_destroy(&vright);
+        return false;
+      }
+      if(cond_exps_[i]->comp == CompOp::ISNOT && vleft.is_null) {
+        value_destroy(&vleft);
+        value_destroy(&vright);
+        return false;
+      }
+      continue;
+    }
+    
+    int cmp_res = 0;
+    if(vleft.type==AttrType::INTS && vright.type==AttrType::INTS) {
+      int vl, vr;
+      vl = *(int *)(vleft.data);
+      vr = *(int *)(vright.data);
+      cmp_res = vl - vr;
+    } else if(vleft.type==AttrType::CHARS && vright.type==AttrType::CHARS) {
+      char *left_char = (char *)(vleft.data), *right_char = (char *)(vright.data);
+      cmp_res = strcmp(left_char, right_char);
+    } else if(vleft.type==AttrType::DATES && vright.type==AttrType::DATES) {
+      unsigned char *left_value2 = (unsigned char *)(vleft.data);
+      unsigned char *right_value2 = (unsigned char *)(vright.data);
+      DateValue left_dv = DateValue(left_value2);
+      DateValue right_dv = DateValue(right_value2);
+      cmp_res = left_dv.compare(right_dv);
+    }else {
+      float vl, vr;
+      if(vleft.type == AttrType::INTS) {
+        vl = (float)(*(int *)(vleft.data));
+      } else {
+        vl = *(float *)(vleft.data);
+      }
+      if(vright.type == AttrType::INTS) {
+        vr = (float)(*(int *)(vright.data));
+      } else {
+        vr = *(float *)(vright.data);
+      }
+      if(abs(vl - vr) <= 1e-5) {
+        cmp_res = 0;
+      } else if(vl - vr > 1e-5) {
+        cmp_res = 1;
+      } else {
+        cmp_res = -1;
+      }
+    }
+
+    switch (cond_exps_[i]->comp) {
+    case EQUAL_TO:
+      if(cmp_res != 0) { value_destroy(&vleft); value_destroy(&vright); return false; }
+      break;
+    case LESS_EQUAL:
+      if(cmp_res >0) { value_destroy(&vleft); value_destroy(&vright); return false; }
+      break;
+    case NOT_EQUAL:
+      if(cmp_res == 0) { value_destroy(&vleft); value_destroy(&vright); return false; }
+      break;
+    case LESS_THAN:
+      if(cmp_res >= 0) { value_destroy(&vleft); value_destroy(&vright); return false; }
+      break;
+    case GREAT_EQUAL:
+      if(cmp_res < 0) { value_destroy(&vleft); value_destroy(&vright); return false; }
+      break;
+    case GREAT_THAN:
+      if(cmp_res <= 0) { value_destroy(&vleft); value_destroy(&vright); return false; }
+      break;
+    default:
+      LOG_ERROR("CompOp is invalid\n");
+      return false;
+    }
+  }
+  return true;
+}
+
+AttrType ConditionExpsFilter::getType(const char *table_name, const char *attribute_name) {
+  int index = tuple_schema_.index_of_field(table_name ? table_name : tuple_schema_.field(0).table_name(), attribute_name);
+  return tuple_schema_.field(index).type();
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/

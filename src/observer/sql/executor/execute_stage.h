@@ -89,6 +89,11 @@ protected:
   // 检查属性, 表名是否合法
   RC check_condition(int condition_num, const Condition *conditions, const Table * table);
   /* --------------------------------------------------------------------------------------------------------------*/
+
+  /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  bool convert_to_selects(const AdvSelects &adv_selects, Selects &selects);
+  RC do_advselects(Trx *trx, const AdvSelects &adv_selects, const char *db, TupleSet &res_tupleset);
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 private:
   Stage *default_storage_stage_ = nullptr;
   Stage *mem_storage_stage_ = nullptr;

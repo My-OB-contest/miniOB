@@ -34,14 +34,16 @@ QUOTE            [\'\"]
 
 {WHITE_SAPCE}                           // ignore whitespace
 \n																						 ;
+ /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+{DIGIT}+                                           yylval->number=atoi(yytext); RETURN_TOKEN(NNNUMBER);
 
-[\-]?{DIGIT}+					                   yylval->number=atoi(yytext); RETURN_TOKEN(NUMBER);
-[\-]?{DIGIT}+{DOT}{DIGIT}+ {
+{DIGIT}+{DOT}{DIGIT}+ {
 	yylval->floatsAndStr.floats = (float)(atof(yytext));
-	yylval->floats=(float)(atof(yytext)); 
+	yylval->floats=(float)(atof(yytext));
 	yylval->floatsAndStr.str = strdup(yytext);
-	RETURN_TOKEN(FLOAT);
+	RETURN_TOKEN(NNFLOAT);
 }
+ /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
  /* @author: huahui @what for: 必做题，增加date字段 -----------------------------------------------------------------------------------------------------------------*/
 {QUOTE}[0-9]{4}-((0?[1-9])|(1[0-2]))-((0?[1-9])|([12][0-9])|(3[0-1])){QUOTE}	     {yylval->string=strdup(yytext); RETURN_TOKEN(DATE);}
  /* ----------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -98,7 +100,13 @@ QUOTE            [\'\"]
 [Nn][Uu][Ll][Ll]                             RETURN_TOKEN(NULL_A);
 [Nn][Uu][Ll][Ll][Aa][Bb][Ll][Ee]             RETURN_TOKEN(NULLABLE);
 [Ii][Ss]                                     RETURN_TOKEN(IS_A);
+ /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/   
+"+"                                          RETURN_TOKEN(PLUS);
+"-"                                          RETURN_TOKEN(MINUS);
+"/"                                          RETURN_TOKEN(DIVIDE);
+ /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
  /* ---------------------------------------------------------------------------------------------------------------*/
+
 
 {ID}							                       yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 "("								                       RETURN_TOKEN(LBRACE);

@@ -113,6 +113,12 @@ public:
     const StringValue &string_other = (const StringValue &)other;
     return strcmp(value_.c_str(), string_other.value_.c_str());
   }
+
+  /* @what for: expression */
+  void *get_value() {
+    char *s = strdup(value_.c_str());
+    return (void *)s;
+  }
 private:
   std::string value_;
 };
@@ -129,6 +135,9 @@ public:
     year = (int)value[0]*256 + (int)value[1];
     month = (int)value[2];
     day = (int)value[3];
+    
+    value_ = malloc(4);
+    memcpy(value_, (const void *)value, 4);
   }
   void to_string(std::ostream &os) const override {
     if(year / 1000 == 0){
@@ -159,8 +168,13 @@ public:
     std::string s2 = ss.str();
     return strcmp(s1.c_str(), s2.c_str());
   }
+  /* @what for: expression*/
+  void *get_value() {
+    return value_;
+  }
 private:
   int year, month, day; // 从字节数组中解析出的year, month, day
+  void *value_;
 };
 
 /* @author: huahui  @what for: null

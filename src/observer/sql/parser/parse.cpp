@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/parser/parse.h" 
 #include "rc.h"
 #include "common/log/log.h"
+#include "memory.h"
 
 RC parse(char *st, Query *sqln);
 
@@ -56,6 +57,41 @@ void relation_attr_destroy(RelAttr *relation_attr) {
   relation_attr->attribute_name = nullptr;
 }
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 对relation_agg_attr_init()的替换，目的初始化RelAttrExp结构的aggregation部分
+void relation_agg_relattrexp_init(RelAttrExp *exp, AggType agg_type, const char *relation_name, const char *attribute_name) {
+  exp->agg_type = agg_type;
+  exp->is_attr = 1;
+  if(relation_name != nullptr) {
+    exp->agg_relation_name = strdup(relation_name);
+  } else {
+    exp->agg_relation_name = nullptr;
+  }
+  exp->agg_attribute_name = strdup(attribute_name);
+  exp->explist = nullptr;  // 这是聚合属性，不存在表达式
+  memset(&exp->agg_val, 0, sizeof(exp->agg_val));
+}
+
+void explist_init_for_null(ExpList *explist) {
+  Exp *exp = (Exp *)malloc(sizeof(Exp));
+  exp->have_brace = 0;
+  exp->have_negative = 0;
+  exp->explist = NULL;
+  exp->is_attr = 0;
+  exp->relation_name = NULL;
+  exp->attribute_name = NULL;
+  value_init_null(&(exp->value));
+  exp->left_exp = NULL;
+  exp->calop = STARTCALOP;
+  exp->num = 1;
+  
+  explist->exp = exp;
+  explist->left_explist = NULL;
+  explist->calop = STARTCALOP;
+  explist->num = explist->exp->num;
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 void value_init_integer(Value *value, int v) {
   value->is_null = 0;       /* @author: huahui  @what for: null--------------------------------------*/
   value->type = INTS;
@@ -68,6 +104,21 @@ void value_init_float(Value *value, float v) {
   value->data = malloc(sizeof(v));
   memcpy(value->data, &v, sizeof(v));
 }
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 不同于value_init_float，这个版本的可以把浮点数的字符串也保存在value->data中
+// value->data分成两部分，第一部分是4个字节，保存浮点数，第二部分是后面的字符串
+void value_init_float2(Value *value, float v, const char *str) {
+  value->is_null = 0;   /* @author: huahui  @what for: null */
+  value->type = FLOATS;
+  value->data = malloc(sizeof(v) + strlen(str) + 5); // 5是为了多申请一些空间
+  memcpy(value->data, &v, sizeof(v));
+  char *s2 = (char *)(value->data) + sizeof(v);
+  strcpy(s2, str);
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+
 void value_init_string(Value *value, const char *v) {
   value->is_null = 0;     /* @author: huahui  @what for: null--------------------------------------*/
   value->type = CHARS;
@@ -130,6 +181,7 @@ void value_destroy(Value *value) {
   free(value->data);
   value->data = nullptr;
 }
+
 
 void condition_init(Condition *condition, CompOp comp, 
                     int left_is_attr, RelAttr *left_attr, Value *left_value,
@@ -232,6 +284,79 @@ void selects_destroy(Selects *selects) {
   }
   selects->condition_num = 0;
 }
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+void exp_destroy(Exp *exp) {
+  if(exp->left_exp) {
+    exp_destroy(exp->left_exp);
+  }
+  if(exp->have_brace) {
+    if(exp->explist) explist_destroy(exp->explist);
+  } else {
+    if(exp->is_attr) {
+      if(exp->relation_name) {
+        free(exp->relation_name);
+      }
+      if(exp->attribute_name) {
+        free(exp->attribute_name);
+      }
+    } else {
+      value_destroy(&(exp->value));
+    }
+  }
+  free(exp);
+}
+void explist_destroy(ExpList *explist) {
+  if(explist->left_explist) {
+    explist_destroy(explist->left_explist);
+  }
+  exp_destroy(explist->exp);
+  free(explist);
+}
+void relattrexp_destroy(RelAttrExp *relattrexp) {
+  if(relattrexp->agg_type == AggType::NOTAGG) {
+    if(relattrexp->is_star) {
+      if(relattrexp->relation_name) free(relattrexp->relation_name);
+    }else {
+      explist_destroy(relattrexp->explist);
+    }
+  } else {
+    if(relattrexp->is_attr) {
+      if(relattrexp->agg_relation_name) free(relattrexp->agg_relation_name);
+      if(relattrexp->agg_attribute_name) free(relattrexp->agg_attribute_name);
+    } else {
+      if(relattrexp->agg_val_type == AggValType::AGGFLOAT && relattrexp->agg_val.str) free(relattrexp->agg_val.str);
+    }
+  }
+}
+void advselects_destroy(AdvSelects *adv_selects) {
+  for(int i=0; i<adv_selects->attr_num; i++) {
+    relattrexp_destroy(&(adv_selects->attr_exps[i]));
+  }
+  adv_selects->attr_num = 0;
+  for(int i=0; i<adv_selects->relation_num; i++) {
+    free(adv_selects->relations[i]);
+    adv_selects->relations[i] = NULL;
+  }
+  adv_selects->relation_num = 0;
+  for(int i=0; i<adv_selects->condition_num; i++) {
+    if(adv_selects->condition_exps[i].left) explist_destroy(adv_selects->condition_exps[i].left);
+    if(adv_selects->condition_exps[i].right) explist_destroy(adv_selects->condition_exps[i].right);
+  }
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 对selects_append_attribute的替换，将RelAttrExp压入到adv_selection.attr_exps中
+void advselects_append_relattrexp(AdvSelects *adv_selection, RelAttrExp *exp) {
+  adv_selection->attr_exps[adv_selection->attr_num++] = *exp;
+}
+// 向AdvSelects中的condition_exps中push一个ConditionExp
+void advselects_append_conditionexp(AdvSelects *adv_selection, ConditionExp *cond_exp) {
+  assert(adv_selection->condition_num < sizeof(adv_selection->condition_exps)/sizeof(adv_selection->condition_exps[0]));
+  adv_selection->condition_exps[adv_selection->condition_num++] = *cond_exp;
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 // insert支持多条插入 by：xiaoyu
 void inserts_init(Inserts *inserts, const char *relation_name, Value values[][MAX_NUM], size_t insert_value_length[], size_t value_list_length) {
@@ -409,7 +534,7 @@ Query *query_create() {
 void query_reset(Query *query) {
   switch (query->flag) {
     case SCF_SELECT: {
-      selects_destroy(&query->sstr.selection);
+      advselects_destroy(&query->sstr.adv_selection);
     }
     break;
     case SCF_INSERT: {
@@ -488,6 +613,22 @@ char * aggtypeToStr(AggType aggtype) {
   return strdup(res);
 }
 /* ------------------------------------------------------------------------------------------------------ */
+
+char *calopToStr(CalOp calop) {
+  if(calop == CalOp::STARTCALOP || calop == CalOp::ENDCALOP) {
+    return "";
+  }
+  if(calop == CalOp::PLUS_OP) {
+    return "+";
+  } else if(calop == CalOp::MINUS_OP) {
+    return "-";
+  } else if(calop == CalOp::TIME_OP) {
+    return "*";
+  } else if(calop == CalOp::DIVIDE_OP) {
+    return "/";
+  }
+  return "";
+}
 
 #ifdef __cplusplus
 } // extern "C"

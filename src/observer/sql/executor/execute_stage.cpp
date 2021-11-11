@@ -556,7 +556,23 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   RC rc = RC::SUCCESS;
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
-  const Selects &selects = sql->sstr.selection;
+  const AdvSelects &adv_selects = sql->sstr.adv_selection;
+  Selects selects;
+  if(!convert_to_selects(adv_selects, selects)) {
+    // 走表达式路线;
+    TupleSet res_tupleset;
+    std::stringstream ss;
+    rc = do_advselects(trx, adv_selects, db, res_tupleset);
+    if(rc != RC::SUCCESS) {
+      end_trx_if_need(session, trx, true);
+      return rc;
+    }
+    res_tupleset.print(ss);
+    session_event->set_response(ss.str());
+    end_trx_if_need(session, trx, true);
+    return rc;
+  }
+
   rc = select_check(db,selects);
   if ( rc != RC::SUCCESS){
       LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
@@ -602,9 +618,9 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   }
 
   /* @author: huahui 
-	 * @what for: 必做题，聚合查询和多表join
-	 * -----------------------------------------------------------------------------------------------------------------
-	 */
+   * @what for: 必做题，聚合查询和多表join
+   * -----------------------------------------------------------------------------------------------------------------
+   */
   TupleSet res_tupleset;
   std::stringstream ss;
   if (tuple_sets.size() > 1) {
@@ -644,7 +660,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     LOG_ERROR("In aggregated query without GROUP BY, expression of SELECT list contains must not contain nonaggregated colum\n");
     return rc;
   }
-  
+
   if(hagg) {
     // 聚合查询，先做合法性校验，比如AVG(birthday)是肯定不对的
     rc = check_agg(db, selects, relattrs);
@@ -660,7 +676,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   }
   res_tupleset.print(ss);
   /* ------------------------------------------------------------------------------------------------------------
-	 */
+   */
 
   for (SelectExeNode *& tmp_node: select_nodes) {
     delete tmp_node;
@@ -951,6 +967,119 @@ RC ExecuteStage::check_condition(int condition_num, const Condition *conditions,
 }
 /* --------------------------------------------------------------------------------------------------------------*/
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 如果所有select中的RelAttrExp能够转换为RelAttr并且所有where中的ConditioExp能够转换为Condtion，则转换，并返回true；否则，就返回false
+bool ExecuteStage::convert_to_selects(const AdvSelects &adv_selects, Selects &selects) {
+  memset(&selects, 0, sizeof(selects));
+  bool flag = true;
+
+  // 转换select clause
+  for(int i=0; i<adv_selects.attr_num; i++) {
+    const RelAttrExp &relattrexp = adv_selects.attr_exps[i];
+    if(relattrexp.agg_type != AggType::NOTAGG) {
+      RelAttr attr;
+      attr.agg_type = relattrexp.agg_type;
+      attr.is_attr = relattrexp.is_attr;
+      attr.relation_name = relattrexp.agg_relation_name ? strdup(relattrexp.agg_relation_name) : nullptr;
+      attr.attribute_name = relattrexp.agg_attribute_name ? strdup(relattrexp.agg_attribute_name) : nullptr;
+      attr.agg_val_type = relattrexp.agg_val_type;
+      attr.agg_val = relattrexp.agg_val;
+      selects_append_attribute(&selects, &attr);
+    } else if(relattrexp.is_star) {
+      RelAttr attr;
+ 			relation_attr_init(&attr, relattrexp.relation_name, "*");
+ 			selects_append_attribute(&selects, &attr);
+    } else if(relattrexp.num == 1) {
+      const Exp *exp = relattrexp.explist->exp;
+      if(!exp->have_brace && exp->is_attr && !exp->have_negative) {
+        RelAttr attr;
+        relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			selects_append_attribute(&selects, &attr);
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+  }
+
+  // 转换where clause
+  for(int i=0; i<adv_selects.condition_num; i++) {
+    const ConditionExp &condexp = adv_selects.condition_exps[i];
+    Condition cond;
+    if(condexp.left->num == 1) {
+      const Exp *exp = condexp.left->exp;
+      if(!exp->have_brace && !exp->have_negative) {
+        cond.left_is_attr = exp->is_attr;
+        if(exp->is_attr) {
+          RelAttr attr;
+          relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			  cond.left_attr = attr;
+        } else {
+          cond.left_value = exp->value;
+        }
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+
+    if(condexp.right->num == 1) {
+      const Exp *exp = condexp.right->exp;
+      if(!exp->have_brace && !exp->have_negative) {
+        cond.right_is_attr = exp->is_attr;
+        if(exp->is_attr) {
+          RelAttr attr;
+          relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			  cond.right_attr = attr;
+        } else {
+          cond.right_value = exp->value;
+        }
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+
+    cond.comp = condexp.comp;
+
+    selects.conditions[selects.condition_num++] = cond;
+  }
+  
+  // 转换from clause
+  for(int i=0; i<adv_selects.relation_num; i++) {
+    selects.relations[selects.relation_num++] = strdup(adv_selects.relations[i]);
+  }
+  
+  return flag;
+}
+
+RC ExecuteStage::do_advselects(Trx *trx, const AdvSelects &adv_selects, const char *db, TupleSet &res_tupleset) {
+  ExpSelectExeNode *esnode = new ExpSelectExeNode(trx, adv_selects, db);
+  RC rc = RC::SUCCESS;
+
+  esnode->init();
+  rc = esnode->execute(res_tupleset);
+  if(rc != RC::SUCCESS) {
+    LOG_ERROR("ExpSelectExeNode::execute() runs wrong \n");
+    delete esnode;
+    return rc;
+  }
+
+  delete esnode;
+  return RC::SUCCESS;
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+
 bool match_table(const Selects &selects, const char *table_name_in_condition, const char *table_name_to_match) {
   if (table_name_in_condition != nullptr) {
     return 0 == strcmp(table_name_in_condition, table_name_to_match);
@@ -971,6 +1100,8 @@ static RC schema_add_field(Table *table, const char *field_name, TupleSchema &sc
   return RC::SUCCESS;
 }
 /* -------------------------------------------------------------------------------------------------------------*/
+
+
 
 // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
 RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node) {

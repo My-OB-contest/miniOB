@@ -109,5 +109,29 @@ private:
 };
 /*end ----------------------------------------------------------------------------------------------*/
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
+RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
+bool relattrexp_isexp(const RelAttrExp &relattrexp, const char *first_table_name, const char *db);   // RelAttrExp是表达式种类吗
+bool relattrexp_issingle(const RelAttrExp &relattrexp, const char *first_table_name, const char *db);
+
+// 专门处理AdvSelects的支持表达式查询
+// 简单处理，直接对所有表进行笛卡儿积，然后用所有ExpCondition进行filter，最后计算所有的RelAttrExp
+class ExpSelectExeNode : public ExecutionNode {
+public:
+  ExpSelectExeNode(Trx *trx, const AdvSelects &adv_selects, const char *db) : trx_(trx), adv_selects_(adv_selects), db_(db) {};
+  virtual ~ExpSelectExeNode();
+  RC init(); // 做完整的鲁棒性检查
+  RC execute(TupleSet &res_tupleset);     // 可以从SelectExeNode和JoinExeNode中抽取代码复用
+private:
+  Trx *trx_;
+  const AdvSelects &adv_selects_;
+  ConditionExpsFilter *filter_;
+  const char *db_;
+private:
+  void cart(std::vector<TupleSet> &tuple_sets);
+};
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 
 #endif //__OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_
