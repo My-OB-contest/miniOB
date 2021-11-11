@@ -1015,7 +1015,8 @@ RC ExpSelectExeNode::execute(TupleSet &res_tupleset) {
         const TupleField &tuple_field = res_tupleset.get_schema().field(j);
         if(tuple_field.get_is_explist()){
           Value value;
-          rc = cal_explist(tuple_field.get_explist(), tuple_sets[0].tuples()[i], tuple_sets[0].get_schema(), value);
+          // rc = cal_explist(tuple_field.get_explist(), tuple_sets[0].tuples()[i], tuple_sets[0].get_schema(), value);
+          value.is_null = 1;
           if(rc != RC::SUCCESS) {
             LOG_ERROR("expression calculation invalid\n");
             return rc;
