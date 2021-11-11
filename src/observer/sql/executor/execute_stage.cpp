@@ -572,20 +572,20 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Trx *trx = session->current_trx();
   const AdvSelects &adv_selects = sql->sstr.adv_selection;
   Selects selects;
-  // if(!convert_to_selects(adv_selects, selects)) {
-  //   // 走表达式路线;
-  //   TupleSet res_tupleset;
-  //   std::stringstream ss;
-  //   rc = do_advselects(trx, adv_selects, db, res_tupleset);
-  //   if(rc != RC::SUCCESS) {
-  //     end_trx_if_need(session, trx, true);
-  //     return rc;
-  //   }
-  //   res_tupleset.print(ss);
-  //   session_event->set_response(ss.str());
-  //   end_trx_if_need(session, trx, true);
-  //   return rc;
-  // }
+  if(!convert_to_selects(adv_selects, selects)) {
+    // 走表达式路线;
+    TupleSet res_tupleset;
+    std::stringstream ss;
+    rc = do_advselects(trx, adv_selects, db, res_tupleset);
+    if(rc != RC::SUCCESS) {
+      end_trx_if_need(session, trx, true);
+      return rc;
+    }
+    res_tupleset.print(ss);
+    session_event->set_response(ss.str());
+    end_trx_if_need(session, trx, true);
+    return rc;
+  }
 
   // rc = select_check(db,selects);
   // if ( rc != RC::SUCCESS){
@@ -696,7 +696,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   //   delete tmp_node;
   // }
   // session_event->set_response(ss.str());
-  session_event->set_response("The res is weird");
+  session_event->set_response("the res is weird\n");
   end_trx_if_need(session, trx, true);
   return rc;
 }
