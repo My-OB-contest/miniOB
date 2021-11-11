@@ -572,8 +572,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Trx *trx = session->current_trx();
   const AdvSelects &adv_selects = sql->sstr.adv_selection;
   Selects selects;
-  // if(!convert_to_selects(adv_selects, selects)) {
-  if(true){
+  if(!convert_to_selects(adv_selects, selects)) {
     // 走表达式路线;
     TupleSet res_tupleset;
     std::stringstream ss;
@@ -584,8 +583,8 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     }
     res_tupleset.print(ss);
     session_event->set_response(ss.str());
-    end_trx_if_need(session, trx, true);
-    return rc;
+    // end_trx_if_need(session, trx, true);
+    return RC::SUCCESS;
   }
 
   rc = select_check(db,selects);
