@@ -572,131 +572,130 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Trx *trx = session->current_trx();
   const AdvSelects &adv_selects = sql->sstr.adv_selection;
   Selects selects;
-  if(!convert_to_selects(adv_selects, selects)) {
+  // if(!convert_to_selects(adv_selects, selects)) {
     // 走表达式路线;
     TupleSet res_tupleset;
     std::stringstream ss;
     rc = do_advselects(trx, adv_selects, db, res_tupleset);
     if(rc != RC::SUCCESS) {
-      end_trx_if_need(session, trx, true);
+      end_trx_if_need(session, trx, false);
       return rc;
     }
     res_tupleset.print(ss);
     session_event->set_response(ss.str());
     end_trx_if_need(session, trx, true);
     return rc;
+  // }
+
+  rc = select_check(db,selects);
+  if ( rc != RC::SUCCESS){
+      LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
+      return rc;
+  }
+  // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
+  std::vector<SelectExeNode *> select_nodes;
+  for (size_t i = 0; i < selects.relation_num; i++) {
+    const char *table_name = selects.relations[i];
+    SelectExeNode *select_node = new SelectExeNode;
+    rc = create_selection_executor(trx, selects, db, table_name, *select_node);
+    if (rc != RC::SUCCESS) {
+      delete select_node;
+      for (SelectExeNode *& tmp_node: select_nodes) {
+        delete tmp_node;
+      }
+      end_trx_if_need(session, trx, false);
+      return rc;
+    }
+    select_nodes.push_back(select_node);
   }
 
-  // rc = select_check(db,selects);
-  // if ( rc != RC::SUCCESS){
-  //     LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
-  //     return rc;
-  // }
-  // // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
-  // std::vector<SelectExeNode *> select_nodes;
-  // for (size_t i = 0; i < selects.relation_num; i++) {
-  //   const char *table_name = selects.relations[i];
-  //   SelectExeNode *select_node = new SelectExeNode;
-  //   rc = create_selection_executor(trx, selects, db, table_name, *select_node);
-  //   if (rc != RC::SUCCESS) {
-  //     delete select_node;
-  //     for (SelectExeNode *& tmp_node: select_nodes) {
-  //       delete tmp_node;
-  //     }
-  //     end_trx_if_need(session, trx, false);
-  //     return rc;
-  //   }
-  //   select_nodes.push_back(select_node);
-  // }
-
-  // if (select_nodes.empty()) {
-  //   LOG_ERROR("No table given");
-  //   end_trx_if_need(session, trx, false);
-  //   return RC::SQL_SYNTAX;
-  // }
+  if (select_nodes.empty()) {
+    LOG_ERROR("No table given");
+    end_trx_if_need(session, trx, false);
+    return RC::SQL_SYNTAX;
+  }
 
 
-  // std::vector<TupleSet> tuple_sets;
-  // for (SelectExeNode *&node: select_nodes) {
-  //   TupleSet tuple_set;
-  //   rc = node->execute(tuple_set);
-  //   if (rc != RC::SUCCESS) {
-  //     for (SelectExeNode *& tmp_node: select_nodes) {
-  //       delete tmp_node;
-  //     }
-  //     end_trx_if_need(session, trx, false);
-  //     return rc;
-  //   } else {
-  //     tuple_sets.push_back(std::move(tuple_set));
-  //   }
-  // }
+  std::vector<TupleSet> tuple_sets;
+  for (SelectExeNode *&node: select_nodes) {
+    TupleSet tuple_set;
+    rc = node->execute(tuple_set);
+    if (rc != RC::SUCCESS) {
+      for (SelectExeNode *& tmp_node: select_nodes) {
+        delete tmp_node;
+      }
+      end_trx_if_need(session, trx, false);
+      return rc;
+    } else {
+      tuple_sets.push_back(std::move(tuple_set));
+    }
+  }
 
-  // /* @author: huahui 
-  //  * @what for: 必做题，聚合查询和多表join
-  //  * -----------------------------------------------------------------------------------------------------------------
-  //  */
-  // TupleSet res_tupleset;
-  // std::stringstream ss;
-  // if (tuple_sets.size() > 1) {
-  //   // 本次查询了多张表，需要做join操作
-  //   JoinExeNode *joinExeNode = new JoinExeNode;
-  //   rc = joinExeNode->init(trx, selects.conditions, selects.condition_num, db, selects.relations, selects.relation_num);
-  //   if (rc != RC::SUCCESS){
-  //       LOG_ERROR("Join init error");
-  //       delete joinExeNode;
-  //       return rc;
-  //   }
-  //   rc = joinExeNode->execute(tuple_sets);
-  //   if (rc != RC::SUCCESS){
-  //       LOG_ERROR("Join execute error");
-  //       delete joinExeNode;
-  //       return rc;
-  //   }
-  //   rc = projection(tuple_sets,selects);
-  //   if (rc != RC::SUCCESS){
-  //       LOG_ERROR("projection error");
-  //       delete joinExeNode;
-  //       return rc;
-  //   }
-  //   res_tupleset = std::move(tuple_sets.front());
-  //   delete joinExeNode;
-  //   // 本次查询了多张表，需要做join操作, 结果放在res_tuple_set中
-  // } else {
-  //   // 当前只查询一张表，直接返回结果即可
-  //   res_tupleset = std::move(tuple_sets.front());
-  //   // tuple_sets.front().print(ss);
-  // }
+  /* @author: huahui 
+   * @what for: 必做题，聚合查询和多表join
+   * -----------------------------------------------------------------------------------------------------------------
+   */
+  TupleSet res_tupleset;
+  std::stringstream ss;
+  if (tuple_sets.size() > 1) {
+    // 本次查询了多张表，需要做join操作
+    JoinExeNode *joinExeNode = new JoinExeNode;
+    rc = joinExeNode->init(trx, selects.conditions, selects.condition_num, db, selects.relations, selects.relation_num);
+    if (rc != RC::SUCCESS){
+        LOG_ERROR("Join init error");
+        delete joinExeNode;
+        return rc;
+    }
+    rc = joinExeNode->execute(tuple_sets);
+    if (rc != RC::SUCCESS){
+        LOG_ERROR("Join execute error");
+        delete joinExeNode;
+        return rc;
+    }
+    rc = projection(tuple_sets,selects);
+    if (rc != RC::SUCCESS){
+        LOG_ERROR("projection error");
+        delete joinExeNode;
+        return rc;
+    }
+    res_tupleset = std::move(tuple_sets.front());
+    delete joinExeNode;
+    // 本次查询了多张表，需要做join操作, 结果放在res_tuple_set中
+  } else {
+    // 当前只查询一张表，直接返回结果即可
+    res_tupleset = std::move(tuple_sets.front());
+    // tuple_sets.front().print(ss);
+  }
 
-  // bool hagg = false;
-  // std::vector<const RelAttr *> relattrs;
-  // rc = have_agg_from_selections(selects, hagg, relattrs);
-  // if(rc != RC::SUCCESS) {
-  //   LOG_ERROR("In aggregated query without GROUP BY, expression of SELECT list contains must not contain nonaggregated colum\n");
-  //   return rc;
-  // }
+  bool hagg = false;
+  std::vector<const RelAttr *> relattrs;
+  rc = have_agg_from_selections(selects, hagg, relattrs);
+  if(rc != RC::SUCCESS) {
+    LOG_ERROR("In aggregated query without GROUP BY, expression of SELECT list contains must not contain nonaggregated colum\n");
+    return rc;
+  }
 
-  // if(hagg) {
-  //   // 聚合查询，先做合法性校验，比如AVG(birthday)是肯定不对的
-  //   rc = check_agg(db, selects, relattrs);
-  //   if(rc != RC::SUCCESS) {
-  //     return rc;
-  //   }
-  //   TupleSet agg_res;
-  //   rc = agg_select_from_tupleset(trx, db, selects, res_tupleset, relattrs, agg_res);
-  //   if(rc != RC::SUCCESS) {
-  //     return rc;
-  //   }
-  //   res_tupleset = std::move(agg_res);
-  // }
-  // res_tupleset.print(ss);
-  // /* ------------------------------------------------------------------------------------------------------------
-  //  */
+  if(hagg) {
+    // 聚合查询，先做合法性校验，比如AVG(birthday)是肯定不对的
+    rc = check_agg(db, selects, relattrs);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+    TupleSet agg_res;
+    rc = agg_select_from_tupleset(trx, db, selects, res_tupleset, relattrs, agg_res);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+    res_tupleset = std::move(agg_res);
+  }
+  res_tupleset.print(ss);
+  /* ------------------------------------------------------------------------------------------------------------
+   */
 
-  // for (SelectExeNode *& tmp_node: select_nodes) {
-  //   delete tmp_node;
-  // }
-  // session_event->set_response(ss.str());
-  session_event->set_response("the res is weird\n");
+  for (SelectExeNode *& tmp_node: select_nodes) {
+    delete tmp_node;
+  }
+  session_event->set_response(ss.str());
   end_trx_if_need(session, trx, true);
   return rc;
 }
