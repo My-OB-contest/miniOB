@@ -46,7 +46,9 @@ public:
   int sys_field_num() const;
 
   const IndexMeta * index(const char *name) const;
-  const IndexMeta * find_index_by_field(const char *field) const;
+  const IndexMeta * find_index_by_field_vector(std::vector<std::string> field_name_vector) const;
+  const IndexMeta * find_index_by_field(const char *field_name) const;
+  const IndexMeta * find_index_by_field_list(char *const *field_list,int num) const;
   const IndexMeta * index(int i) const;
   int index_num() const;
 

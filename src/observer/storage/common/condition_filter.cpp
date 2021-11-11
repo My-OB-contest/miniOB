@@ -21,7 +21,6 @@ See the Mulan PSL v2 for more details. */
 #include <math.h>
 
 using namespace common;
-
 ConditionFilter::~ConditionFilter()
 {}
 
@@ -232,7 +231,18 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       }else{
         right = *(float *)right_value;
       }
-      cmp_result = (int)(left - right);
+      if((left - right < 1e-6) && (left -right > -1e-6) )
+      {
+          cmp_result = 0;
+      } else{
+          if (left-right > 0){
+              cmp_result = 1;
+          }
+          if (left-right < 0){
+              cmp_result = -1;
+          }
+      }
+
     } break;
     /* ------------------------------------------------------------------------------*/
     case DATES: {

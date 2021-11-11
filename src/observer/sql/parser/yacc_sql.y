@@ -256,18 +256,29 @@ desc_table:
     }
     ;
 
-create_index:		/*create index 语句的语法解析树*/
-    CREATE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON 
-		{
-			CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_index";
-			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5, $7 ,0);
-		}
-	| CREATE UNIQUE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON
-	    {
-	        CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_unique_index";
-            create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6, $8 ,1);
-	    }
+ create_index:		/*create index 语句的语法解析树*/
+    CREATE INDEX ID ON ID LBRACE field_name_list RBRACE SEMICOLON
+ 		{
+ 			CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_index";
+			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5 ,0);
+ 		}
+	| CREATE UNIQUE INDEX ID ON ID LBRACE field_name_list RBRACE SEMICOLON
+ 	    {
+ 	        CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_unique_index";
+            create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6 ,1);
+ 	    }
     ;
+
+field_name_list:
+    ID
+        {
+            create_index_append_attribute(&CONTEXT->ssql->sstr.create_index,$1);
+        }
+    |ID COMMA field_name_list
+        {
+            create_index_append_attribute(&CONTEXT->ssql->sstr.create_index,$1);
+        }
+
 
 drop_index:			/*drop index 语句的语法解析树*/
     DROP INDEX ID  SEMICOLON 
