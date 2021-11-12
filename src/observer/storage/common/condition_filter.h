@@ -124,19 +124,19 @@ private:
 };
 
 /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
+RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
 
 // 处理表达式的比较以及简单的比较如 d="1998-12-9"
 class ConditionExpsFilter {
 public:
   ConditionExpsFilter();
   ~ConditionExpsFilter();
-  RC init(int condition_num, const ConditionExp *cond_exp, const TupleSchema &tuple_schema, 
-          RC (*cal_explist)(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value));
+  RC init(int condition_num, const ConditionExp cond_exps[], const TupleSchema &tuple_schema);
   bool filter(const Tuple &tuple) const;
 private:
-  std::vector<const ConditionExp *> cond_exps_;
+  std::vector<ConditionExp> cond_exps_;
   TupleSchema tuple_schema_;
-  RC (*cal_explist_)(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
   AttrType getType(const char *table_name, const char *attribute_name);
 };
 

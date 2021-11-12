@@ -494,29 +494,289 @@ bool CompositeConditionFilter::filter(const Record &rec) const
 }
 
 /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 计算exp的结果，exp中未知数的结果在tuple中
+// exp中relation_name可能为空，若为空，则说明
+// 注意：exp和tuple_schema必须合法
+RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value) {
+  RC rc = RC::SUCCESS;
+  Value leftexp_value, rightexp_value;
+  if(exp->left_exp) {
+    rc = cal_exp(exp->left_exp, tuple, tuple_schema, leftexp_value);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+  if(exp->have_brace) {
+    rc = cal_explist(exp->explist, tuple, tuple_schema, rightexp_value);
+    if(rc != RC::SUCCESS) return rc;
+  } else {
+    if(exp->is_attr) {
+      int field_index = tuple_schema.index_of_field((exp->relation_name?exp->relation_name:tuple_schema.field(0).table_name()), exp->attribute_name);
+      const std::shared_ptr<TupleValue> &tv = tuple.get_pointer(field_index);
+      /*if(tuple_schema.field(field_index).type() != AttrType::INTS && tuple_schema.field(field_index).type() != AttrType::FLOATS) {
+        LOG_ERROR("%s.%s is not type of int or float\n", tuple_schema.field(field_index).table_name(), tuple_schema.field(field_index).field_name());
+        return RC::SQL_SYNTAX;
+      }*/
+      if(std::dynamic_pointer_cast<NullValue>(tv)) {
+        rightexp_value.is_null = 1;
+        LOG_INFO("the field of expression: %s.%s is NULL\n", exp->relation_name?exp->relation_name:tuple_schema.field(0).table_name(), exp->attribute_name);
+      }else {
+        if(tuple_schema.field(field_index).type() == AttrType::INTS) {
+          std::shared_ptr<IntValue> inttv = std::dynamic_pointer_cast<IntValue>(tv);
+          rightexp_value.is_null = 0;
+          rightexp_value.type = AttrType::INTS;
+          rightexp_value.data = malloc(sizeof(int));
+          int v = inttv->getValue();
+          memcpy(rightexp_value.data, &v, sizeof(int));
+        } else if(tuple_schema.field(field_index).type() == AttrType::FLOATS) {
+          std::shared_ptr<FloatValue> floattv = std::dynamic_pointer_cast<FloatValue>(tv);
+          rightexp_value.is_null = 0;
+          rightexp_value.type = AttrType::FLOATS;
+          rightexp_value.data = malloc(sizeof(float));
+          float v = floattv->getValue();
+          memcpy(rightexp_value.data, &v, sizeof(float));
+        } else if(tuple_schema.field(field_index).type() == AttrType::CHARS) {
+          std::shared_ptr<StringValue> strtv = std::dynamic_pointer_cast<StringValue>(tv);
+          rightexp_value.is_null = 0;
+          rightexp_value.type = AttrType::CHARS;
+          rightexp_value.data = strtv->get_value();
+        } else if(tuple_schema.field(field_index).type() == AttrType::DATES) {
+          std::shared_ptr<DateValue> datetv = std::dynamic_pointer_cast<DateValue>(tv);
+          rightexp_value.is_null = 0;
+          rightexp_value.type = AttrType::DATES;
+          rightexp_value.data = datetv->get_value();
+        }
+      }
+    } else {
+      /*if(exp->value.is_null) {
+        LOG_INFO("some item in expression is NULL\n");
+      }else if(exp->value.type!=AttrType::INTS && exp->value.type!=AttrType::FLOATS) {
+        LOG_ERROR("some constant in expression is not type of int or float\n");
+        if(exp->left_exp) value_destroy(&leftexp_value);
+        return RC::SQL_SYNTAX;
+      }*/
+      if(exp->value.is_null) {
+        rightexp_value.is_null = 1;
+      } else if(exp->value.type == AttrType::INTS) {
+        rightexp_value.is_null = 0;
+        rightexp_value.type = AttrType::INTS;
+        rightexp_value.data = malloc(sizeof(int));
+        memcpy(rightexp_value.data, exp->value.data, sizeof(int));
+      } else if(exp->value.type == AttrType::FLOATS){
+        rightexp_value.is_null = 0;
+        rightexp_value.type = AttrType::FLOATS;
+        rightexp_value.data = malloc(sizeof(float));
+        memcpy(rightexp_value.data, exp->value.data, sizeof(float));
+      } else if(exp->value.type == AttrType::CHARS){
+        rightexp_value.is_null = 0;
+        rightexp_value.type = AttrType::CHARS;
+        char *s = strdup((char *)(exp->value.data));
+        rightexp_value.data = (void *)s;
+      } else if(exp->value.type == AttrType::DATES) {
+        rightexp_value.is_null = 0;
+        rightexp_value.type = AttrType::DATES;
+        rightexp_value.data = malloc(4);
+        memcpy(rightexp_value.data, exp->value.data, 4);
+      }
+    }
+  }
+
+  if((exp->left_exp && leftexp_value.is_null) || rightexp_value.is_null) {
+    if(exp->left_exp) {
+      value_destroy(&leftexp_value);
+    }
+    value_destroy(&rightexp_value);
+    value.is_null = 1;
+    return RC::SUCCESS;
+  }else {
+    if(!exp->left_exp) {
+      value = rightexp_value;
+      return RC::SUCCESS;
+    } else {
+      // 解决除0错误
+      if(exp->calop==CalOp::DIVIDE_OP && (rightexp_value.type==AttrType::INTS && (*(int *)(rightexp_value.data)) == 0 || rightexp_value.type==AttrType::FLOATS && (*(float *)(leftexp_value.data)) == 0.0)) {
+        value.is_null = 1;
+        value_destroy(&leftexp_value);
+        value_destroy(&rightexp_value);
+        return RC::SUCCESS;
+      }
+      if(leftexp_value.type==AttrType::INTS && rightexp_value.type==AttrType::INTS 
+         && (exp->calop!=CalOp::DIVIDE_OP || (*(int *)(leftexp_value.data)) % (*(int *)(rightexp_value.data)) == 0)) {
+        int res;
+        int lv = (*(int *)(leftexp_value.data)), rv = (*(int *)(rightexp_value.data));
+        switch(exp->calop) {
+        case CalOp::DIVIDE_OP:
+          res = lv / rv;
+          break;
+        case CalOp::TIME_OP:
+          res = lv * rv;
+          break;
+        default:
+          LOG_ERROR("invalid calop, Exp struct must only use DIVIDE or TIME \n");
+          value_destroy(&leftexp_value);
+          value_destroy(&rightexp_value);
+          return RC::SQL_SYNTAX;
+        }
+        value.is_null = 0;
+        value.type = AttrType::INTS;
+        value.data = malloc(sizeof(int));
+        memcpy(value.data, &res, sizeof(int));
+      } else {
+        float res;
+        float lv, rv;
+        if(leftexp_value.type == AttrType::INTS) {
+          lv = (float)(*(int *)(leftexp_value.data));
+        } else {
+          lv = (*(float *)(leftexp_value.data));
+        }
+        if(rightexp_value.type == AttrType::INTS) {
+          rv = (float)(*(int *)(rightexp_value.data));
+        } else {
+          rv = (*(float *)(rightexp_value.data));
+        }
+        switch(exp->calop) {
+        case CalOp::DIVIDE_OP:
+          res = lv / rv;
+          break;
+        case CalOp::TIME_OP:
+          res = lv * rv;
+          break;
+        default:
+          LOG_ERROR("invalid calop, Exp struct must only use DIVIDE or TIME \n");
+          value_destroy(&leftexp_value);
+          value_destroy(&rightexp_value);
+          return RC::SQL_SYNTAX;
+        }
+        value.is_null = 0;
+        value.type = AttrType::FLOATS;
+        value.data = malloc(sizeof(float));
+        memcpy(value.data, &res, sizeof(float));
+      }
+      value_destroy(&leftexp_value);
+      value_destroy(&rightexp_value);
+      return RC::SUCCESS;
+    }
+  }
+}
+
+// 计算explist的结果，explist中未知数的值在tuple中
+// 结果输出在value_type和value中
+// 注意：explist和tuple_schema必须合法
+RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value) {
+  RC rc = RC::SUCCESS;
+  Value leftexplist_value, rightexplist_value;
+  if(explist->left_explist) {
+    rc = cal_explist(explist->left_explist, tuple, tuple_schema, leftexplist_value);
+    if(rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+  rc = cal_exp(explist->exp, tuple, tuple_schema, rightexplist_value);
+  if(rc != RC::SUCCESS) {
+    return rc;
+  }
+  if((explist->left_explist && leftexplist_value.is_null) || rightexplist_value.is_null) {
+    if(explist->left_explist) {
+      value_destroy(&leftexplist_value);
+    }
+    value_destroy(&rightexplist_value);
+    value.is_null = 1;
+    return RC::SUCCESS;
+  }
+  
+  if(explist->exp->have_negative) {
+    LOG_INFO("the leftmost Exp of Explist has negative sign\n");
+    if(rightexplist_value.type == AttrType::INTS) {
+      int rv = *(int *)rightexplist_value.data;
+      rv = -rv;
+      memcpy(rightexplist_value.data, &rv, sizeof(int));
+    } else {
+      float rv = *(float *)rightexplist_value.data;
+      rv = -rv;
+      memcpy(rightexplist_value.data, &rv, sizeof(float));
+    }
+  }
+  if(!explist->left_explist) {
+    value = rightexplist_value;
+    return RC::SUCCESS;
+  }
+
+  if(leftexplist_value.type==AttrType::INTS && rightexplist_value.type==AttrType::INTS) {
+    int res;
+    int lv = *(int *)leftexplist_value.data, rv = *(int *)rightexplist_value.data;
+    switch(explist->calop) {
+    case CalOp::PLUS_OP:
+      res = lv + rv;
+      break;
+    case CalOp::MINUS_OP:
+      res = lv - rv;
+      break;
+    default:
+      LOG_ERROR("invalid calop, ExpList struct must only use PLUS or MINUS \n");
+      value_destroy(&leftexplist_value);
+      value_destroy(&rightexplist_value);
+      return RC::SQL_SYNTAX;
+    }
+    value.is_null = 0;
+    value.type = AttrType::INTS;
+    value.data = malloc(sizeof(int));
+    memcpy(value.data, &res, sizeof(int));
+  } else {
+    float res;
+    float lv, rv;
+    if(leftexplist_value.type == AttrType::INTS) {
+      lv = (float)(*(int *)leftexplist_value.data);
+    } else {
+      lv = *(float *)leftexplist_value.data;
+    }
+    if(rightexplist_value.type == AttrType::INTS) {
+      lv = (float)(*(int *)rightexplist_value.data);
+    } else {
+      rv = *(float *)rightexplist_value.data;
+    }
+    switch(explist->calop) {
+    case CalOp::PLUS_OP:
+      res = lv + rv;
+      break;
+    case CalOp::MINUS_OP:
+      res = lv - rv;
+      break;
+    default:
+      LOG_ERROR("invalid calop, ExpList struct must only use PLUS or MINUS \n");
+      value_destroy(&leftexplist_value);
+      value_destroy(&rightexplist_value);
+      return RC::SQL_SYNTAX;
+    }
+    value.is_null = 0;
+    value.type = AttrType::FLOATS;
+    value.data = malloc(sizeof(float));
+    memcpy(value.data, &res, sizeof(float));
+  }
+  value_destroy(&leftexplist_value);
+  value_destroy(&rightexplist_value);
+  return RC::SUCCESS;
+}
 
 ConditionExpsFilter::ConditionExpsFilter(){};
 ConditionExpsFilter::~ConditionExpsFilter(){};
 
-RC ConditionExpsFilter::init(int condition_num, const ConditionExp *cond_exp, const TupleSchema &tuple_schema, 
-          RC (*cal_explist)(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value)) {
+RC ConditionExpsFilter::init(int condition_num, const ConditionExp cond_exps[], const TupleSchema &tuple_schema) {
   for(int i = 0; i < condition_num; i++) {
-    cond_exps_.emplace_back(&(cond_exp[i]));
+    cond_exps_.push_back(cond_exps[i]);
   }
   tuple_schema_ = tuple_schema;
-  cal_explist_ = cal_explist;
 }
 
 bool ConditionExpsFilter::filter(const Tuple &tuple) const {
   for(int i = 0; i < cond_exps_.size(); i++) {
     Value vleft, vright;
     RC rc = RC::SUCCESS;
-    rc = cal_explist_(cond_exps_[i]->left, tuple, tuple_schema_, vleft);
+    rc = cal_explist(cond_exps_[i].left, tuple, tuple_schema_, vleft);
     if(rc != RC::SUCCESS) {
       LOG_ERROR("ConditionExpsFilter::filter error, return false\n");
       return false;
     }
-    rc = cal_explist_(cond_exps_[i]->right, tuple, tuple_schema_, vright);
+    rc = cal_explist(cond_exps_[i].right, tuple, tuple_schema_, vright);
     if(rc != RC::SUCCESS) {
       LOG_ERROR("ConditionExpsFilter::filter error, return false\n");
       value_destroy(&vleft);
@@ -524,17 +784,17 @@ bool ConditionExpsFilter::filter(const Tuple &tuple) const {
     }
     
     if(vleft.is_null || vright.is_null) { 
-      if(cond_exps_[i]->comp != CompOp::IS && cond_exps_[i]->comp != CompOp::ISNOT) {
+      if(cond_exps_[i].comp != CompOp::IS && cond_exps_[i].comp != CompOp::ISNOT) {
         value_destroy(&vleft);
         value_destroy(&vright);
         return false;
       }
-      if(cond_exps_[i]->comp == CompOp::IS && !vleft.is_null) {
+      if(cond_exps_[i].comp == CompOp::IS && !vleft.is_null) {
         value_destroy(&vleft);
         value_destroy(&vright);
         return false;
       }
-      if(cond_exps_[i]->comp == CompOp::ISNOT && vleft.is_null) {
+      if(cond_exps_[i].comp == CompOp::ISNOT && vleft.is_null) {
         value_destroy(&vleft);
         value_destroy(&vright);
         return false;
@@ -578,7 +838,7 @@ bool ConditionExpsFilter::filter(const Tuple &tuple) const {
       }
     }
 
-    switch (cond_exps_[i]->comp) {
+    switch (cond_exps_[i].comp) {
     case EQUAL_TO:
       if(cmp_res != 0) { value_destroy(&vleft); value_destroy(&vright); return false; }
       break;

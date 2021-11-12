@@ -110,8 +110,6 @@ private:
 /*end ----------------------------------------------------------------------------------------------*/
 
 /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
-RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
-RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
 bool relattrexp_isexp(const RelAttrExp &relattrexp, const char *first_table_name, const char *db);   // RelAttrExp是表达式种类吗
 bool relattrexp_issingle(const RelAttrExp &relattrexp, const char *first_table_name, const char *db);
 
