@@ -1403,7 +1403,7 @@ exp:
     exp->num = 1;
     $$ = (void *)exp;
   }
-  | LBRACE exp_list RBRACE {
+  | LBRACE exp_list3 RBRACE {
     Exp *exp = (Exp *)malloc(sizeof(Exp));
     exp->have_brace = 1;
     exp->have_negative = 0;
