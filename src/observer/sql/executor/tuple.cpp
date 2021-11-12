@@ -70,9 +70,6 @@ void print_exp(Exp *exp, std::ostream &os) {
     print_exp(exp->left_exp, os);
     os << calopToStr(exp->calop);
   }
-  if(!exp->left_exp && exp->have_negative) {
-    os << "-";
-  }
   if(exp->have_brace) {
     os << "(";
     print_explist(exp->explist, os);
@@ -96,6 +93,9 @@ void print_explist(ExpList *explist, std::ostream &os) {
   if(explist->left_explist) {
     print_explist(explist->left_explist, os);
     os << calopToStr(explist->calop);
+  }
+  if(explist->exp->have_negative) {
+    os << "-";
   }
   print_exp(explist->exp, os);
 }

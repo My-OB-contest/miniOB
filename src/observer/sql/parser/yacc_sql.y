@@ -1253,6 +1253,7 @@ exp_list3:
     explist->exp->have_negative = 1;
     $$ = $2;
   }
+  ;
 
 
 /* exps是一个完整的支持乘除的表达式，它用乘除将很多exp连接起来，exp可以是属性，值或者括号括进来的东西exp_list
