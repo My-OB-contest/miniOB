@@ -581,9 +581,8 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
       end_trx_if_need(session, trx, false);
       return rc;
     }
-    // res_tupleset.print(ss);
-    // session_event->set_response(ss.str());
-    session_event->set_response("the res is weird\n");
+    res_tupleset.print(ss);
+    session_event->set_response(ss.str());
     end_trx_if_need(session, trx, true);
     return RC::SUCCESS;
   }

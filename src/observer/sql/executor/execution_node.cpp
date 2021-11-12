@@ -833,6 +833,7 @@ ExpSelectExeNode::~ExpSelectExeNode(){
 // 检查Exp是否合法
 RC ExpSelectExeNode::check_exp(Exp *exp) {
   RC rc = RC::SUCCESS;
+  if(!exp) return RC::SUCCESS;
   if(exp->left_exp) {
     rc = check_exp(exp->left_exp);
     if(rc != RC::SUCCESS) {
@@ -922,9 +923,11 @@ RC ExpSelectExeNode::init() {
       LOG_ERROR("expression, single-attr or star cannot be with agg attr\n");
       return RC::SQL_SYNTAX;
     }
-    rc = check_explist(relattrexp.explist);
-    if(rc != RC::SUCCESS) {
-      return rc;
+    if(!relattrexp.is_star) {
+      rc = check_explist(relattrexp.explist);
+      if(rc != RC::SUCCESS) {
+        return rc;
+      }
     }
   }
 
