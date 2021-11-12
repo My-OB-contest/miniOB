@@ -760,15 +760,18 @@ RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tu
 ConditionExpsFilter::ConditionExpsFilter(){};
 ConditionExpsFilter::~ConditionExpsFilter(){};
 
-RC ConditionExpsFilter::init(int condition_num, const ConditionExp cond_exps[], const TupleSchema &tuple_schema) {
+void ConditionExpsFilter::init(int condition_num, const ConditionExp cond_exps[], const TupleSchema &tuple_schema) {
+  condition_num_ = condition_num;
   for(int i = 0; i < condition_num; i++) {
-    cond_exps_.push_back(cond_exps[i]);
+    // cond_exps_.emplace_back(cond_exps[i]);
+    cond_exps_[i] = cond_exps[i];
   }
   tuple_schema_ = tuple_schema;
 }
 
 bool ConditionExpsFilter::filter(const Tuple &tuple) const {
-  for(int i = 0; i < cond_exps_.size(); i++) {
+  // for(int i = 0; i < cond_exps_.size(); i++) {
+  for(int i = 0; i < condition_num_; i++) {
     Value vleft, vright;
     RC rc = RC::SUCCESS;
     rc = cal_explist(cond_exps_[i].left, tuple, tuple_schema_, vleft);

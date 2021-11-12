@@ -132,10 +132,12 @@ class ConditionExpsFilter {
 public:
   ConditionExpsFilter();
   ~ConditionExpsFilter();
-  RC init(int condition_num, const ConditionExp cond_exps[], const TupleSchema &tuple_schema);
+  void init(int condition_num, const ConditionExp cond_exps[], const TupleSchema &tuple_schema);
   bool filter(const Tuple &tuple) const;
 private:
-  std::vector<ConditionExp> cond_exps_;
+  // std::vector<ConditionExp> cond_exps_;
+  int condition_num_;
+  ConditionExp cond_exps_[100];
   TupleSchema tuple_schema_;
   AttrType getType(const char *table_name, const char *attribute_name);
 };

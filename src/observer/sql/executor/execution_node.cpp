@@ -720,7 +720,7 @@ RC ExpSelectExeNode::execute(TupleSet &res_tupleset) {
 
   // 初始化filter
   filter_ = new ConditionExpsFilter();
-  filter_->init(adv_selects_.condition_num, adv_selects_.condition_exps, tuple_sets[0].get_schema(), cal_explist);
+  filter_->init(adv_selects_.condition_num, adv_selects_.condition_exps, tuple_sets[0].get_schema());
   
   TupleSchema res_schema;
   for(int i = adv_selects_.attr_num-1; i >= 0; i--) {
