@@ -1007,33 +1007,33 @@ RC ExpSelectExeNode::execute(TupleSet &res_tupleset) {
   }
 
   res_tupleset.set_schema(res_schema);
-  // for(int i = 0; i < tuple_sets[0].size(); i++) {
-  //   if(filter_->filter(tuple_sets[0].get(i))) {
-  //     Tuple tuple;
-  //     for(int j = 0; j < res_tupleset.get_schema().fields().size(); j++) {
-  //       const TupleField &tuple_field = res_tupleset.get_schema().field(j);
-  //       if(tuple_field.get_is_explist()){
-  //         Value value;
-  //         rc = cal_explist(tuple_field.get_explist(), tuple_sets[0].tuples()[i], tuple_sets[0].get_schema(), value);
-  //         if(rc != RC::SUCCESS) {
-  //           LOG_ERROR("expression calculation invalid\n");
-  //           return rc;
-  //         }
-  //         if(value.is_null) {
-  //           tuple.add(new NullValue());
-  //         } else if(value.type == AttrType::INTS) {
-  //           tuple.add((*(int *)(value.data)));
-  //         } else {
-  //           tuple.add((*(float *)(value.data)));
-  //         }
-  //       }else {
-  //         int index = tuple_sets[0].get_schema().index_of_field(tuple_field.table_name(), tuple_field.field_name());
-  //         tuple.add(tuple_sets[0].tuples()[i].get_pointer(index));
-  //       }
-  //     }
-  //     res_tupleset.add(std::move(tuple));
-  //   }
-  // }
+  for(int i = 0; i < tuple_sets[0].size(); i++) {
+    if(filter_->filter(tuple_sets[0].get(i))) {
+      Tuple tuple;
+      for(int j = 0; j < res_tupleset.get_schema().fields().size(); j++) {
+        const TupleField &tuple_field = res_tupleset.get_schema().field(j);
+        if(tuple_field.get_is_explist()){
+          Value value;
+          rc = cal_explist(tuple_field.get_explist(), tuple_sets[0].tuples()[i], tuple_sets[0].get_schema(), value);
+          if(rc != RC::SUCCESS) {
+            LOG_ERROR("expression calculation invalid\n");
+            return rc;
+          }
+          if(value.is_null) {
+            tuple.add(new NullValue());
+          } else if(value.type == AttrType::INTS) {
+            tuple.add((*(int *)(value.data)));
+          } else {
+            tuple.add((*(float *)(value.data)));
+          }
+        }else {
+          int index = tuple_sets[0].get_schema().index_of_field(tuple_field.table_name(), tuple_field.field_name());
+          tuple.add(tuple_sets[0].tuples()[i].get_pointer(index));
+        }
+      }
+      res_tupleset.add(std::move(tuple));
+    }
+  }
 
   return RC::SUCCESS;
 }
