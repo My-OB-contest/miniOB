@@ -579,10 +579,7 @@ RC ExpSelectExeNode::check_exp(Exp *exp) {
     }
   }
   if(exp->have_brace) {
-    rc = check_explist(exp->explist);
-    if(rc != RC::SUCCESS) {
-      return rc;
-    }
+    return check_explist(exp->explist);
   }
   if(exp->is_attr) {
     // 检查属性中不带表名的错误
