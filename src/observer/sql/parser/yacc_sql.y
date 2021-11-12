@@ -173,6 +173,7 @@ ParserContext *get_context(yyscan_t scanner)
 %type <exp> exps2;
 %type <exp_list> exp_list;
 %type <exp_list> exp_list2;
+%type <exp_list> exp_list3
 %type <floatsAndStr> floatnumber
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
@@ -1193,6 +1194,7 @@ relattrexp2:
   ;
 
 /* exp_list是一个完整的支持加减乘除的表达式，它用加减将至少一个的exps连接起来
+ * 前面不带正号
  */
 exp_list:
   exps exp_list2 {
@@ -1238,6 +1240,19 @@ exp_list2:
     $$ = $2;
   }
   ;
+
+exp_list3:
+  exp_list {
+    $$ = $1;
+  }
+  | MINUS exp_list {
+    ExpList *explist = (ExpList *)($2);
+    while(explist->left_explist) {
+      explist = explist->left_explist;
+    }
+    explist->exp->have_negative = 1;
+    $$ = $2;
+  }
 
 
 /* exps是一个完整的支持乘除的表达式，它用乘除将很多exp连接起来，exp可以是属性，值或者括号括进来的东西exp_list
@@ -1422,9 +1437,10 @@ condition_exps:
   
   }
   ;
-  
+
+
 condition_exp: 
-  exp_list comOp exp_list {
+  exp_list3 comOp exp_list3 {
     ExpList *explist_left = (ExpList *)($1);
     ExpList *explist_right = (ExpList *)($3);
     ConditionExp cond_exp;
@@ -1434,7 +1450,7 @@ condition_exp:
     CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
   }
   /* @author: huahui  @what for: null ------------------------------------------------------------------------*/
-	| exp_list IS_A NULL_A {
+	| exp_list3 IS_A NULL_A {
 		ExpList *explist_left = (ExpList *)($1);
 		ExpList *explist_right = (ExpList *)malloc(sizeof(ExpList));
 		
@@ -1446,7 +1462,7 @@ condition_exp:
 		cond_exp.comp = IS;
 		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
 	}
-	| exp_list IS_A NOT NULL_A {
+	| exp_list3 IS_A NOT NULL_A {
 		ExpList *explist_left = (ExpList *)($1);
 		ExpList *explist_right = (ExpList *)malloc(sizeof(ExpList));
 		
