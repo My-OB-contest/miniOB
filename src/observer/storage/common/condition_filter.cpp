@@ -502,13 +502,6 @@ RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, 
   Value leftexp_value, rightexp_value;
   if(exp->left_exp) {
     rc = cal_exp(exp->left_exp, tuple, tuple_schema, leftexp_value);
-    // test
-    if(leftexp_value.type == INTS) {
-      LOG_ERROR("exp: %d\n", *(int *)(leftexp_value.data));
-    } else{
-      LOG_ERROR("exp: %.2f\n", *(float *)(leftexp_value.data));
-    }
-
     if(rc != RC::SUCCESS) {
       return rc;
     }
@@ -587,12 +580,6 @@ RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, 
       }
     }
   }
-  // test
-  if(rightexp_value.type == INTS) {
-    LOG_ERROR("exp: %d\n", *(int *)(rightexp_value.data));
-  } else{
-    LOG_ERROR("exp: %.2f\n", *(float *)(rightexp_value.data));
-  }
 
   if((exp->left_exp && leftexp_value.is_null) || rightexp_value.is_null) {
     if(exp->left_exp) {
@@ -620,14 +607,9 @@ RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, 
         switch(exp->calop) {
         case CalOp::DIVIDE_OP:
           res = lv / rv;
-          // test 
-          LOG_ERROR("exp: %d/%d=%d\n", lv, rv, res);
-
           break;
         case CalOp::TIME_OP:
           res = lv * rv;
-          // test 
-          LOG_ERROR("exp: %d*%d=%d\n", lv, rv, res);
 
           break;
         default:
@@ -656,15 +638,9 @@ RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, 
         switch(exp->calop) {
         case CalOp::DIVIDE_OP:
           res = lv / rv;
-          // test
-          LOG_ERROR("%.2f/%.2f=%.2f\n", lv, rv, res);
-
           break;
         case CalOp::TIME_OP:
           res = lv * rv;
-          // test
-          LOG_ERROR("%.2f*%.2f=%.2f\n", lv, rv, res);
-
           break;
         default:
           LOG_ERROR("invalid calop, Exp struct must only use DIVIDE or TIME \n");
@@ -695,13 +671,6 @@ RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tu
     if(rc != RC::SUCCESS) {
       return rc;
     }
-    // test
-    if(leftexplist_value.type == INTS) {
-      LOG_ERROR("explist: %d\n", *(int *)(leftexplist_value.data));
-    } else{
-      LOG_ERROR("explist: %.2f\n", *(float *)(leftexplist_value.data));
-    }
-
   }
   rc = cal_exp(explist->exp, tuple, tuple_schema, rightexplist_value);
   if(rc != RC::SUCCESS) {
@@ -728,12 +697,6 @@ RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tu
       memcpy(rightexplist_value.data, &rv, sizeof(float));
     }
   }
-  // test
-  if(rightexplist_value.type == INTS) {
-    LOG_ERROR("explist: %d\n", *(int *)(rightexplist_value.data));
-  } else{
-    LOG_ERROR("explist: %.2f\n", *(float *)(rightexplist_value.data));
-  }
 
   if(!explist->left_explist) {
     value = rightexplist_value;
@@ -746,14 +709,9 @@ RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tu
     switch(explist->calop) {
     case CalOp::PLUS_OP:
       res = lv + rv;
-      // test 
-      LOG_ERROR("explist: %d+%d=%d\n", lv, rv, res); 
-
       break;
     case CalOp::MINUS_OP:
       res = lv - rv;
-      // test 
-      LOG_ERROR("explist: %d-%d=%d\n", lv, rv, res);
 
       break;
     default:
@@ -782,15 +740,9 @@ RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tu
     switch(explist->calop) {
     case CalOp::PLUS_OP:
       res = lv + rv;
-      // test 
-      LOG_ERROR("explist: %.2f+%.2f=%.2f\n", lv, rv, res); 
-
       break;
     case CalOp::MINUS_OP:
       res = lv - rv;
-      // test 
-      LOG_ERROR("explist: %.2f-%.2f=%.2f\n", lv, rv, res); 
-
       break;
     default:
       LOG_ERROR("invalid calop, ExpList struct must only use PLUS or MINUS \n");
