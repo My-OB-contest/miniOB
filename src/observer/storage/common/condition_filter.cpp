@@ -44,7 +44,7 @@ RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrT
   //fzh改，添加新可比较属性需要更改
   /* @author: huahui  @what for: null  ------------------------------------------------------------------*/
   if(!left.is_null && !right.is_null){
-    if (attr_type < CHARS || attr_type > DATES ) {
+    if (attr_type < CHARS || attr_type > TEXT ) {
       LOG_ERROR("Invalid condition with unsupported attribute type: %d", attr_type);
       return RC::INVALID_ARGUMENT;
     }
@@ -205,7 +205,7 @@ bool DefaultConditionFilter::filter(const Record &rec) const
 
   //增加属性字段需要修改
   switch (attr_type_) {
-    case CHARS: {  // 字符串都是定长的，直接比较
+    case CHARS || TEXT: {  // 字符串都是定长的，直接比较
       // 按照C字符串风格来定
       cmp_result = strcmp(left_value, right_value);
     } break;

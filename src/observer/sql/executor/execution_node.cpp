@@ -441,7 +441,7 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
           res[j].first += 1; 
         }
       }else {
-        if(tuple_field.type() == AttrType::CHARS || tuple_field.type() == AttrType::DATES || tuple_field.type() == AttrType::UNDEFINED) {
+        if(tuple_field.type() == AttrType::CHARS || tuple_field.type() == AttrType::TEXT|| tuple_field.type() == AttrType::DATES || tuple_field.type() == AttrType::UNDEFINED) {
           return RC::SQL_SYNTAX;
         }
         if(!have_res[j]) {
@@ -490,7 +490,7 @@ RC AggExeNode::execute(TupleSet &res_tupleset) {
       }else if(tuple_field.type() == AttrType::FLOATS) {
         std::shared_ptr<FloatValue> tv = std::static_pointer_cast<FloatValue>(tuple_set_.get(res[j].first).get_pointer(idx));
         tuple.add(tv);
-      }else if(tuple_field.type() == AttrType::CHARS) {
+      }else if(tuple_field.type() == AttrType::CHARS || tuple_field.type() == AttrType::TEXT) {
         std::shared_ptr<StringValue> tv = std::static_pointer_cast<StringValue>(tuple_set_.get(res[j].first).get_pointer(idx));
         tuple.add(tv);
       }else {

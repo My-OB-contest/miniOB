@@ -382,6 +382,22 @@ void TupleRecordConverter::add_record(const char *record) {
       }
       break;
       /*
+      * @author: xiaoyu
+      * @what for: 选做题，增加text字段
+      * begin -------------------------------------------------------------------------------------------
+      */
+      case TEXT: {
+        const char *s = record + field_meta->offset();
+        TextAddress* text_address = new TextAddress(s);
+        char text[4097];
+        memset(&text, 0, sizeof(text));
+//        TupleRecordConverter converter(table_, tuple_set);
+        table_->scan_text_record(text_address, text);
+        tuple.add(text, strlen(text));
+      }
+        break;
+      /*end ----------------------------------------------------------------------------------------------*/
+      /*
        * @author: huahui
        * @what for: 必做题，增加date字段
        * begin -------------------------------------------------------------------------------------------

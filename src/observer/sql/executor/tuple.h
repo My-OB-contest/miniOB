@@ -24,8 +24,10 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/parser/parse.h"
 #include "sql/executor/value.h"
+#include "storage/common/record_manager.h"
 
 class Table;
+struct TextRecord;
 
 class Tuple {
 public:

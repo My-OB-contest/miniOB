@@ -36,12 +36,13 @@ const char *ATTR_TYPE_NAME[] = {
   "chars",
   "ints",
   "floats",
-  "dates"
+  "dates",
+  "text"
 };
 
 //fzh改，加新属性需要修改
 const char *attr_type_to_string(AttrType type) {
-  if (type >= UNDEFINED && type <= DATES) {
+  if (type >= UNDEFINED && type <= TEXT) {
     return ATTR_TYPE_NAME[type];
   }
   return "unknown";
@@ -151,7 +152,7 @@ void FieldMeta::desc(std::ostream &os) const {
  * -----------------------------------------------------------------------------------------------------------------
  */
 bool FieldMeta::addable() const {
-  if(attr_type_ == AttrType::CHARS || attr_type_ == AttrType::DATES) {
+  if(attr_type_ == AttrType::CHARS || attr_type_ == AttrType::TEXT || attr_type_ == AttrType::DATES) {
     return false;
   } else {
     return true;

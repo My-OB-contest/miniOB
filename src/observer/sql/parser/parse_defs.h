@@ -58,7 +58,7 @@ typedef enum {
  
 /* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/
 //属性值类型
-typedef enum { UNDEFINED, CHARS, INTS, FLOATS, DATES } AttrType;
+typedef enum { UNDEFINED, CHARS, INTS, FLOATS, DATES, TEXT} AttrType;
 /* -----------------------------------------------------------------------------------------------*/
 
 //属性值

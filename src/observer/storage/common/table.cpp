@@ -31,15 +31,24 @@ See the Mulan PSL v2 for more details. */
 Table::Table() : 
     data_buffer_pool_(nullptr),
     file_id_(-1),
+    hide_file_id_(-1),
+    text_record_handler_(nullptr),
     record_handler_(nullptr) {
 }
 
 Table::~Table() {
   delete record_handler_;
   record_handler_ = nullptr;
+  delete text_record_handler_;
+  text_record_handler_ = nullptr;
 
   if (data_buffer_pool_ != nullptr && file_id_ >= 0) {
     data_buffer_pool_->close_file(file_id_);
+    data_buffer_pool_ = nullptr;
+  }
+
+  if (data_buffer_pool_ != nullptr && hide_file_id_ >= 0) {
+    data_buffer_pool_->close_file(hide_file_id_);
     data_buffer_pool_ = nullptr;
   }
 
@@ -72,7 +81,7 @@ RC Table::create(const char *path, const char *name, const char *base_dir, int a
                 path, strerror(errno));
       return RC::SCHEMA_TABLE_EXIST;
     }
-    LOG_ERROR("Create table file failed. filename=%s, errmsg=%d:%s", 
+    LOG_ERROR("Create table file failed. filename=%s, errmsg=%d:%s",
        path, errno, strerror(errno));
     return RC::IOERR;
   }
@@ -102,6 +111,18 @@ RC Table::create(const char *path, const char *name, const char *base_dir, int a
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to create disk buffer pool of data file. file name=%s", data_file.c_str());
     return rc;
+  }
+
+  //如果带text字段，添加隐藏表
+  for(int i = 0; i < attribute_count; i++){
+    if(attributes[i].type == TEXT){
+      std::string hide_data_file = std::string(base_dir) + "/" + name + TABLE_HIDE_DATA_SUFFIX;
+      rc = data_buffer_pool_->create_file(hide_data_file.c_str());
+      if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to create disk buffer pool of hide data file. hide file name=%s", data_file.c_str());
+        return rc;
+      }
+    }
   }
 
   rc = init_record_handler(base_dir);
@@ -216,6 +237,54 @@ RC Table::rollback_insert(Trx *trx, const RID &rid) {
   return rc;
 }
 
+RC Table::insert_text_record(Record *record){
+  RC rc = RC::SUCCESS;
+//
+//  if (trx != nullptr) {
+//    trx->init_trx_info(this, *record);
+//  }
+  rc = text_record_handler_->insert_record(record->data, 16, &record->rid);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Insert record failed. table name=%s, rc=%d:%s", table_meta_.name(), rc, strrc(rc));
+    return rc;
+  }
+
+//  if (trx != nullptr) {
+//    rc = trx->insert_record(this, record);
+//    if (rc != RC::SUCCESS) {
+//      LOG_ERROR("Failed to log operation(insertion) to trx");
+//
+//      RC rc2 = record_handler_->delete_record(&record->rid);
+//      if (rc2 != RC::SUCCESS) {
+//        LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
+//                  name(), rc2, strrc(rc2));
+//      }
+//      return rc;
+//    }
+//  }
+
+//  rc = insert_entry_of_indexes(record->data, record->rid);
+//  if (rc != RC::SUCCESS ) {
+//    RC rc2;
+//    if(rc !=RC::RECORD_DUPLICATE_KEY){
+//      rc2 = delete_entry_of_indexes(record->data, record->rid, true);
+//      if (rc2 != RC::SUCCESS) {
+//        LOG_PANIC("Failed to rollback index data when insert index entries failed. table name=%s, rc=%d:%s",
+//                  name(), rc2, strrc(rc2));
+//      }
+//    }
+//    rc2 = text_record_handler_->delete_record(&record->rid);
+////    rc2 = trx->delete_record(this,record);
+//
+//    if (rc2 != RC::SUCCESS) {
+//      LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
+//                name(), rc2, strrc(rc2));
+//    }
+//    return rc;
+//  }
+  return rc;
+}
+
 RC Table::insert_record(Trx *trx, Record *record) {
   RC rc = RC::SUCCESS;
 
@@ -323,7 +392,7 @@ const TableMeta &Table::table_meta() const {
 }
 
 RC Table::make_record(int value_num, const Value values[], char * &record_out) {
-  // 检查字段类型是否一致
+  // 检查字段数是否一致
   if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
     return RC::SCHEMA_FIELD_MISSING;
   }
@@ -341,7 +410,8 @@ RC Table::make_record(int value_num, const Value values[], char * &record_out) {
       continue;
     }
     /* --------------------------------------------------------------------------------------------------------*/
-    if (field->type() != value.type) {
+    if(field->type() == TEXT && value.type == CHARS){
+    }else if (field->type() != value.type) {
       LOG_ERROR("Invalid value type. field name=%s, type=%d, but given=%d",
         field->name(), field->type(), value.type);
       return RC::SCHEMA_FIELD_TYPE_MISMATCH;
@@ -354,9 +424,15 @@ RC Table::make_record(int value_num, const Value values[], char * &record_out) {
 
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
-    const Value &value = values[i];
+    Value value;
+    value.data = values[i].data;
     /* @author: huahui  @what for: null ---------------------------------------------------------------------*/
     // 如果是null值，就记录对应的属性是null的
+    if(field->type() == TEXT){
+      TextAddress text_address = split_text((char*)value.data);
+      text_address.encode((char*)value.data);
+//      strncpy((char*)value.data, textrecord.encode(), field->len());
+    }
     if(value.is_null) {
       record[field->get_null_tag_offset()] = 1;
     }else {
@@ -370,8 +446,19 @@ RC Table::make_record(int value_num, const Value values[], char * &record_out) {
   return RC::SUCCESS;
 }
 
+RC Table::make_text_record(char *short_text, char *&text_record_out) {
+  int text_size = 16;
+  char *text_record = new char [text_size];
+
+  memcpy(text_record, short_text, text_size);
+
+  text_record_out = text_record;
+  return RC::SUCCESS;
+}
+
 RC Table::init_record_handler(const char *base_dir) {
   std::string data_file = std::string(base_dir) + "/" + table_meta_.name() + TABLE_DATA_SUFFIX;
+  std::string hide_data_file = std::string(base_dir) + "/" + table_meta_.name() + TABLE_HIDE_DATA_SUFFIX;
   if (nullptr == data_buffer_pool_) {
     data_buffer_pool_ = theGlobalDiskBufferPool();
   }
@@ -384,6 +471,14 @@ RC Table::init_record_handler(const char *base_dir) {
     return rc;
   }
 
+  int data_buffer_pool_hide_file_id;
+  rc = data_buffer_pool_->open_file(hide_data_file.c_str(), &data_buffer_pool_hide_file_id);
+  if (rc != RC::SUCCESS) {
+//    LOG_ERROR("Failed to open disk buffer pool for file:%s. rc=%d:%s",
+//              hide_data_file.c_str(), rc, strrc(rc));
+//    return rc;
+  }
+
   record_handler_ = new RecordFileHandler();
   rc = record_handler_->init(*data_buffer_pool_, data_buffer_pool_file_id);
   if (rc != RC::SUCCESS) {
@@ -391,7 +486,15 @@ RC Table::init_record_handler(const char *base_dir) {
     return rc;
   }
 
+  text_record_handler_ = new RecordFileHandler();
+  rc = text_record_handler_->init(*data_buffer_pool_, data_buffer_pool_hide_file_id);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to init record handler. rc=%d:%s", rc, strrc(rc));
+    return rc;
+  }
+
   file_id_ = data_buffer_pool_file_id;
+  hide_file_id_ = data_buffer_pool_hide_file_id;
   return rc;
 }
 
@@ -438,7 +541,7 @@ RC Table::scan_record(Trx *trx, ConditionFilter *filter, int limit, void *contex
   /* @optimize: 发现条件中有一个含有=null之类的，可以直接返回空tupleset*/
 
   IndexScanner *index_scanner = find_index_for_scan(filter);
-    if (index_scanner != nullptr) {
+  if (index_scanner != nullptr) {
     return scan_record_by_index(trx, index_scanner, filter, limit, context, record_reader);
   }
 
@@ -469,6 +572,38 @@ RC Table::scan_record(Trx *trx, ConditionFilter *filter, int limit, void *contex
     LOG_ERROR("failed to scan record. file id=%d, rc=%d:%s", file_id_, rc, strrc(rc));
   }
   scanner.close_scan();
+  return rc;
+}
+
+RC Table::scan_text_record(TextAddress* text_address, char* text) {
+  RC rc = RC::SUCCESS;
+  RecordFileScanner scanner;
+  rc = scanner.open_text_scan(*data_buffer_pool_, hide_file_id_);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("failed to open scanner. file id=%d. rc=%d:%s", file_id_, rc, strrc(rc));
+    return rc;
+  }
+
+  std::vector<Record> text_record;
+
+  rc = scanner.get_text_record(text_address, &text_record);
+
+  if (RC::RECORD_EOF == rc) {
+    rc = RC::SUCCESS;
+  } else {
+    LOG_ERROR("failed to scan text record. file id=%d, rc=%d:%s", file_id_, rc, strrc(rc));
+  }
+  scanner.close_scan();
+
+//  char temp_text[4097];
+  int total_len = 0;
+  for(int i = 0; i < text_record.size(); i++){
+    std::cout<<text_record[i].data<<std::endl;
+    strncpy(text + total_len, text_record[i].data, strlen(text_record[i].data));
+    total_len += strlen(text_record[i].data);
+  }
+  text[total_len] = '\0';
+//  strcpy(text, temp_text);
   return rc;
 }
 
@@ -658,6 +793,54 @@ private:
     const Value *value;
     const char *attribute_name;
 };
+
+TextAddress Table::split_text(char *text) {
+  TextAddress text_address;
+  int len = strlen(text)>4096? 4096:strlen(text);
+//  int len = 4096;
+  std::cout << len << std::endl;
+//  std::cout << len2 << std::endl;
+  int end = (len%15==0)? len/15:len/15+1;
+  int i = 0;
+  for( i ; i < end; i++){
+    std::cout << i << std::endl;
+    char data[16];
+    memset(&data, 0, sizeof(data));
+    int copy_len = (len - i * 15 > 0) ? 15 : i * 15 - len;
+    strncpy(data, text+i*15, copy_len);
+    data[15] = '\0';
+//    std::cout << data << std::endl;
+//    char* record_data;
+//    make_text_record(data, record_data);
+    Record record;
+    record.data = data;
+    insert_text_record(&record);
+    if(i == 0){
+      text_address.start_pagenum = record.rid.page_num;
+      text_address.start_slot_num = record.rid.slot_num;
+    }
+    if(i == end - 1){
+      text_address.end_pagenum = record.rid.page_num;
+      text_address.end_slot_num = record.rid.slot_num;
+    }
+  }
+
+  char data[16];
+  memset(&data, 0, sizeof(data));
+  while(i < 4096/15 + 1){
+    Record record;
+    record.data = data;
+    insert_text_record(&record);
+    if(i == 273){
+      text_address.end_pagenum = record.rid.page_num;
+      text_address.end_slot_num = record.rid.slot_num;
+    }
+    i++;
+  }
+
+  return text_address;
+}
+
 RC Table::update_record(Record *record,const Value *value,const char *attribute_name){
     RC rc = RC::SUCCESS;
     const FieldMeta *fieldMeta = table_meta_.field(attribute_name);
@@ -677,7 +860,11 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
     /* @author: huahui  @what for: null -------------------------------------------------------------------*/
     // 如果value是null，则先判断是否是nullable，然后直接更新record的null_tag为1
     // 如果不是null，则也更新null_tag为0
-    if(value->is_null) {
+    Value value_;
+    value_.is_null = value->is_null;
+    value_.data = value->data;
+    value_.type = fieldMeta->type();
+    if(value_.is_null) {
       if(fieldMeta->get_nullable()) {
         record->data[fieldMeta->get_null_tag_offset()] = 1;
       }else {
@@ -687,8 +874,8 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
       record->data[fieldMeta->get_null_tag_offset()] = 0;
     }
     /* ----------------------------------------------------------------------------------------------------*/
-    if(!value->is_null){
-      switch (value->type) {
+    if(!value_.is_null){
+      switch (value_.type) {
         case CHARS:{
             memcpy(dest,(const char *)value->data,fieldlen);
         }
@@ -703,6 +890,13 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
         break;
         case DATES:{
             memcpy(dest,(const unsigned char*)value->data,fieldlen);
+        }
+        break;
+        case TEXT:{
+          TextAddress* text_address = new TextAddress(dest);
+//          char text[4097];
+//          scan_text_record(text_address, text);
+          update_text(text_address, (char*)value->data);
         }
         break;
         default:{
@@ -736,7 +930,9 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   }
   //校验属性的类型是否匹配
   if(!value->is_null){
-    if (value->type !=this->table_meta_.field(attribute_name)->type()){
+    if(value->type == CHARS && this->table_meta_.field(attribute_name)->type() == TEXT){
+
+    }else if (value->type !=this->table_meta_.field(attribute_name)->type()){
       rc = RC::SCHEMA_FIELD_MISSING;
       LOG_ERROR("update field type not match");
       return rc;
@@ -754,6 +950,45 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   rc = scan_record(trx, &filter, -1, &updater, record_reader_update_adapter);
   if (updated_count != nullptr) {
       *updated_count = updater.updated_count();
+  }
+  return rc;
+}
+
+RC Table::update_text(TextAddress* text_address, char* data){
+  RC rc = RC::SUCCESS;
+  RecordFileScanner scanner;
+  rc = scanner.open_text_scan(*data_buffer_pool_, hide_file_id_);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("failed to open scanner. file id=%d. rc=%d:%s", file_id_, rc, strrc(rc));
+    return rc;
+  }
+
+  std::vector<Record> text_record;
+
+  rc = scanner.get_text_record(text_address, &text_record);
+
+  if (RC::RECORD_EOF == rc) {
+    rc = RC::SUCCESS;
+  } else {
+    LOG_ERROR("failed to scan text record. file id=%d, rc=%d:%s", file_id_, rc, strrc(rc));
+  }
+  scanner.close_scan();
+
+//  char temp_text[4097];
+  int len = strlen(data) > 4096 ? 4096 : strlen(data);
+  int end = (len % 15 == 0) ? len / 15 : len / 15 + 1;
+  int i = 0;
+  for( i ; i < end; i++){
+    std::cout << i << std::endl;
+    int copy_len = (len - i * 15 > 0) ? 15 : i * 15 - len;
+    strncpy(text_record[i].data, data + i * 15, copy_len);
+    text_record_handler_->update_record(&text_record[i]);
+  }
+
+  for( i ; i < text_record.size(); i++) {
+    char data[16];
+    memset(&data, 0, sizeof(data));
+    text_record[i].data = data;
   }
   return rc;
 }
@@ -798,6 +1033,43 @@ RC Table::delete_record(Trx *trx, ConditionFilter *filter, int *deleted_count) {
 
 RC Table::delete_record(Trx *trx, Record *record) {
   RC rc = RC::SUCCESS;
+  if(hide_file_id_ != -1){
+    const std::vector<FieldMeta> fieldMetas = table_meta_.find_field_by_attrtype(TEXT);
+    if(!fieldMetas.empty()){
+      for (const FieldMeta &fieldMeta : fieldMetas) {
+        int fieldlen = fieldMeta.len();
+        int fieldoffset = fieldMeta.offset();
+        char *dest = record->data+fieldoffset;
+        TextAddress* text_address = new TextAddress(dest);
+
+        RecordFileScanner scanner;
+        rc = scanner.open_text_scan(*data_buffer_pool_, hide_file_id_);
+        if (rc != RC::SUCCESS) {
+          LOG_ERROR("failed to open scanner. file id=%d. rc=%d:%s", file_id_, rc, strrc(rc));
+          return rc;
+        }
+        std::vector<Record> text_records;
+        rc = scanner.get_text_record(text_address, &text_records);
+        if (RC::RECORD_EOF == rc) {
+          rc = RC::SUCCESS;
+        } else {
+          LOG_ERROR("failed to scan text record. file id=%d, rc=%d:%s", file_id_, rc, strrc(rc));
+        }
+        scanner.close_scan();
+        for(Record text_record: text_records) {
+            rc = text_record_handler_->delete_record(&text_record.rid);
+            if(rc != RC::SUCCESS){
+              LOG_ERROR("failed to delete text record. file id=%d, rc=%d:%s", file_id_, rc, strrc(rc));
+              return rc;
+            }
+        }
+      }
+    }else{
+      rc = RC::SCHEMA_FIELD_MISSING;
+      return rc;
+    }
+  }
+
   if (trx != nullptr) {
     rc = trx->delete_record(this, record);
   } else {

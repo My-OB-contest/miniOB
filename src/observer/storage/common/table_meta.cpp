@@ -145,6 +145,17 @@ const FieldMeta * TableMeta::find_field_by_offset(int offset) const {
   }
   return nullptr;
 }
+
+const std::vector<FieldMeta> TableMeta::find_field_by_attrtype(AttrType type) const{
+  std::vector<FieldMeta> fmv;
+  for (const FieldMeta &field : fields_) {
+    if (field.type() == type) {
+      fmv.emplace_back(field);
+    }
+  }
+  return fmv;
+}
+
 int TableMeta::field_num() const {
   return fields_.size();
 }

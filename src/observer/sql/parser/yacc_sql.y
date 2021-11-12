@@ -92,6 +92,7 @@ ParserContext *get_context(yyscan_t scanner)
         STRING_T
         FLOAT_T
 		DATE_T  /* @author: huahui @what for: 必做题，增加date字段 */
+		TEXT_T  /* @author: xiaoyu @what for: 必做题，增加text字段 */
         HELP
         EXIT
         DOT //QUOTE
@@ -164,7 +165,8 @@ ParserContext *get_context(yyscan_t scanner)
 // 非终结符
 
 %type <number> type;
-// %type <condition1> condition;
+%type <number> text;
+//%type <condition1> condition;
 %type <value1> value;
 %type <number> number;
 /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
@@ -326,6 +328,17 @@ attr_def:
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
 			CONTEXT->value_length++;
 		}
+        |ID_get text
+		{
+			AttrInfo attribute;
+			attr_info_init(&attribute, CONTEXT->id, $2, 16);
+			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
+			// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id);
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type=$2;
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
+			CONTEXT->value_length++;
+		}
 	/* @author: huahui  @what for: null
 	 * ------------------------------------------------------------------------------------------------------------------------------------------------
 	 */
@@ -341,7 +354,7 @@ attr_def:
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length = $4;
 			CONTEXT->value_length++;
 		}
-	| ID_get type LBRACE number RBRACE NULLABLE 
+	| ID_get type LBRACE number RBRACE NULLABLE
 	    {
 			AttrInfo attribute;
 			attr_info_init(&attribute, CONTEXT->id, $2, $4);
@@ -353,10 +366,22 @@ attr_def:
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length = $4;
 			CONTEXT->value_length++;
 		}
-	| ID_get type NOT NULL_A 
+	| ID_get type NOT NULL_A
+        {
+        	AttrInfo attribute;
+        	attr_info_init(&attribute, CONTEXT->id, $2, 4);
+        	attribute.nullable = 0;
+        	create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
+        	// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
+        	// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id);
+        	// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type=$2;
+        	// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
+        	CONTEXT->value_length++;
+        }
+	| ID_get text NOT NULL_A
 	    {
 			AttrInfo attribute;
-			attr_info_init(&attribute, CONTEXT->id, $2, 4);
+			attr_info_init(&attribute, CONTEXT->id, $2, 16);
 			attribute.nullable = 0;
 			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
@@ -399,6 +424,10 @@ floatnumber:
     $$.str = strdup(tmp);
   }
   ;
+
+text:
+    TEXT_T { $$=TEXT; } /* @author: xiaoyu @what for: 选做题，增加text字段 */
+    ;
 
 type:
 	INT_T { $$=INTS; }

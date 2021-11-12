@@ -42,6 +42,7 @@ public:
   const FieldMeta * field(int index) const;
   const FieldMeta * field(const char *name) const;
   const FieldMeta * find_field_by_offset(int offset) const;
+  const std::vector<FieldMeta> find_field_by_attrtype(AttrType type) const;
   int field_num() const;
   int sys_field_num() const;
 

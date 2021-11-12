@@ -102,7 +102,10 @@ RC DiskBufferPool::open_file(const char *file_name, int *file_id)
   }
 
   if ((fd = open(file_name, O_RDWR)) < 0) {
-    LOG_ERROR("Failed to open file %s, because %s.", file_name, strerror(errno));
+    std::string filename = file_name;
+    if(filename.find(".hide.data")==std::string::npos) {
+      LOG_ERROR("Failed to open file %s, because %s.", file_name, strerror(errno));
+    }
     return RC::IOERR_ACCESS;
   }
   LOG_INFO("Successfully open file %s.", file_name);

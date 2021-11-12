@@ -45,6 +45,71 @@ struct Record
   char *data; // record's data
 };
 
+class TextAddress
+{
+public:
+    TextAddress(int sp, int ss, int ep, int es):
+    start_pagenum(sp),
+    start_slot_num(ss),
+    end_pagenum(ep),
+    end_slot_num(es)
+    {}
+
+    TextAddress():
+            start_pagenum(-1),
+            start_slot_num(-1),
+            end_pagenum(-1),
+            end_slot_num(-1)
+    {}
+
+   PageNum start_pagenum;
+   SlotNum start_slot_num;
+   PageNum end_pagenum;
+   SlotNum end_slot_num;
+
+   RC encode(char data[17]){
+//     char data[17];
+     char* start_page = transToString(start_pagenum);
+     strncpy(data, start_page, 4);
+     char* start_slot = transToString(start_slot_num);
+     strncpy(data+4, start_slot, 4);
+     char* end_page = transToString(end_pagenum);
+     strncpy(data+8, end_page, 4);
+     char* end_slot = transToString(end_slot_num);
+     strncpy(data+12, end_slot, 4);
+     data[16] = '\0';
+//     decode(data);
+     return RC::SUCCESS;
+   }
+
+   TextAddress(const char* data){
+     char start_page[5];
+     char start_slot[5];
+     char end_page[5];
+     char end_slot[5];
+     strncpy(start_page, data, 4);
+     strncpy(start_slot, data+4, 4);
+     strncpy(end_page, data+8, 4);
+     strncpy(end_slot, data+12, 4);
+     start_page[4] = '\0';
+     start_slot[4] = '\0';
+     end_page[4] = '\0';
+     end_slot[4] = '\0';
+     start_pagenum = atoi(start_page);
+     start_slot_num = atoi(start_slot);
+     end_pagenum = atoi(end_page);
+     end_slot_num = atoi(end_slot);
+//     return TextRecord(atoi(start_page),atoi(start_slot),atoi(end_page),atoi(end_slot));
+   }
+
+private:
+    char* transToString(int num){
+      std::string str = std::to_string(num);
+      while (str.size() < 4) str = "0" + str;
+      return (char*)(str.data());
+   }
+};
+
 class RecordPageHandler {
 public:
   RecordPageHandler();
@@ -73,6 +138,7 @@ public:
   RC get_record(const RID *rid, Record *rec);
   RC get_first_record(Record *rec);
   RC get_next_record(Record *rec);
+  RC get_text_next_record(Record *rec);
 
   PageNum get_page_num() const;
 
@@ -106,6 +172,8 @@ public:
    * @return
    */
   RC delete_record(const RID *rid);
+
+  RC insert_text_record(const char *data, int record_size, RID *rid);
 
   /**
    * 插入一个新的记录到指定文件中，pData为指向新纪录内容的指针，返回该记录的标识符rid
@@ -162,6 +230,16 @@ public:
    */
   RC open_scan(DiskBufferPool & buffer_pool, int file_id, ConditionFilter *condition_filter);
 
+   /**
+   * 打开一个隐藏表文件扫描。
+   * 本函数利用从第二个参数开始的所有输入参数初始化一个由参数rmFileScan指向的文件扫描结构，
+   * 在使用中，用户应先调用此函数初始化文件扫描结构，
+   * 然后再调用GetNextRec函数来逐个返回文件中满足条件的记录。
+   * @param buffer_pool
+   * @param hide_file_id
+   * @return
+   */
+  RC open_text_scan(DiskBufferPool & buffer_pool, int hide_file_id);
   /**
    * 关闭一个文件扫描，释放相应的资源
    * @return
@@ -178,6 +256,7 @@ public:
    * @return
    */
   RC get_next_record(Record *rec);
+  RC get_text_record(TextAddress* text_address, std::vector<Record>* text_record);
 
 private:
   DiskBufferPool  *   disk_buffer_pool_;
