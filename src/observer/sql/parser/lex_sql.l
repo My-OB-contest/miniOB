@@ -100,6 +100,7 @@ QUOTE            [\'\"]
 [Nn][Uu][Ll][Ll]                             RETURN_TOKEN(NULL_A);
 [Nn][Uu][Ll][Ll][Aa][Bb][Ll][Ee]             RETURN_TOKEN(NULLABLE);
 [Ii][Ss]                                     RETURN_TOKEN(IS_A);
+ 
  /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/   
 "+"                                          RETURN_TOKEN(PLUS);
 "-"                                          RETURN_TOKEN(MINUS);
@@ -107,6 +108,13 @@ QUOTE            [\'\"]
  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
  /* ---------------------------------------------------------------------------------------------------------------*/
 
+ /* @author: huahui @what for: order-by*/
+[Oo][Rr][Dd][Ee][Rr]                    RETURN_TOKEN(ORDER);
+[Bb][Yy]                                RETURN_TOKEN(BY);
+[Aa][Ss][Cc]                            RETURN_TOKEN(ASC);
+
+ /* @author: huahui  @what for: group-by*/
+[Gg][Rr][Oo][Uu][Pp]                   RETURN_TOKEN(GROUP);
 
 {ID}							                       yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 "("								                       RETURN_TOKEN(LBRACE);

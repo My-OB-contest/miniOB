@@ -81,6 +81,20 @@ typedef struct _Condition {
 } Condition;
 
 
+/* @author: huahui  @what for: order-by */
+typedef enum { ASCORDER, DESCORDER } OrderRule; 
+typedef struct {
+  OrderRule order_rule;
+  char *relation_name;   
+  char *attribute_name;  
+} OrderAttr;
+
+/* @author: huahui  @what for: group-by */
+typedef struct {
+  char *relation_name;
+  char *attribute_name;
+} GroupAttr;
+
 /* @author: huahui  @what for: expression 
  *---------------------------------------------------------------------------------------------------------------------*/
 typedef enum {
@@ -167,6 +181,14 @@ typedef struct {
   char *    relations[MAX_NUM];     // relations in From clause
   size_t    condition_num;          // Length of conditions in Where clause
   Condition conditions[MAX_NUM];    // conditions in Where clause
+
+  /* @author: huahui  @what for: order-by */
+  OrderAttr    order_attrs[MAX_NUM];
+  size_t       order_num;
+
+  /* @author: huahui  @what for: group-by*/
+  GroupAttr    group_attrs[MAX_NUM];
+  size_t       group_num;
 } Selects;
 
 /* @author: huahui  @what for: expression -----------------------------------------------------------------------*/
@@ -177,6 +199,15 @@ typedef struct {
   char *       relations[MAX_NUM];
   size_t       condition_num;
   ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
+
+  /* @author: huahui  @what for: order-by */
+  OrderAttr    order_attrs[MAX_NUM];
+  size_t       order_num;
+  
+  /* @author: huahui  @what for: group-by*/
+  GroupAttr    group_attrs[MAX_NUM];
+  size_t       group_num;
+
 }AdvSelects; // advanced selects: 支持条件表达式
 /* --------------------------------------------------------------------------------------------------------------*/
 

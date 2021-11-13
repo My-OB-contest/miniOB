@@ -22,6 +22,7 @@ See the Mulan PSL v2 for more details. */
 #include <ostream>
 #include <sstream>
 #include <memory>
+#include <cmath>
 
 #include "sql/parser/parse_defs.h"
 
@@ -70,10 +71,12 @@ public:
     if (result > 0) { // 浮点数没有考虑精度问题
       return 1;
     }
-    if (result < 0) {
-      return -1;
-    }
-    return 0;
+    if (abs(result) <= 1e-5) {
+      return 0;
+    } else if(result > 0.0) {
+      return 1;
+    } 
+    return -1;
   }
   double getValue() const {
     return value_;
