@@ -986,9 +986,7 @@ RC Table::update_text(TextAddress* text_address, char* data){
   }
 
   for( i ; i < text_record.size(); i++) {
-    char data[16];
-    memset(&data, 0, sizeof(data));
-    text_record[i].data = data;
+    memset(text_record[i].data, 0, 16);
   }
   return rc;
 }
