@@ -426,6 +426,8 @@ RC Table::make_record(int value_num, const Value values[], char * &record_out) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     Value value;
     value.data = values[i].data;
+    value.is_null = values[i].is_null;
+    value.type = values[i].type;
     /* @author: huahui  @what for: null ---------------------------------------------------------------------*/
     // 如果是null值，就记录对应的属性是null的
     if(field->type() == TEXT){
