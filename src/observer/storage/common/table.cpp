@@ -473,10 +473,8 @@ RC Table::init_record_handler(const char *base_dir) {
 
   int data_buffer_pool_hide_file_id;
   rc = data_buffer_pool_->open_file(hide_data_file.c_str(), &data_buffer_pool_hide_file_id);
-  if (rc != RC::SUCCESS) {
-//    LOG_ERROR("Failed to open disk buffer pool for file:%s. rc=%d:%s",
-//              hide_data_file.c_str(), rc, strrc(rc));
-//    return rc;
+  if (rc == RC::SUCCESS) {
+    hide_file_id_ = data_buffer_pool_hide_file_id;
   }
 
   record_handler_ = new RecordFileHandler();
@@ -494,7 +492,6 @@ RC Table::init_record_handler(const char *base_dir) {
   }
 
   file_id_ = data_buffer_pool_file_id;
-  hide_file_id_ = data_buffer_pool_hide_file_id;
   return rc;
 }
 
