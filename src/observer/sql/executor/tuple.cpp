@@ -417,7 +417,7 @@ void TupleRecordConverter::add_record(const char *record) {
         memset(&text, 0, sizeof(text));
 //        TupleRecordConverter converter(table_, tuple_set);
         table_->scan_text_record(text_address, text);
-        tuple.add(text, sizeof(text) - 1);
+        tuple.add(text, strlen(text));
       }
         break;
       /*end ----------------------------------------------------------------------------------------------*/

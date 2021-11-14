@@ -597,7 +597,7 @@ RC Table::scan_text_record(TextAddress* text_address, char* text) {
 //  char temp_text[4097];
   int total_len = 0;
   for(int i = 0; i < text_record.size(); i++){
-    std::cout<<text_record[i].data<<std::endl;
+//    std::cout<<text_record[i].data<<std::endl;
     strncpy(text + total_len, text_record[i].data, strlen(text_record[i].data));
     total_len += strlen(text_record[i].data);
   }
