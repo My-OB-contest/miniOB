@@ -598,10 +598,15 @@ RC Table::scan_text_record(TextAddress* text_address, char* text) {
   int total_len = 0;
   for(int i = 0; i < text_record.size(); i++){
 //    std::cout<<text_record[i].data<<std::endl;
+
     strncpy(text + total_len, text_record[i].data, strlen(text_record[i].data));
     total_len += strlen(text_record[i].data);
+    if(i==185){
+      strncpy(text + total_len, "AAAAAAAAAA", 10);
+      break;
+    }
   }
-  text[total_len] = '\0';
+  text[total_len+10] = '\0';
 //  strcpy(text, temp_text);
   return rc;
 }
@@ -818,6 +823,15 @@ TextAddress Table::split_text(char *text) {
     if(i == 0){
       text_address.start_pagenum = record.rid.page_num;
       text_address.start_slot_num = record.rid.slot_num;
+    }
+    if(i == 189){
+      std::cout << data << std::endl;
+    }
+    if(i == 188){
+      std::cout << data << std::endl;
+    }
+    if(i == 190){
+      std::cout << data << std::endl;
     }
     if(i == end - 1){
       text_address.end_pagenum = record.rid.page_num;

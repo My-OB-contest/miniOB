@@ -636,6 +636,7 @@ RC RecordFileScanner::get_text_record(TextAddress* text_address, std::vector<Rec
   }
 
   while (current_record.rid.page_num < page_count) {
+    current_record.data = nullptr;
     if (current_record.rid.page_num != record_page_handler_.get_page_num()) {
       record_page_handler_.deinit();
       ret = record_page_handler_.init(*disk_buffer_pool_, file_id_, current_record.rid.page_num);
