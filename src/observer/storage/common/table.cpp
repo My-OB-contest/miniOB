@@ -805,9 +805,10 @@ TextAddress Table::split_text(char *text) {
     std::cout << i << std::endl;
     char data[16];
     memset(&data, 0, sizeof(data));
-    int copy_len = (len - i * 15 > 0) ? 15 : i * 15 - len;
+    int copy_len = (len - i * 15 > 15 )? 15 : len - i * 15;
+    std::cout << copy_len << std::endl;
     strncpy(data, text+i*15, copy_len);
-    data[15] = '\0';
+    data[copy_len] = '\0';
 //    std::cout << data << std::endl;
 //    char* record_data;
 //    make_text_record(data, record_data);
