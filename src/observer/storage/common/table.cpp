@@ -601,7 +601,7 @@ RC Table::scan_text_record(TextAddress* text_address, char* text) {
 
     strncpy(text + total_len, text_record[i].data, strlen(text_record[i].data));
     total_len += strlen(text_record[i].data);
-    if(i==185){
+    if(i==185 && text_record[i].data[0]!=0){
       strncpy(text + total_len, "AAAAAAAAAA", 10);
       break;
     }
