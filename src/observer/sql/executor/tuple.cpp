@@ -13,7 +13,6 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include <algorithm>
-
 #include "sql/parser/parse_defs.h"
 #include "sql/executor/tuple.h"
 #include "storage/common/table.h"
@@ -415,7 +414,6 @@ void TupleRecordConverter::add_record(const char *record) {
         TextAddress* text_address = new TextAddress(s);
         char text[4097];
         memset(&text, 0, sizeof(text));
-//        TupleRecordConverter converter(table_, tuple_set);
         table_->scan_text_record(text_address, text);
         tuple.add(text, strlen(text));
       }

@@ -239,49 +239,11 @@ RC Table::rollback_insert(Trx *trx, const RID &rid) {
 
 RC Table::insert_text_record(Record *record){
   RC rc = RC::SUCCESS;
-//
-//  if (trx != nullptr) {
-//    trx->init_trx_info(this, *record);
-//  }
   rc = text_record_handler_->insert_text_record(record->data, 16, &record->rid);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Insert record failed. table name=%s, rc=%d:%s", table_meta_.name(), rc, strrc(rc));
     return rc;
   }
-
-//  if (trx != nullptr) {
-//    rc = trx->insert_record(this, record);
-//    if (rc != RC::SUCCESS) {
-//      LOG_ERROR("Failed to log operation(insertion) to trx");
-//
-//      RC rc2 = record_handler_->delete_record(&record->rid);
-//      if (rc2 != RC::SUCCESS) {
-//        LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
-//                  name(), rc2, strrc(rc2));
-//      }
-//      return rc;
-//    }
-//  }
-
-//  rc = insert_entry_of_indexes(record->data, record->rid);
-//  if (rc != RC::SUCCESS ) {
-//    RC rc2;
-//    if(rc !=RC::RECORD_DUPLICATE_KEY){
-//      rc2 = delete_entry_of_indexes(record->data, record->rid, true);
-//      if (rc2 != RC::SUCCESS) {
-//        LOG_PANIC("Failed to rollback index data when insert index entries failed. table name=%s, rc=%d:%s",
-//                  name(), rc2, strrc(rc2));
-//      }
-//    }
-//    rc2 = text_record_handler_->delete_record(&record->rid);
-////    rc2 = trx->delete_record(this,record);
-//
-//    if (rc2 != RC::SUCCESS) {
-//      LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
-//                name(), rc2, strrc(rc2));
-//    }
-//    return rc;
-//  }
   return rc;
 }
 
@@ -433,7 +395,6 @@ RC Table::make_record(int value_num, const Value values[], char * &record_out) {
     if(field->type() == TEXT){
       TextAddress text_address = split_text((char*)value.data);
       text_address.encode((char*)value.data);
-//      strncpy((char*)value.data, textrecord.encode(), field->len());
     }
     if(value.is_null) {
       record[field->get_null_tag_offset()] = 1;
@@ -445,16 +406,6 @@ RC Table::make_record(int value_num, const Value values[], char * &record_out) {
   }
 
   record_out = record;
-  return RC::SUCCESS;
-}
-
-RC Table::make_text_record(char *short_text, char *&text_record_out) {
-  int text_size = 16;
-  char *text_record = new char [text_size];
-
-  memcpy(text_record, short_text, text_size);
-
-  text_record_out = text_record;
   return RC::SUCCESS;
 }
 
@@ -594,16 +545,12 @@ RC Table::scan_text_record(TextAddress* text_address, char* text) {
   }
   scanner.close_scan();
 
-//  char temp_text[4097];
   int total_len = 0;
   for(int i = 0; i < text_record.size(); i++){
-//    std::cout<<text_record[i].data<<std::endl;
-
     strncpy(text + total_len, text_record[i].data, strlen(text_record[i].data));
     total_len += strlen(text_record[i].data);
   }
   text[total_len] = '\0';
-//  strcpy(text, temp_text);
   return rc;
 }
 
@@ -796,23 +743,15 @@ private:
 
 TextAddress Table::split_text(char *text) {
   TextAddress text_address;
-  int len = strlen(text)>4096? 4096:strlen(text);
-//  int len = 4096;
-  std::cout << len << std::endl;
-//  std::cout << len2 << std::endl;
-  int end = (len%15==0)? len/15:len/15+1;
+  int len = strlen(text) > BP_PAGE_SIZE ? BP_PAGE_SIZE : strlen(text);
+  int end = (len % TEXT_RECORD_SIZE == 0) ? len / TEXT_RECORD_SIZE : len / TEXT_RECORD_SIZE + 1;
   int i = 0;
-  for( i ; i < end; i++){
-    std::cout << i << std::endl;
-    char data[16];
+  for(; i < end; i++){
+    char data[TEXT_RECORD_SIZE + 1];
     memset(&data, 0, sizeof(data));
-    int copy_len = (len - i * 15 > 15 )? 15 : len - i * 15;
-    std::cout << copy_len << std::endl;
-    strncpy(data, text+i*15, copy_len);
+    int copy_len = (len - i * TEXT_RECORD_SIZE > TEXT_RECORD_SIZE ) ? TEXT_RECORD_SIZE : len - i * TEXT_RECORD_SIZE;
+    strncpy(data, text + i * TEXT_RECORD_SIZE, copy_len);
     data[copy_len] = '\0';
-//    std::cout << data << std::endl;
-//    char* record_data;
-//    make_text_record(data, record_data);
     Record record;
     record.data = data;
     insert_text_record(&record);
@@ -820,34 +759,24 @@ TextAddress Table::split_text(char *text) {
       text_address.start_pagenum = record.rid.page_num;
       text_address.start_slot_num = record.rid.slot_num;
     }
-    if(i == 189){
-      std::cout << data << std::endl;
-    }
-    if(i == 188){
-      std::cout << data << std::endl;
-    }
-    if(i == 190){
-      std::cout << data << std::endl;
-    }
     if(i == end - 1){
       text_address.end_pagenum = record.rid.page_num;
       text_address.end_slot_num = record.rid.slot_num;
     }
   }
 
-  char data[16];
+  char data[TEXT_RECORD_SIZE + 1];
   memset(&data, 0, sizeof(data));
-  while(i < 4096/15 + 1){
+  while(i < BP_PAGE_SIZE / TEXT_RECORD_SIZE + 1){
     Record record;
     record.data = data;
     insert_text_record(&record);
-    if(i == 273){
+    if(i == BP_PAGE_SIZE / TEXT_RECORD_SIZE){
       text_address.end_pagenum = record.rid.page_num;
       text_address.end_slot_num = record.rid.slot_num;
     }
     i++;
   }
-
   return text_address;
 }
 
@@ -904,8 +833,6 @@ RC Table::update_record(Record *record,const Value *value,const char *attribute_
         break;
         case TEXT:{
           TextAddress* text_address = new TextAddress(dest);
-//          char text[4097];
-//          scan_text_record(text_address, text);
           update_text(text_address, (char*)value->data);
         }
         break;
@@ -941,7 +868,6 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   //校验属性的类型是否匹配
   if(!value->is_null){
     if(value->type == CHARS && this->table_meta_.field(attribute_name)->type() == TEXT){
-
     }else if (value->type !=this->table_meta_.field(attribute_name)->type()){
       rc = RC::SCHEMA_FIELD_MISSING;
       LOG_ERROR("update field type not match");
@@ -984,19 +910,17 @@ RC Table::update_text(TextAddress* text_address, char* data){
   }
   scanner.close_scan();
 
-//  char temp_text[4097];
-  int len = strlen(data) > 4096 ? 4096 : strlen(data);
-  int end = (len % 15 == 0) ? len / 15 : len / 15 + 1;
+  int len = strlen(data) > BP_PAGE_SIZE ? BP_PAGE_SIZE : strlen(data);
+  int end = (len % TEXT_RECORD_SIZE == 0) ? len / TEXT_RECORD_SIZE : len / TEXT_RECORD_SIZE + 1;
   int i = 0;
-  for( i ; i < end; i++){
-    std::cout << i << std::endl;
-    int copy_len = (len - i * 15 > 0) ? 15 : i * 15 - len;
-    strncpy(text_record[i].data, data + i * 15, copy_len);
+  for(; i < end; i++){
+    int copy_len = (len - i * TEXT_RECORD_SIZE > 0) ? TEXT_RECORD_SIZE : i * TEXT_RECORD_SIZE - len;
+    strncpy(text_record[i].data, data + i * TEXT_RECORD_SIZE, copy_len);
     text_record_handler_->update_record(&text_record[i]);
   }
 
-  for( i ; i < text_record.size(); i++) {
-    memset(text_record[i].data, 0, 16);
+  for(; i < text_record.size(); i++) {
+    memset(text_record[i].data, 0, TEXT_RECORD_SIZE + 1);
   }
   return rc;
 }

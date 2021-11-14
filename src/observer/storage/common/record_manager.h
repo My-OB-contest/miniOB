@@ -115,6 +115,7 @@ public:
   RecordPageHandler();
   ~RecordPageHandler();
   RC init(DiskBufferPool &buffer_pool, int file_id, PageNum page_num);
+  RC initfrom_pageone(DiskBufferPool &buffer_pool, int file_id, PageNum page_num);
   RC init_empty_page(DiskBufferPool &buffer_pool, int file_id, PageNum page_num, int record_size);
   RC deinit();
 

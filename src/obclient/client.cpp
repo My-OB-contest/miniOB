@@ -156,9 +156,8 @@ int main(int argc, char *argv[]) {
   // char buf[MAXDATASIZE];
 
   fputs(prompt_str, stdout);
-//  FILE* stream = freopen("data.data","rt+",stdin);
-  while (fgets(send_buf, MAX_MEM_BUFFER_SIZE, stdin) != NULL) {
-//    std::cout<<"yes:"<<send_buf<<std::endl;
+  FILE* stream = freopen("data.data","rt+",stdin);
+  while (fgets(send_buf, MAX_MEM_BUFFER_SIZE, stream) != NULL) {
     if (common::is_blank(send_buf)) {
       fputs(prompt_str, stdout);
       continue;

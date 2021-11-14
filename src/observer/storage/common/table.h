@@ -22,7 +22,6 @@ class RecordFileHandler;
 class ConditionFilter;
 class DefaultConditionFilter;
 class CompositeConditionFilter;
-class RecordReaderScanAdapter;
 struct Record;
 struct RID;
 struct TextAddress;
@@ -31,8 +30,6 @@ class IndexScanner;
 class RecordDeleter;
 class RecordUpdater;
 class Trx;
-
-
 
 class Table {
 public:
@@ -74,7 +71,6 @@ public:
 
   const TableMeta &table_meta() const;
   const int  get_file_id() const{return file_id_;};
-  const int  get_hide_file_id() const{return hide_file_id_;};
   RC sync();
 
 public:
@@ -119,7 +115,5 @@ private:
   RecordFileHandler *     record_handler_;   /// 记录操作
   std::vector<Index *>    indexes_;
 };
-
-
 
 #endif // __OBSERVER_STORAGE_COMMON_TABLE_H__

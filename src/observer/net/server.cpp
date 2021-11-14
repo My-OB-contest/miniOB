@@ -116,8 +116,8 @@ void Server::recv(int fd, short ev, void *arg) {
 	// 持续接收消息，直到遇到'\0'。将'\0'遇到的后续数据直接丢弃没有处理，因为目前仅支持一收一发的模式
   while (true) {
     read_len = ::read(client->fd, client->buf + data_len, buf_size - data_len);
-//    client->buf[read_len-2] = 0;
-//    client->buf[read_len-3] = '\n';
+    client->buf[read_len-2] = 0;
+    client->buf[read_len-3] = '\n';
 //    std::cout<<client->buf<<std::endl;
     if (read_len < 0) {
       if (errno == EAGAIN) {

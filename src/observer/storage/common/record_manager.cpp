@@ -67,12 +67,34 @@ RecordPageHandler::~RecordPageHandler() {
   deinit();
 }
 
+RC RecordPageHandler::initfrom_pageone(DiskBufferPool &buffer_pool, int file_id, PageNum page_num) {
+  RC ret = RC::SUCCESS;
+  if ((ret = buffer_pool.get_this_page(file_id, page_num, &page_handle_)) != RC::SUCCESS) {
+    LOG_ERROR("Failed to get page handle from disk buffer pool. ret=%d:%s", ret, strrc(ret));
+    return ret;
+  }
+
+  char *data;
+  ret = buffer_pool.get_data(&page_handle_, &data);
+  if (ret != RC::SUCCESS) {
+    LOG_ERROR("Failed to get page data. ret=%d:%s", ret, strrc(ret));
+    return ret;
+  }
+
+  disk_buffer_pool_ = &buffer_pool;
+  file_id_ = file_id;
+
+  page_header_ = (PageHeader*)(data);
+  bitmap_ = data + page_fix_size();
+  return ret;
+}
+
 RC RecordPageHandler::init(DiskBufferPool &buffer_pool, int file_id, PageNum page_num) {
-//  if (disk_buffer_pool_ != nullptr) {
-//    LOG_WARN("Disk buffer pool has been opened for file_id:page_num %d:%d.",
-//             file_id, page_num);
-//    return RC::RECORD_OPENNED;
-//  }
+  if (disk_buffer_pool_ != nullptr) {
+    LOG_WARN("Disk buffer pool has been opened for file_id:page_num %d:%d.",
+             file_id, page_num);
+    return RC::RECORD_OPENNED;
+  }
 
   RC ret = RC::SUCCESS;
   if ((ret = buffer_pool.get_this_page(file_id, page_num, &page_handle_)) != RC::SUCCESS) {
@@ -296,7 +318,6 @@ RC RecordPageHandler::get_next_record(Record *rec) {
 
   rec->rid.page_num = get_page_num();
   rec->rid.slot_num = index;
-  // rec->valid = true;
 
   char *record_data = page_handle_.frame->page.data +
       page_header_->first_record_offset + (index * page_header_->record_size);
@@ -328,7 +349,7 @@ RC RecordPageHandler::get_text_next_record(Record *rec) {
   // rec->valid = true;
 
   char *record_data = page_handle_.frame->page.data +
-                      page_header_->first_record_offset + (index * page_header_->record_size);
+      page_header_->first_record_offset + (index * page_header_->record_size);
   rec->data = record_data;
   return RC::SUCCESS;
 }
@@ -387,7 +408,7 @@ RC RecordFileHandler::insert_text_record(const char *data, int record_size, RID 
   if (current_page_num < 0) {
     if (page_count >= 2) { // 当前buffer pool 有页面时才尝试加载第一页
       // 参考diskBufferPool，pageNum从1开始
-      if ((ret = record_page_handler_.init(*disk_buffer_pool_, file_id_, 1)) != RC::SUCCESS) {
+      if ((ret = record_page_handler_.initfrom_pageone(*disk_buffer_pool_, file_id_, 1)) != RC::SUCCESS) {
         LOG_ERROR("Failed to init record page handler.ret=%d", ret);
         return ret;
       }
@@ -713,7 +734,7 @@ RC RecordFileScanner::get_text_record(TextAddress* text_address, std::vector<Rec
   }
 
   int i = 0;
-  while (i < 4096 / 15 + 1) {
+  while (i < BP_PAGE_SIZE / TEXT_RECORD_SIZE + 1) {
     current_record.data = nullptr;
     if (current_record.rid.page_num != record_page_handler_.get_page_num()) {
       record_page_handler_.deinit();
