@@ -243,7 +243,7 @@ RC Table::insert_text_record(Record *record){
 //  if (trx != nullptr) {
 //    trx->init_trx_info(this, *record);
 //  }
-  rc = text_record_handler_->insert_record(record->data, 16, &record->rid);
+  rc = text_record_handler_->insert_text_record(record->data, 16, &record->rid);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Insert record failed. table name=%s, rc=%d:%s", table_meta_.name(), rc, strrc(rc));
     return rc;
@@ -601,12 +601,8 @@ RC Table::scan_text_record(TextAddress* text_address, char* text) {
 
     strncpy(text + total_len, text_record[i].data, strlen(text_record[i].data));
     total_len += strlen(text_record[i].data);
-    if(i==186 && text_record[i].data[0]!=0){
-      strncpy(text + total_len, "AAAAAAAAAA", 10);
-      break;
-    }
   }
-  text[total_len+10] = '\0';
+  text[total_len] = '\0';
 //  strcpy(text, temp_text);
   return rc;
 }

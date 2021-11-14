@@ -308,8 +308,8 @@ RC DiskBufferPool::get_page_num(BPPageHandle *page_handle, PageNum *page_num)
 
 RC DiskBufferPool::get_data(BPPageHandle *page_handle, char **data)
 {
-  if (!page_handle->open)
-    return RC::BUFFERPOOL_CLOSED;
+//  if (!page_handle->open)
+//    return RC::BUFFERPOOL_CLOSED;
   *data = page_handle->frame->page.data;
   return RC::SUCCESS;
 }

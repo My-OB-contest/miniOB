@@ -68,11 +68,11 @@ RecordPageHandler::~RecordPageHandler() {
 }
 
 RC RecordPageHandler::init(DiskBufferPool &buffer_pool, int file_id, PageNum page_num) {
-  if (disk_buffer_pool_ != nullptr) {
-    LOG_WARN("Disk buffer pool has been opened for file_id:page_num %d:%d.",
-             file_id, page_num);
-    return RC::RECORD_OPENNED;
-  }
+//  if (disk_buffer_pool_ != nullptr) {
+//    LOG_WARN("Disk buffer pool has been opened for file_id:page_num %d:%d.",
+//             file_id, page_num);
+//    return RC::RECORD_OPENNED;
+//  }
 
   RC ret = RC::SUCCESS;
   if ((ret = buffer_pool.get_this_page(file_id, page_num, &page_handle_)) != RC::SUCCESS) {
@@ -374,6 +374,78 @@ void RecordFileHandler::close() {
   }
 }
 
+RC RecordFileHandler::insert_text_record(const char *data, int record_size, RID *rid) {
+  RC ret = RC::SUCCESS;
+  // 找到没有填满的页面
+  int page_count = 0;
+  if ((ret = disk_buffer_pool_->get_page_count(file_id_, &page_count)) != RC::SUCCESS) {
+    LOG_ERROR("Failed to get page count while inserting record");
+    return ret;
+  }
+
+  PageNum current_page_num = -1;
+  if (current_page_num < 0) {
+    if (page_count >= 2) { // 当前buffer pool 有页面时才尝试加载第一页
+      // 参考diskBufferPool，pageNum从1开始
+      if ((ret = record_page_handler_.init(*disk_buffer_pool_, file_id_, 1)) != RC::SUCCESS) {
+        LOG_ERROR("Failed to init record page handler.ret=%d", ret);
+        return ret;
+      }
+      current_page_num = record_page_handler_.get_page_num();
+    } else {
+      current_page_num = 0;
+    }
+  }
+
+  bool page_found = false;
+  for (int i = 0; i < page_count; i++) {
+    current_page_num = (current_page_num + i) % page_count; // 从当前打开的页面开始查找
+    if (current_page_num == 0) {
+      continue;
+    }
+    if (current_page_num != record_page_handler_.get_page_num()) {
+      record_page_handler_.deinit();
+      ret = record_page_handler_.init(*disk_buffer_pool_, file_id_, current_page_num);
+      if (ret != RC::SUCCESS && ret != RC::BUFFERPOOL_INVALID_PAGE_NUM) {
+        LOG_ERROR("Failed to init record page handler. page number is %d. ret=%d:%s", current_page_num, ret, strrc(ret));
+        return ret;
+      }
+    }
+
+    if (!record_page_handler_.is_full()) {
+      page_found = true;
+      break;
+    }
+  }
+
+  // 找不到就分配一个新的页面
+  if (!page_found) {
+    BPPageHandle page_handle;
+    if ((ret = disk_buffer_pool_->allocate_page(file_id_, &page_handle)) != RC::SUCCESS) {
+      LOG_ERROR("Failed to allocate page while inserting record. file_it:%d, ret:%d",
+                file_id_, ret);
+      return ret;
+    }
+
+    current_page_num = page_handle.frame->page.page_num;
+    record_page_handler_.deinit();
+    ret = record_page_handler_.init_empty_page(*disk_buffer_pool_, file_id_, current_page_num, record_size);
+    if (ret != RC::SUCCESS) {
+      LOG_ERROR("Failed to init empty page. file_id:%d, ret:%d", file_id_, ret);
+      if (RC::SUCCESS != disk_buffer_pool_->unpin_page(&page_handle)) {
+        LOG_ERROR("Failed to unpin page. file_id:%d", file_id_);
+      }
+      return ret;
+    }
+    if (RC::SUCCESS != disk_buffer_pool_->unpin_page(&page_handle)) {
+      LOG_ERROR("Failed to unpin page. file_id:%d", file_id_);
+    }
+  }
+
+  // 找到空闲位置
+  return record_page_handler_.insert_record(data, rid);
+}
+
 RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid) {
   RC ret = RC::SUCCESS;
   // 找到没有填满的页面 
@@ -593,8 +665,13 @@ RC RecordFileScanner::get_next_record(Record *rec) {
 }
 
 bool iscontain(TextAddress *text_address, Record* record){
-  if(record->rid.page_num == text_address->start_pagenum){
-    if(record->rid.page_num == text_address->end_pagenum){
+  int startpage = text_address->start_pagenum;
+  int endpage = text_address->end_pagenum;
+  if(endpage < startpage){
+    endpage += startpage;
+  }
+  if(record->rid.page_num == startpage){
+    if(record->rid.page_num == endpage){
       if(record->rid.slot_num >= text_address->start_slot_num && record->rid.slot_num <= text_address->end_slot_num) {
         return true;
       }
@@ -602,12 +679,12 @@ bool iscontain(TextAddress *text_address, Record* record){
       return true;
     }
     return false;
-  }else if(record->rid.page_num == text_address->end_pagenum){
+  }else if(record->rid.page_num == endpage){
     if(record->rid.slot_num <= text_address->end_slot_num){
       return true;
     }
     return false;
-  }else if(record->rid.page_num > text_address->start_pagenum && record->rid.page_num < text_address->end_pagenum){
+  }else if(record->rid.page_num > startpage && record->rid.page_num < endpage){
     return true;
   }
   return false;
@@ -635,7 +712,8 @@ RC RecordFileScanner::get_text_record(TextAddress* text_address, std::vector<Rec
     return RC::RECORD_EOF;
   }
 
-  while (current_record.rid.page_num < page_count) {
+  int i = 0;
+  while (i < 4096 / 15 + 1) {
     current_record.data = nullptr;
     if (current_record.rid.page_num != record_page_handler_.get_page_num()) {
       record_page_handler_.deinit();
@@ -659,6 +737,7 @@ RC RecordFileScanner::get_text_record(TextAddress* text_address, std::vector<Rec
     }else{
       return RC::RECORD_EOF;
     }
+    i++;
   }
   return ret;
 }
