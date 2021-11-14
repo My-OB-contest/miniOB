@@ -686,7 +686,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     for(int i = 0; i < selects.group_num; i++) {
       order_attrs[i].attribute_name = selects.group_attrs[i].attribute_name;
       order_attrs[i].relation_name = selects.group_attrs[i].relation_name;
-      order_attrs[i].order_rule = OrderRule::ASC;
+      order_attrs[i].order_rule = OrderRule::ASCORDER;
     }
     res_tupleset.sortTuples(selects.group_num, order_attrs);
     delete[] order_attrs;
@@ -1337,8 +1337,8 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
 // tuple_set是按照groupby的要求排序好的
 RC ExecuteStage::groupby_select_from_tupleset(Trx *trx, const char *db, const Selects &selects, TupleSet &tuple_set, TupleSet &res_tupleset) {
   RC rc = RC::SUCCESS;
-  GroupbyExeNode *groupby_node = new GroupbyExeNode(trx, tuple_set, selects);
-  RC rc = groupby_node->execute(res_tupleset);
+  GroupbyExeNode *groupby_node = new GroupbyExeNode(trx, std::move(tuple_set), selects);
+  rc = groupby_node->execute(res_tupleset);
   delete groupby_node;
   return rc;
 }
@@ -1348,7 +1348,7 @@ RC ExecuteStage::groupby_select_from_tupleset(Trx *trx, const char *db, const Se
 void ExecuteStage::have_agg_from_tupleset_for_group(const Selects &selection, std::vector<const RelAttr *> &relattrs) {
   for(int i = selection.attr_num - 1; i >= 0; i--) {
     const RelAttr &relattr = selection.attributes[i];
-    if(!relattr.agg_type == AggType::NOTAGG) {
+    if(relattr.agg_type != AggType::NOTAGG) {
       relattrs.push_back(&(selection.attributes[i]));
     }
   }

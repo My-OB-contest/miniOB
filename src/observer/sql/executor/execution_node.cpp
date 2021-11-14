@@ -823,8 +823,8 @@ RC GroupbyExeNode::execute(TupleSet &res_tupleset) {
   RC rc = RC::SUCCESS;
   // 设置res_tupleset的schema
   TupleSchema schema;
-  for(size_t i = selects_.relation_num-1; i >= 0; i--) {
-    const RelAttr &relattr = selects_.relations[i];
+  for(int i = selects_.attr_num-1; i >= 0; i--) {
+    const RelAttr &relattr = selects_.attributes[i];
     // 普通属性
     if(relattr.agg_type == AggType::NOTAGG) {
       schema.add(AttrType::UNDEFINED, (relattr.relation_name ? relattr.relation_name : selects_.relations[0]), relattr.attribute_name, selects_.relation_num > 1);
@@ -845,7 +845,7 @@ RC GroupbyExeNode::execute(TupleSet &res_tupleset) {
  
   // 比较两个Tuple是否相等
   auto cmp = [&](const Tuple &t1, const Tuple &t2) -> bool {
-    for(int i = selects_.order_num-1; i >= 0; i--) {
+    for(int i = selects_.group_num-1; i >= 0; i--) {
       const char *table_name = selects_.group_attrs[i].relation_name ? selects_.group_attrs[i].relation_name : tuple_set_.get_schema().field(0).table_name();
       int index = tuple_set_.get_schema().index_of_field(table_name, selects_.group_attrs[i].attribute_name);
       int flag = t1.get_pointer(index)->compare(t2.get(index));
@@ -862,8 +862,10 @@ RC GroupbyExeNode::execute(TupleSet &res_tupleset) {
     for(j = i; j < tuple_set_.size() && cmp(tfirst, tuple_set_.get(j)); j++) {};
     Tuple res_tuple;
     execute_group(i, j-1, res_tupleset.get_schema(), res_tuple);
-    res_tupleset.add(res_tuple);
+    res_tupleset.add(std::move(res_tuple));
+    i = j;
   }
+  return RC::SUCCESS;
 }
 
 /* 
@@ -886,7 +888,7 @@ RC GroupbyExeNode::execute_group(int begin, int end, const TupleSchema &schema, 
   for(int i = 0; i < field_num; i++) {
     const TupleField &tuple_field = schema.field(i);
     // 不是聚合属性，可以不用考虑
-    if(tuple_field.getAggtype == AggType::NOTAGG) {
+    if(tuple_field.getAggtype() == AggType::NOTAGG) {
       continue;
     }
     if(!tuple_field.get_is_attr()) {

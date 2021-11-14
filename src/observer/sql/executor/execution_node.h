@@ -136,7 +136,7 @@ private:
 /* @author: huahui  @what for: group-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 class GroupbyExeNode : public ExecutionNode {
 public:
-  GroupbyExeNode(Trx *trx, TupleSet &&tuple_set, const Selects &selects) : trx_(trx), tuple_set_(tuple_set), selects_(selects) {};
+  GroupbyExeNode(Trx *trx, TupleSet &&tuple_set, const Selects &selects) : trx_(trx), tuple_set_(std::move(tuple_set)), selects_(selects) {};
   virtual ~GroupbyExeNode() {};
   RC execute(TupleSet &res_tupleset);
 private:
