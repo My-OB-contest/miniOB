@@ -239,7 +239,8 @@ RC Table::rollback_insert(Trx *trx, const RID &rid) {
 
 RC Table::insert_text_record(Record *record){
   RC rc = RC::SUCCESS;
-  rc = text_record_handler_->insert_text_record(record->data, 16, &record->rid);
+
+  rc = text_record_handler_->insert_text_record(record->data, TEXT_RECORD_SIZE, &record->rid);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Insert record failed. table name=%s, rc=%d:%s", table_meta_.name(), rc, strrc(rc));
     return rc;
