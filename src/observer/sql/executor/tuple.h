@@ -222,6 +222,10 @@ public:
   const std::vector<Tuple> &tuples() const;
 
   void print(std::ostream &os) const;
+
+  /* @author: huahui  @what for: order-by */
+  void sortTuples(int order_num, const OrderAttr *order_attrs);
+
 public:
   const TupleSchema &schema() const {
     return schema_;

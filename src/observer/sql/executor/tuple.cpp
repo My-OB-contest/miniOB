@@ -12,6 +12,8 @@ See the Mulan PSL v2 for more details. */
 // Created by Wangyunlai on 2021/5/14.
 //
 
+#include <algorithm>
+
 #include "sql/parser/parse_defs.h"
 #include "sql/executor/tuple.h"
 #include "storage/common/table.h"
@@ -188,6 +190,7 @@ void TupleSchema::add(AttrType type, const char *table_name, const char *field_n
   fields_.emplace_back(type, table_name, field_name);
   fields_.back().set_have_table_name(have_table_name);
   fields_.back().set_is_attr(true);
+  fields_.back().set_aggtype(AggType::NOTAGG);
 }
 void TupleSchema::add(AttrType type, const char *table_name, const char *field_name, bool have_table_name, AggType aggtype) {
   fields_.emplace_back(type, table_name, field_name);
@@ -321,6 +324,27 @@ void TupleSet::print(std::ostream &os) const {
     os << std::endl;
   }
 }
+
+/* @author: huahui  @what for: order-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+void TupleSet::sortTuples(int order_num, const OrderAttr *order_attrs) {
+  if(order_num <= 0) return;
+  auto cmp = [&](const Tuple &t1, const Tuple &t2) -> bool {
+    for(int i = order_num - 1; i >= 0; i--) {
+      const char *table_name = order_attrs[i].relation_name ? order_attrs[i].relation_name : schema_.field(0).table_name();
+      int index = schema_.index_of_field(table_name, order_attrs[i].attribute_name);
+      int flag = t1.get_pointer(index)->compare(t2.get(index));
+      if(flag != 0 || i == 0) {
+        if(order_attrs[i].order_rule == OrderRule::ASCORDER) {
+          return flag < 0;
+        } else {
+          return flag > 0;
+        }
+      }
+    }
+  };
+  std::sort(tuples_.begin(), tuples_.end(), cmp);
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 void TupleSet::set_schema(const TupleSchema &schema) {
   schema_ = schema;

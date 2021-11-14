@@ -818,3 +818,220 @@ void ExpSelectExeNode::cart(std::vector<TupleSet> &tuple_sets){
 
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
+/* @author: huahui  @what for: group-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+RC GroupbyExeNode::execute(TupleSet &res_tupleset) {
+  RC rc = RC::SUCCESS;
+  // 设置res_tupleset的schema
+  TupleSchema schema;
+  for(int i = selects_.attr_num-1; i >= 0; i--) {
+    const RelAttr &relattr = selects_.attributes[i];
+    // 普通属性
+    if(relattr.agg_type == AggType::NOTAGG) {
+      schema.add(AttrType::UNDEFINED, (relattr.relation_name ? relattr.relation_name : selects_.relations[0]), relattr.attribute_name, selects_.relation_num > 1);
+      continue;
+    }
+    // 聚合数字，如count(1)
+    if(!relattr.is_attr) {
+      schema.add(false, relattr.agg_type, relattr.is_attr, relattr.agg_val_type, relattr.agg_val);
+      continue;
+    }
+    // 聚合属性, 如count(id), count(*)
+    const char *table_name = relattr.relation_name==nullptr?selects_.relations[0]:relattr.relation_name;
+    schema.add(AttrType::UNDEFINED, table_name, relattr.attribute_name, relattr.relation_name!=nullptr, relattr.agg_type);
+  }
+  res_tupleset.set_schema(schema);
+
+  if(tuple_set_.size() <= 0) return RC::SUCCESS;
+ 
+  // 比较两个Tuple是否相等
+  auto cmp = [&](const Tuple &t1, const Tuple &t2) -> bool {
+    for(int i = selects_.group_num-1; i >= 0; i--) {
+      const char *table_name = selects_.group_attrs[i].relation_name ? selects_.group_attrs[i].relation_name : tuple_set_.get_schema().field(0).table_name();
+      int index = tuple_set_.get_schema().index_of_field(table_name, selects_.group_attrs[i].attribute_name);
+      int flag = t1.get_pointer(index)->compare(t2.get(index));
+      if(flag != 0) {
+        return false;
+      }
+    }
+    return true;
+  };
+  
+  for(int i = 0; i < tuple_set_.size(); ) {
+    const Tuple &tfirst = tuple_set_.get(i);
+    int j = i;
+    for(j = i; j < tuple_set_.size() && cmp(tfirst, tuple_set_.get(j)); j++) {};
+    Tuple res_tuple;
+    execute_group(i, j-1, res_tupleset.get_schema(), res_tuple);
+    res_tupleset.add(std::move(res_tuple));
+    i = j;
+  }
+  return RC::SUCCESS;
+}
+
+/* 
+ * begin, end: 在tuple_set_的[begin, end]区间内进行分组或聚合
+ * schema: 应该投影到res_tuple中的field，包括聚合属性
+ * res_tuple: 最后的结果是一个Tuple，因为这个函数是把一组内的相同信息提取出来
+ */
+RC GroupbyExeNode::execute_group(int begin, int end, const TupleSchema &schema, Tuple &res_tuple) {
+  int field_num = schema.fields().size();
+  
+  // 保存结果,如果是max, min, 就保存下标在first中，如果是count，就保存计数器在first中，如果是avg，就保存计数器和累加值在first和second中
+  // 如果是max(5)，则保存5在first中，如果是min(5.6)则保存5.6在second中
+  // 如果是count(*)，则保存tuple_set_的大小在first里面
+  // 如果是count(attr)，则初始化first为0
+  std::vector<std::pair<int, double> > res(field_num);
+  /* @what for: null  用于判断某个聚合属性是否有结果, 比如max(id)，但是id全是null，这样max(id)就没有结果了*/
+  std::vector<int> have_res(field_num, 0);
+  // 如果是类似于count(1)这种形式的聚合，可以直接把结果算出来
+  bool have_agg_attr = false; // 还存在类似于max(id)这种聚合属性
+  for(int i = 0; i < field_num; i++) {
+    const TupleField &tuple_field = schema.field(i);
+    // 不是聚合属性，可以不用考虑
+    if(tuple_field.getAggtype() == AggType::NOTAGG) {
+      continue;
+    }
+    if(!tuple_field.get_is_attr()) {
+      have_res[i] = 1;                                              /* @what for: null */
+      if(tuple_field.getAggtype() == AggType::AGGMAX || tuple_field.getAggtype() == AggType::AGGMIN) {
+        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
+          res[i].first = tuple_field.get_agg_val().intv;
+        }else{
+          res[i].second = tuple_field.get_agg_val().floatv;
+        }
+      }else if(tuple_field.getAggtype() == AggType::AGGCOUNT) {
+        res[i].first = end - begin + 1;
+      }else {
+        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
+          res[i].second = tuple_field.get_agg_val().intv;
+        }else{
+          res[i].second = tuple_field.get_agg_val().floatv;
+        }
+      }
+    } else if(tuple_field.getAggtype()==AggType::AGGCOUNT) { // 注意，这个时候聚合函数只能是count，否则在前面的判断阶段会出错
+      have_res[i] = 1;  
+      if(strcmp(tuple_field.field_name(), "*") == 0) {
+        res[i].first = end - begin + 1;
+      } else {
+        have_agg_attr = true;
+        res[i].first = 0;
+      }
+    } else{
+      have_agg_attr = true;
+    }
+  }
+
+  for(int i = begin; i <= end && have_agg_attr; i++) {
+    const Tuple &tuple = tuple_set_.get(i);
+    for(int j = 0; j < field_num; j++) {
+      const TupleField &tuple_field = schema.field(j);
+      // 普通属性，不考虑
+      if(tuple_field.getAggtype() == AggType::NOTAGG) {
+        continue;
+      }
+      // 聚合值，不用考虑
+      if(!tuple_field.get_is_attr()) {
+        continue;
+      }
+      int idx = tuple_set_.get_schema().index_of_field(tuple_field.table_name(), tuple_field.field_name());
+      AggType aggtype = tuple_field.getAggtype();
+      if(strcmp(tuple_field.field_name(), "*") == 0) { // 注意，这个时候聚合函数只能是count，否则在前面的判断阶段会出错
+        continue;
+      }
+      /* @author: huahui  @what for: null --------------------------------------------------------*/
+      // 当聚合某个属性的时候，如果这个属性是null，可以直接跳过
+      if(strcmp(tuple_field.field_name(), "*")!=0 && std::dynamic_pointer_cast<NullValue>(tuple.get_pointer(idx))) {
+        continue;
+      }
+      /* -------------------------------------------------------------------------------------------*/
+                                                   
+      if(aggtype == AggType::AGGMAX) {
+        if(!have_res[j]) {
+          res[j].first = i;
+        }else{
+          if(tuple.get_pointer(idx)->compare(tuple_set_.get(res[j].first).get(idx)) > 0) {
+            res[j].first = i;
+          }
+        }
+      }else if(aggtype == AggType::AGGMIN) {
+        if(!have_res[j]) {
+          res[j].first = i;
+        } else {
+          if(tuple.get_pointer(idx)->compare(tuple_set_.get(res[j].first).get(idx)) < 0) {
+            res[j].first = i;
+          }
+        }
+      } else if(aggtype == AggType::AGGCOUNT) {
+        if(!have_res[j]) {
+          res[j].first = 1; 
+        }else {
+          res[j].first += 1; 
+        }
+      }else {
+        if(!have_res[j]) {
+          res[j].first = 1;
+          res[j].second = 0.0;
+          res[j].second += getNum(tuple.get_pointer(idx), tuple_set_.get_schema().field(idx).type());
+        }else{
+          res[j].first += 1;
+          res[j].second += getNum(tuple.get_pointer(idx), tuple_set_.get_schema().field(idx).type());
+        }
+      }
+      have_res[j] = 1;         /* @what for: null */
+    }
+  }
+
+  for(int j = 0; j < field_num; j++) {
+    const TupleField &tuple_field = schema.field(j);
+    int idx = tuple_set_.get_schema().index_of_field(tuple_field.table_name(), tuple_field.field_name());
+    // 普通属性
+    if(tuple_field.getAggtype() == AggType::NOTAGG) {
+      res_tuple.add(tuple_set_.get(begin).get_pointer(idx));
+      continue;
+    }
+
+    /* @what for: null */
+    if(!have_res[j]) {
+      res_tuple.add(new NullValue());
+      continue;
+    }
+
+    if(!tuple_field.get_is_attr()) {
+      if(tuple_field.getAggtype() == AggType::AGGMAX || tuple_field.getAggtype() == AggType::AGGMIN) {
+        if(tuple_field.get_agg_val_type() == AggValType::AGGNUMBER) {
+          res_tuple.add(res[j].first);
+        }else{
+          res_tuple.add((float)res[j].second);
+        }
+      }else if(tuple_field.getAggtype() == AggType::AGGCOUNT) {
+        res_tuple.add(res[j].first);
+      }else{
+        res_tuple.add((float)res[j].second);
+      }
+      continue;
+    }
+
+    if(schema.field(j).getAggtype() == AggType::AGGMAX || schema.field(j).getAggtype() == AggType::AGGMIN) {
+      if(tuple_set_.get_schema().field(idx).type() == AttrType::INTS) {
+        std::shared_ptr<IntValue> tv = std::static_pointer_cast<IntValue>(tuple_set_.get(res[j].first).get_pointer(idx));
+        res_tuple.add(tv);
+      }else if(tuple_set_.get_schema().field(idx).type() == AttrType::FLOATS) {
+        std::shared_ptr<FloatValue> tv = std::static_pointer_cast<FloatValue>(tuple_set_.get(res[j].first).get_pointer(idx));
+        res_tuple.add(tv);
+      }else if(tuple_set_.get_schema().field(idx).type() == AttrType::CHARS) {
+        std::shared_ptr<StringValue> tv = std::static_pointer_cast<StringValue>(tuple_set_.get(res[j].first).get_pointer(idx));
+        res_tuple.add(tv);
+      }else {
+        std::shared_ptr<DateValue> tv = std::static_pointer_cast<DateValue>(tuple_set_.get(res[j].first).get_pointer(idx));
+        res_tuple.add(tv);
+      }
+    }else if(schema.field(j).getAggtype() == AggType::AGGCOUNT) {
+      res_tuple.add(res[j].first);
+    }else {
+      res_tuple.add((float)res[j].second / res[j].first);
+    }
+  }
+
+  return RC::SUCCESS;
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/

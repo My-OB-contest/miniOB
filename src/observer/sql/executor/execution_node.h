@@ -133,5 +133,19 @@ private:
 };
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
+/* @author: huahui  @what for: group-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+class GroupbyExeNode : public ExecutionNode {
+public:
+  GroupbyExeNode(Trx *trx, TupleSet &&tuple_set, const Selects &selects) : trx_(trx), tuple_set_(std::move(tuple_set)), selects_(selects) {};
+  virtual ~GroupbyExeNode() {};
+  RC execute(TupleSet &res_tupleset);
+private:
+  Trx *trx_;
+  TupleSet tuple_set_;
+  const Selects &selects_;
+private:
+  RC execute_group(int begin, int end, const TupleSchema &schema, Tuple &res_tuple);
+};
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 #endif //__OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_
