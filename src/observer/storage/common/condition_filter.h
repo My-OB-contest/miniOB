@@ -123,4 +123,25 @@ private:
     CompOp comp_op_ = NO_OP;
 };
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
+RC cal_explist(const ExpList *explist, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);
+
+// 处理表达式的比较以及简单的比较如 d="1998-12-9"
+class ConditionExpsFilter {
+public:
+  ConditionExpsFilter();
+  ~ConditionExpsFilter();
+  void init(int condition_num, const ConditionExp cond_exps[], const TupleSchema &tuple_schema);
+  bool filter(const Tuple &tuple) const;
+private:
+  // std::vector<ConditionExp> cond_exps_;
+  int condition_num_;
+  ConditionExp cond_exps_[100];
+  TupleSchema tuple_schema_;
+  AttrType getType(const char *table_name, const char *attribute_name);
+};
+
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 #endif // __OBSERVER_STORAGE_COMMON_CONDITION_FILTER_H_

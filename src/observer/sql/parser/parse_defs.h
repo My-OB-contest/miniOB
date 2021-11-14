@@ -32,6 +32,9 @@ typedef struct {int intv; float floatv; char *str; } AggVal;
 //属性结构体
 typedef struct {
   /* @author: huahui @what for: 必做题，聚合查询 ------------------------------------------------------*/
+  // 当agg_type==NOTAGG时,只有relation_name和attribute_name生效
+  // 当agg_type!=NOTAGG && is_attr时, agg_type, relation_name和attribute_name生效
+  // 当agg_type!=NOTAGG && !is_attr时, agg_type, agg_val_type和agg_val生效
   AggType agg_type;   // 标识是否是聚合查询以及是什么聚合查询，NOTAGG表示不是
   int is_attr;       // 如果是聚合属性，则这个is_attr判断是属性还是数值
   AggValType agg_val_type;
@@ -55,7 +58,7 @@ typedef enum {
  
 /* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/
 //属性值类型
-typedef enum { UNDEFINED, CHARS, INTS, FLOATS, DATES } AttrType;
+typedef enum { UNDEFINED, CHARS, INTS, FLOATS, DATES, TEXT} AttrType;
 /* -----------------------------------------------------------------------------------------------*/
 
 //属性值
@@ -77,6 +80,99 @@ typedef struct _Condition {
   Value right_value;   // right-hand side value if right_is_attr = FALSE
 } Condition;
 
+
+/* @author: huahui  @what for: order-by */
+typedef enum { ASCORDER, DESCORDER } OrderRule; 
+typedef struct {
+  OrderRule order_rule;
+  char *relation_name;   
+  char *attribute_name;  
+} OrderAttr;
+
+/* @author: huahui  @what for: group-by */
+typedef struct {
+  char *relation_name;
+  char *attribute_name;
+} GroupAttr;
+
+/* @author: huahui  @what for: expression 
+ *---------------------------------------------------------------------------------------------------------------------*/
+typedef enum {
+  STARTCALOP,
+  PLUS_OP,
+  MINUS_OP,
+  TIME_OP,
+  DIVIDE_OP,
+  ENDCALOP
+} CalOp;
+
+struct ExpList;
+// 5; a; a*5; a/5; a/b; 5/b; *等只含有乘除法，不含加减法的表达式
+typedef struct Exp {
+  // 若have_brace==true，则Exp里面只有explist有效
+  // is_attr为真，relation_name和attribute_name有效
+  // is_attr为假，value有效
+  // left_exp默认为nullptr, 若为nullptr，则calop属性失效
+  int have_brace;                 // 表达式外面是否有括号包围
+  int have_negative;              // 表达式前面是否有负号，默认是没有的，一般在Exp树的根结点中使用have_negative表示这个表达式是否有负号
+  // have_brace == true
+    struct ExpList *explist;               // 若have_brace==true，则Exp里面只有explist有效
+  // have_brace == false
+    int is_attr;           // 标识是否是属性
+    // is_attr == 1
+      char *relation_name;   // relation name (may be NULL) 表名
+      char *attribute_name;  // attribute name              属性名
+    // is_attr == 0
+      Value value;           // 表达式中的常量值
+  struct Exp *left_exp;        // 为nullptr,表示这个结点是表达式树的叶子结点，而且后面的CalOp属性失效
+  // left_exp != nullptr
+    CalOp calop;           // 只能是乘除号
+    
+  int num;                  // 表达式中item的个数，这个item可以是*, id或value
+} Exp;
+
+// 可以包含一个Exp，也可以用加减号将多个ExpList连接在一起
+typedef struct ExpList {
+  // left_explist为假时, calop失效
+  Exp *exp;
+  struct ExpList *left_explist;
+  CalOp calop;                    // 只能是加减号
+    
+  int num;                  // 表达式中item的个数，这个item可以是*, id或value
+} ExpList;
+
+// RelAttrExp有以下三种情况
+// select * from t; 或者 select t.* from t;
+// select (i+f)-4.5, i-f from t;
+// select count(i), avg(f) from t;
+// ----------------------------------------------
+// 当agg_type!=NOTAGG 或者 is_star==1 或者 num==1并且没有括号并且没有负号 则说明这个RelAttrExp是简单的，就可以转换为RelAttr结构
+// RelAttrExp有四种种类：1. star 2. 表达式 3. 非数值类型,如日期和字符串 4. 聚合
+typedef struct {
+  AggType agg_type;   // 标识是否是聚合查询以及是什么聚合查询，NOTAGG表示不是
+  // agg_type == NOTAGG
+    int is_star;              // 表示是不是类似于*, t.*的情况，如果是，则is_star = true
+    // is_star == 1
+      char *relation_name;      // 如果agg_type==NOTAGG并且is_star==1，则这个属性有效  
+    // is_star == 0
+      ExpList *explist;    // 表达式
+      int num;                  // 当agg_type==NOTAGG并且is_star==0时有效, 表达式中item的个数，这个item可以是*, id或value
+  // agg_type != NOTAGG
+    int is_attr;        // 如果是聚合属性并且is_star==0，则这个is_attr判断是属性还是数值
+    char *agg_relation_name;  // 聚合属性的表名
+    char *agg_attribute_name; // 聚合属性的属性名
+    AggValType agg_val_type;  // 聚合属性的数值类型
+    AggVal agg_val;           // 聚合属性的数值
+}RelAttrExp;
+
+typedef struct {
+  ExpList *left;
+  ExpList *right;
+  CompOp comp; 
+} ConditionExp; // 对Condition的替换
+/* -----------------------------------------------------------------------------------------------------------------------*/
+
+
 // struct of select
 typedef struct {
   size_t    attr_num;               // Length of attrs in Select clause
@@ -85,7 +181,35 @@ typedef struct {
   char *    relations[MAX_NUM];     // relations in From clause
   size_t    condition_num;          // Length of conditions in Where clause
   Condition conditions[MAX_NUM];    // conditions in Where clause
+
+  /* @author: huahui  @what for: order-by */
+  OrderAttr    order_attrs[MAX_NUM];
+  size_t       order_num;
+
+  /* @author: huahui  @what for: group-by*/
+  GroupAttr    group_attrs[MAX_NUM];
+  size_t       group_num;
 } Selects;
+
+/* @author: huahui  @what for: expression -----------------------------------------------------------------------*/
+typedef struct {
+  size_t       attr_num;
+  RelAttrExp   attr_exps[MAX_NUM];  // 删掉RelAttr，增加RelAttrExp
+  size_t       relation_num;
+  char *       relations[MAX_NUM];
+  size_t       condition_num;
+  ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
+
+  /* @author: huahui  @what for: order-by */
+  OrderAttr    order_attrs[MAX_NUM];
+  size_t       order_num;
+  
+  /* @author: huahui  @what for: group-by*/
+  GroupAttr    group_attrs[MAX_NUM];
+  size_t       group_num;
+
+}AdvSelects; // advanced selects: 支持条件表达式
+/* --------------------------------------------------------------------------------------------------------------*/
 
 // struct of insert
 // insert支持多条插入,修改Inserts结构 by：xiaoyu
@@ -100,7 +224,8 @@ typedef struct {
 typedef struct {
   char *relation_name;            // Relation to delete from
   size_t condition_num;           // Length of conditions in Where clause
-  Condition conditions[MAX_NUM];  // conditions in Where clause
+  Condition conditions[MAX_NUM];
+  ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
 } Deletes;
 
 // struct of update
@@ -109,7 +234,8 @@ typedef struct {
   char *attribute_name;           // Attribute to update
   Value value;                    // update value
   size_t condition_num;           // Length of conditions in Where clause
-  Condition conditions[MAX_NUM];  // conditions in Where clause
+  Condition conditions[MAX_NUM];
+  ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
 } Updates;
 
 typedef struct {
@@ -135,11 +261,13 @@ typedef struct {
 
 // struct of create_index
 typedef struct {
-  char *index_name;      // Index name
-  char *relation_name;   // Relation name
-  char *attribute_name;  // Attribute name
-  int   isunique;
+    char *index_name;      // Index name
+    char *relation_name;   // Relation name
+    char* attribute_name[MAX_NUM];  // Attribute name
+    int   isunique;
+    int   attr_num;
 } CreateIndex;
+
 
 // struct of  drop_index
 typedef struct {
@@ -157,6 +285,7 @@ typedef struct {
 
 union Queries {
   Selects selection;
+  AdvSelects adv_selection; /* @author: huahui  @what for: expression -----------------------------------------*/
   Inserts insertion;
   Deletes deletion;
   Updates update;
@@ -206,9 +335,20 @@ void relation_agg_attr_init(RelAttr *relation_attr, AggType agg_type, const char
 /* --------------------------------------------------------------------------------------------------*/
 void relation_attr_destroy(RelAttr *relation_attr);
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 对relation_agg_attr_init()的替换，目的初始化RelAttrExp结构的aggregation部分
+void relation_agg_relattrexp_init(RelAttrExp *exp, AggType agg_type, const char *relation_name, const char *attribute_name);
+
+void explist_init_for_null(ExpList *explist);
+
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 void value_init_integer(Value *value, int v);
 void value_init_float(Value *value, float v); 
-void value_init_string(Value *value, const char *v);
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+void value_init_float2(Value *value, float v, const char *str);
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+void value_init_string(Value *value, const char *str);
 /* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/
 void value_init_date(Value *value, const char *v);
 /* -----------------------------------------------------------------------------------------------*/
@@ -221,6 +361,9 @@ void condition_init(Condition *condition, CompOp comp, int left_is_attr, RelAttr
     int right_is_attr, RelAttr *right_attr, Value *right_value);
 void condition_destroy(Condition *condition);
 
+void conditionexp_destroy(const ConditionExp *cond_exp);  /* @what for: expression*/
+
+
 void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type, size_t length);
 void attr_info_destroy(AttrInfo *attr_info);
 
@@ -229,25 +372,40 @@ void selects_append_attribute(Selects *selects, RelAttr *rel_attr);
 void selects_append_relation(Selects *selects, const char *relation_name);
 void selects_append_conditions(Selects *selects, Condition conditions[], size_t condition_num);
 void selects_destroy(Selects *selects);
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+void exp_destroy(Exp *exp);
+void explist_destroy(ExpList *explist);
+void relattrexp_destroy(RelAttrExp *relattrexp);
+void advselects_destroy(AdvSelects *adv_selects);   // 将AdvSelects销毁掉
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 对selects_append_attribute的替换，将RelAttrExp压入到adv_selection.attr_exps中
+void advselects_append_relattrexp(AdvSelects *adv_selection, RelAttrExp *exp);
+// 向AdvSelects中的condition_exps中push一个ConditionExp
+void advselects_append_conditionexps(AdvSelects *adv_selection, ConditionExp cond_exps[], size_t condition_num);
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 // insert支持多条插入 by：xiaoyu
 void inserts_init(Inserts *inserts, const char *relation_name, Value values[][MAX_NUM], size_t insert_value_length[], size_t value_list_length);
 void inserts_destroy(Inserts *inserts);
 
 void deletes_init_relation(Deletes *deletes, const char *relation_name);
-void deletes_set_conditions(Deletes *deletes, Condition conditions[], size_t condition_num);
+void deletes_set_conditions(Deletes *deletes, ConditionExp cond_exps[], size_t condition_num);  /* @what for: expression*/
 void deletes_destroy(Deletes *deletes);
 
+/* @what for: expression*/
 void updates_init(Updates *updates, const char *relation_name, const char *attribute_name, Value *value,
-    Condition conditions[], size_t condition_num);
+    ConditionExp cond_exps[], size_t condition_num);
 void updates_destroy(Updates *updates);
 
 void create_table_append_attribute(CreateTable *create_table, AttrInfo *attr_info);
 void create_table_init_name(CreateTable *create_table, const char *relation_name);
 void create_table_destroy(CreateTable *create_table);
-/* @author: fzh  @what for: unique index  --------------------------------------------------------------*/
-void create_index_init(
-        CreateIndex *create_index, const char *index_name, const char *relation_name, const char *attr_name,int isunique);
+/* @author: fzh  @what for: unique index multi index  --------------------------------------------------------------*/
+void create_index_init(CreateIndex *create_index, const char *index_name, const char *relation_name,int isunique);
+void create_index_append_attribute(CreateIndex *create_index, const char *attr_name);
+
 /* ----------------------------------------------------------------------------------------------------*/
 
 
@@ -274,6 +432,8 @@ void query_destroy(Query *query);  // reset and delete
 /* @author: huahui  @what for: 聚合查询  --------------------------------------------------------------*/
 char * aggtypeToStr(AggType aggtype);
 /* ----------------------------------------------------------------------------------------------------*/
+
+char *calopToStr(CalOp calop);
 
 #ifdef __cplusplus
 }

@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/parser/parse.h" 
 #include "rc.h"
 #include "common/log/log.h"
+#include "memory.h"
 
 RC parse(char *st, Query *sqln);
 
@@ -56,6 +57,41 @@ void relation_attr_destroy(RelAttr *relation_attr) {
   relation_attr->attribute_name = nullptr;
 }
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 对relation_agg_attr_init()的替换，目的初始化RelAttrExp结构的aggregation部分
+void relation_agg_relattrexp_init(RelAttrExp *exp, AggType agg_type, const char *relation_name, const char *attribute_name) {
+  exp->agg_type = agg_type;
+  exp->is_attr = 1;
+  if(relation_name != nullptr) {
+    exp->agg_relation_name = strdup(relation_name);
+  } else {
+    exp->agg_relation_name = nullptr;
+  }
+  exp->agg_attribute_name = strdup(attribute_name);
+  exp->explist = nullptr;  // 这是聚合属性，不存在表达式
+  memset(&exp->agg_val, 0, sizeof(exp->agg_val));
+}
+
+void explist_init_for_null(ExpList *explist) {
+  Exp *exp = (Exp *)malloc(sizeof(Exp));
+  exp->have_brace = 0;
+  exp->have_negative = 0;
+  exp->explist = NULL;
+  exp->is_attr = 0;
+  exp->relation_name = NULL;
+  exp->attribute_name = NULL;
+  value_init_null(&(exp->value));
+  exp->left_exp = NULL;
+  exp->calop = STARTCALOP;
+  exp->num = 1;
+  
+  explist->exp = exp;
+  explist->left_explist = NULL;
+  explist->calop = STARTCALOP;
+  explist->num = explist->exp->num;
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 void value_init_integer(Value *value, int v) {
   value->is_null = 0;       /* @author: huahui  @what for: null--------------------------------------*/
   value->type = INTS;
@@ -68,6 +104,21 @@ void value_init_float(Value *value, float v) {
   value->data = malloc(sizeof(v));
   memcpy(value->data, &v, sizeof(v));
 }
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 不同于value_init_float，这个版本的可以把浮点数的字符串也保存在value->data中
+// value->data分成两部分，第一部分是4个字节，保存浮点数，第二部分是后面的字符串
+void value_init_float2(Value *value, float v, const char *str) {
+  value->is_null = 0;   /* @author: huahui  @what for: null */
+  value->type = FLOATS;
+  value->data = malloc(sizeof(v) + strlen(str) + 5); // 5是为了多申请一些空间
+  memcpy(value->data, &v, sizeof(v));
+  char *s2 = (char *)(value->data) + sizeof(v);
+  strcpy(s2, str);
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+
 void value_init_string(Value *value, const char *v) {
   value->is_null = 0;     /* @author: huahui  @what for: null--------------------------------------*/
   value->type = CHARS;
@@ -118,13 +169,19 @@ void value_init_date(Value *value, const char *v){
 void value_init_null(Value *value) {
   value->is_null = 1;
   value->type = AttrType::UNDEFINED;
+  value->data = nullptr;
 }
 /* -----------------------------------------------------------------------------------------------*/
 void value_destroy(Value *value) {
   value->type = UNDEFINED;
+  /* @author: huahui  @what for: null字段 -------------------------------------------------------*/
+  if(value->is_null) {
+    return;
+  }
   free(value->data);
   value->data = nullptr;
 }
+
 
 void condition_init(Condition *condition, CompOp comp, 
                     int left_is_attr, RelAttr *left_attr, Value *left_value,
@@ -181,6 +238,12 @@ void condition_destroy(Condition *condition) {
   }
 }
 
+/* @what for: expression*/
+void conditionexp_destroy(const ConditionExp *cond_exp) {
+  if(cond_exp->left) explist_destroy(cond_exp->left);
+  if(cond_exp->right) explist_destroy(cond_exp->right);
+}
+
 void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type, size_t length) {
   attr_info->name = strdup(name);
   attr_info->type = type;
@@ -228,6 +291,81 @@ void selects_destroy(Selects *selects) {
   selects->condition_num = 0;
 }
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+void exp_destroy(Exp *exp) {
+  if(exp->left_exp) {
+    exp_destroy(exp->left_exp);
+  }
+  if(exp->have_brace) {
+    if(exp->explist) explist_destroy(exp->explist);
+  } else {
+    if(exp->is_attr) {
+      if(exp->relation_name) {
+        free(exp->relation_name);
+      }
+      if(exp->attribute_name) {
+        free(exp->attribute_name);
+      }
+    } else {
+      value_destroy(&(exp->value));
+    }
+  }
+  free(exp);
+}
+void explist_destroy(ExpList *explist) {
+  if(explist->left_explist) {
+    explist_destroy(explist->left_explist);
+  }
+  exp_destroy(explist->exp);
+  free(explist);
+}
+void relattrexp_destroy(RelAttrExp *relattrexp) {
+  if(relattrexp->agg_type == AggType::NOTAGG) {
+    if(relattrexp->is_star) {
+      if(relattrexp->relation_name) free(relattrexp->relation_name);
+    }else {
+      explist_destroy(relattrexp->explist);
+    }
+  } else {
+    if(relattrexp->is_attr) {
+      if(relattrexp->agg_relation_name) free(relattrexp->agg_relation_name);
+      if(relattrexp->agg_attribute_name) free(relattrexp->agg_attribute_name);
+    } else {
+      if(relattrexp->agg_val_type == AggValType::AGGFLOAT && relattrexp->agg_val.str) free(relattrexp->agg_val.str);
+    }
+  }
+}
+void advselects_destroy(AdvSelects *adv_selects) {
+  for(int i=0; i<adv_selects->attr_num; i++) {
+    relattrexp_destroy(&(adv_selects->attr_exps[i]));
+  }
+  adv_selects->attr_num = 0;
+  for(int i=0; i<adv_selects->relation_num; i++) {
+    free(adv_selects->relations[i]);
+    adv_selects->relations[i] = NULL;
+  }
+  adv_selects->relation_num = 0;
+  for(int i=0; i<adv_selects->condition_num; i++) {
+    if(adv_selects->condition_exps[i].left) explist_destroy(adv_selects->condition_exps[i].left);
+    if(adv_selects->condition_exps[i].right) explist_destroy(adv_selects->condition_exps[i].right);
+  }
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 对selects_append_attribute的替换，将RelAttrExp压入到adv_selection.attr_exps中
+void advselects_append_relattrexp(AdvSelects *adv_selection, RelAttrExp *exp) {
+  adv_selection->attr_exps[adv_selection->attr_num++] = *exp;
+}
+// 向AdvSelects中的condition_exps中push一个ConditionExp
+void advselects_append_conditionexps(AdvSelects *adv_selection, ConditionExp cond_exps[], size_t condition_num) {
+  assert(condition_num <= sizeof(adv_selection->condition_exps)/sizeof(adv_selection->condition_exps[0]));
+  for(size_t i = 0; i < condition_num; i++) {
+    adv_selection->condition_exps[adv_selection->condition_num++] = cond_exps[i];
+  }
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 // insert支持多条插入 by：xiaoyu
 void inserts_init(Inserts *inserts, const char *relation_name, Value values[][MAX_NUM], size_t insert_value_length[], size_t value_list_length) {
   for(size_t i = 0; i < value_list_length; i++) {
@@ -259,31 +397,34 @@ void deletes_init_relation(Deletes *deletes, const char *relation_name) {
   deletes->relation_name = strdup(relation_name);
 }
 
-void deletes_set_conditions(Deletes *deletes, Condition conditions[], size_t condition_num) {
-  assert(condition_num <= sizeof(deletes->conditions)/sizeof(deletes->conditions[0]));
+void deletes_set_conditions(Deletes *deletes, ConditionExp cond_exps[], size_t condition_num) {
+  assert(condition_num <= sizeof(deletes->condition_exps)/sizeof(deletes->condition_exps[0]));
   for (size_t i = 0; i < condition_num; i++) {
-    deletes->conditions[i] = conditions[i];
+    deletes->condition_exps[i] = cond_exps[i];
   }
   deletes->condition_num = condition_num;
 }
+
+/* @what for: expression*/
 void deletes_destroy(Deletes *deletes) {
   for (size_t i = 0; i < deletes->condition_num; i++) {
-    condition_destroy(&deletes->conditions[i]);
+    conditionexp_destroy(&deletes->condition_exps[i]);
   }
   deletes->condition_num = 0;
   free(deletes->relation_name);
   deletes->relation_name = nullptr;
 }
 
+/* @what for: expression*/
 void updates_init(Updates *updates, const char *relation_name, const char *attribute_name,
-                  Value *value, Condition conditions[], size_t condition_num) {
+                  Value *value, ConditionExp cond_exps[], size_t condition_num) {
   updates->relation_name = strdup(relation_name);
   updates->attribute_name = strdup(attribute_name);
   updates->value = *value;
 
-  assert(condition_num <= sizeof(updates->conditions)/sizeof(updates->conditions[0]));
+  assert(condition_num <= sizeof(updates->condition_exps)/sizeof(updates->condition_exps[0]));
   for (size_t i = 0; i < condition_num; i++) {
-    updates->conditions[i] = conditions[i];
+    updates->condition_exps[i] = cond_exps[i];
   }
   updates->condition_num = condition_num;
 }
@@ -295,9 +436,10 @@ void updates_destroy(Updates *updates) {
   updates->attribute_name = nullptr;
 
   value_destroy(&updates->value);
-
+  
+  /* @what for: expression*/
   for (size_t i = 0; i < updates->condition_num; i++) {
-    condition_destroy(&updates->conditions[i]);
+    conditionexp_destroy(&updates->condition_exps[i]);
   }
   updates->condition_num = 0;
 }
@@ -328,24 +470,32 @@ void drop_table_destroy(DropTable *drop_table) {
 
 /* @author: fzh  @what for: unique index  --------------------------------------------------------------*/
 
-void create_index_init(CreateIndex *create_index, const char *index_name,const char *relation_name, const char *attr_name ,int isunique) {
+/* @author: fzh  @what for: unique index  && muti index--------------------------------------------------------------*/
+void create_index_init(CreateIndex *create_index, const char *index_name,const char *relation_name ,int isunique) {
   create_index->index_name = strdup(index_name);
   create_index->relation_name = strdup(relation_name);
-  create_index->attribute_name = strdup(attr_name);
+ // create_index->attribute_name = strdup(attr_name);
   create_index->isunique = isunique;
+}
+void create_index_append_attribute(CreateIndex *create_index, const char *attr_name){
+    create_index->attribute_name[create_index->attr_num++] = strdup(attr_name);
+}
+
+void create_index_destroy(CreateIndex *create_index) {
+    free(create_index->index_name);
+    free(create_index->relation_name);
+    for (size_t i = 0; i < create_index->attr_num; i++) {
+        free(create_index->attribute_name[i]);
+        create_index->attribute_name[i] = NULL;
+    }
+    create_index->attr_num = 0;
+    create_index->index_name = nullptr;
+    create_index->relation_name = nullptr;
 }
 
 /* ----------------------------------------------------------------------------------------------------*/
 
-void create_index_destroy(CreateIndex *create_index) {
-  free(create_index->index_name);
-  free(create_index->relation_name);
-  free(create_index->attribute_name);
 
-  create_index->index_name = nullptr;
-  create_index->relation_name = nullptr;
-  create_index->attribute_name = nullptr;
-}
 
 void drop_index_init(DropIndex *drop_index, const char *index_name) {
   drop_index->index_name = strdup(index_name);
@@ -404,7 +554,7 @@ Query *query_create() {
 void query_reset(Query *query) {
   switch (query->flag) {
     case SCF_SELECT: {
-      selects_destroy(&query->sstr.selection);
+      advselects_destroy(&query->sstr.adv_selection);
     }
     break;
     case SCF_INSERT: {
@@ -483,6 +633,22 @@ char * aggtypeToStr(AggType aggtype) {
   return strdup(res);
 }
 /* ------------------------------------------------------------------------------------------------------ */
+
+char *calopToStr(CalOp calop) {
+  if(calop == CalOp::STARTCALOP || calop == CalOp::ENDCALOP) {
+    return "";
+  }
+  if(calop == CalOp::PLUS_OP) {
+    return "+";
+  } else if(calop == CalOp::MINUS_OP) {
+    return "-";
+  } else if(calop == CalOp::TIME_OP) {
+    return "*";
+  } else if(calop == CalOp::DIVIDE_OP) {
+    return "/";
+  }
+  return "";
+}
 
 #ifdef __cplusplus
 } // extern "C"

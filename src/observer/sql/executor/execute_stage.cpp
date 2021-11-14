@@ -180,6 +180,7 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
               rc =check_date_from_values(1,(const Value *)&(sql->sstr.update.conditions->right_value));
           }
       }*/
+      convert_condexps_to_conds(sql->sstr.update.condition_num, sql->sstr.update.condition_exps, sql->sstr.update.conditions); /* @what for: expression */
       RC rc = update_check(current_db, sql->sstr.update);
       if(rc != RC::SUCCESS){
         char err[207];
@@ -200,7 +201,20 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
     }
     break;
     /*end ----------------------------------------------------------------------------------------------*/
-    case SCF_DELETE:
+    case SCF_DELETE:{
+      /* @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+      convert_condexps_to_conds(sql->sstr.deletion.condition_num, sql->sstr.deletion.condition_exps, sql->sstr.deletion.conditions); 
+      StorageEvent *storage_event = new (std::nothrow) StorageEvent(exe_event);
+      if (storage_event == nullptr) {
+        LOG_ERROR("Failed to new StorageEvent");
+        event->done_immediate();
+        return;
+      }
+
+      default_storage_stage_->handle_event(storage_event);
+      /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+    }
+    break;
     case SCF_CREATE_TABLE:
     case SCF_SHOW_TABLES:
     case SCF_DESC_TABLE:
@@ -289,6 +303,8 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
   * 如果是多表，检查每个属性是否有表和属性名两个部分，以及属性是否在对应的表中；查询属性对应的表是否在查询的表中；条件中的所有属性也要合法
   * 对于condition部分也要检查
   * 比如t.col中，若t中没有col属性，则会返回错误
+  * 检查orderby的错误
+  * 检查groupby的错误
 	* -----------------------------------------------------------------------------------------------------------------
 	*/
 RC ExecuteStage::select_check (const char *db,const Selects &selects){
@@ -383,6 +399,11 @@ RC ExecuteStage::select_check (const char *db,const Selects &selects){
           return RC::SQL_SYNTAX;
         }
     }
+
+    // @todo: order-by 校验order- by
+
+    // @todo: group-by 校验group-by
+
     return RC::SUCCESS;
   }
   // 多表校验
@@ -488,6 +509,9 @@ RC ExecuteStage::update_check(const char *db, const Updates &updates) {
 
   // check conditon
   Table * table = DefaultHandler::get_default().find_table(db, updates.relation_name);
+  if(!table) {
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
   rc = check_condition(updates.condition_num, updates.conditions, table);
   if(rc != RC::SUCCESS) {
     return rc;
@@ -521,13 +545,13 @@ RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &sele
     int indexcount=0;
     for (int i = selects.attr_num-1; i >=0 ; --i) {
         for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
-            if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
-                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+            if ((!selects.attributes[i].relation_name || strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0) && strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
+                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), selects.relation_num>1);
                 attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
                 break;
             }
-            if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp("*",selects.attributes[i].attribute_name) == 0){
-                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+            if ((!selects.attributes[i].relation_name || strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0) && strcmp("*",selects.attributes[i].attribute_name) == 0){
+                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), selects.relation_num>1);
                 attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
             }
         }
@@ -553,7 +577,23 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   RC rc = RC::SUCCESS;
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
-  const Selects &selects = sql->sstr.selection;
+  const AdvSelects &adv_selects = sql->sstr.adv_selection;
+  Selects selects;
+  if(!convert_to_selects(adv_selects, selects)) {
+    // 走表达式路线;
+    TupleSet res_tupleset;
+    std::stringstream ss;
+    rc = do_advselects(trx, adv_selects, db, res_tupleset);
+    if(rc != RC::SUCCESS) {
+      end_trx_if_need(session, trx, false);
+      return rc;
+    }
+    res_tupleset.print(ss);
+    session_event->set_response(ss.str());
+    end_trx_if_need(session, trx, true);
+    return RC::SUCCESS;
+  } 
+
   rc = select_check(db,selects);
   if ( rc != RC::SUCCESS){
       LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
@@ -599,9 +639,9 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   }
 
   /* @author: huahui 
-	 * @what for: 必做题，聚合查询和多表join
-	 * -----------------------------------------------------------------------------------------------------------------
-	 */
+   * @what for: 必做题，聚合查询和多表join
+   * -----------------------------------------------------------------------------------------------------------------
+   */
   TupleSet res_tupleset;
   std::stringstream ss;
   if (tuple_sets.size() > 1) {
@@ -619,45 +659,84 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
         delete joinExeNode;
         return rc;
     }
-    rc = projection(tuple_sets,selects);
+    /*rc = projection(tuple_sets,selects);
     if (rc != RC::SUCCESS){
         LOG_ERROR("projection error");
         delete joinExeNode;
         return rc;
-    }
+    }*/
     res_tupleset = std::move(tuple_sets.front());
     delete joinExeNode;
     // 本次查询了多张表，需要做join操作, 结果放在res_tuple_set中
   } else {
     // 当前只查询一张表，直接返回结果即可
     res_tupleset = std::move(tuple_sets.front());
-    // tuple_sets.front().print(ss);
   }
 
-  bool hagg = false;
-  std::vector<const RelAttr *> relattrs;
-  rc = have_agg_from_selections(selects, hagg, relattrs);
-  if(rc != RC::SUCCESS) {
-    LOG_ERROR("In aggregated query without GROUP BY, expression of SELECT list contains must not contain nonaggregated colum\n");
-    return rc;
+  /* @author: huahui  @what for: order-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  // 调用TupleSet的排序函数，但是此时还未projection
+  if(selects.order_num > 0) {
+    res_tupleset.sortTuples(selects.order_num, selects.order_attrs);
+  }
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+  /* @what for: group-by*/
+  if(selects.group_num > 0) {
+    OrderAttr *order_attrs = new OrderAttr[selects.group_num];
+    for(int i = 0; i < selects.group_num; i++) {
+      order_attrs[i].attribute_name = selects.group_attrs[i].attribute_name;
+      order_attrs[i].relation_name = selects.group_attrs[i].relation_name;
+      order_attrs[i].order_rule = OrderRule::ASCORDER;
+    }
+    res_tupleset.sortTuples(selects.group_num, order_attrs);
+    delete[] order_attrs;
   }
   
-  if(hagg) {
+  /* @what for: group-by*/
+  if(selects.group_num == 0) {
+    bool hagg = false;
+    std::vector<const RelAttr *> relattrs;
+    rc = have_agg_from_selections(selects, hagg, relattrs);
+    if(rc != RC::SUCCESS) {
+      LOG_ERROR("In aggregated query without GROUP BY, expression of SELECT list contains must not contain nonaggregated colum\n");
+      return rc;
+    }
+
+    if(hagg) {
+      // 聚合查询，先做合法性校验，比如AVG(birthday)是肯定不对的
+      rc = check_agg(db, selects, relattrs);
+      if(rc != RC::SUCCESS) {
+        return rc;
+      }
+      TupleSet agg_res;
+      rc = agg_select_from_tupleset(trx, db, selects, res_tupleset, relattrs, agg_res);
+      if(rc != RC::SUCCESS) {
+        return rc;
+      }
+      res_tupleset = std::move(agg_res);
+    } else {
+      std::vector<TupleSet> tuplesets;
+      tuplesets.push_back(std::move(res_tupleset));
+      projection(tuplesets, selects);
+      res_tupleset = std::move(tuplesets.front());
+    }
+  } else {
+    std::vector<const RelAttr *> relattrs;
+    have_agg_from_tupleset_for_group(selects, relattrs);
     // 聚合查询，先做合法性校验，比如AVG(birthday)是肯定不对的
     rc = check_agg(db, selects, relattrs);
     if(rc != RC::SUCCESS) {
+      LOG_ERROR("aggregation is invalid\n");
       return rc;
     }
-    TupleSet agg_res;
-    rc = agg_select_from_tupleset(trx, db, selects, res_tupleset, relattrs, agg_res);
-    if(rc != RC::SUCCESS) {
-      return rc;
-    }
-    res_tupleset = std::move(agg_res);
+    TupleSet group_res;
+    rc = groupby_select_from_tupleset(trx, db, selects, res_tupleset, group_res);
+    res_tupleset = std::move(group_res);
   }
+
   res_tupleset.print(ss);
   /* ------------------------------------------------------------------------------------------------------------
-	 */
+   */
 
   for (SelectExeNode *& tmp_node: select_nodes) {
     delete tmp_node;
@@ -948,6 +1027,188 @@ RC ExecuteStage::check_condition(int condition_num, const Condition *conditions,
 }
 /* --------------------------------------------------------------------------------------------------------------*/
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+bool ExecuteStage::convert_condexps_to_conds(int condition_num, ConditionExp condition_exps[], Condition conds[]) {
+  bool flag;
+
+  for(int i=0; i<condition_num; i++) {
+    const ConditionExp &condexp = condition_exps[i];
+    Condition cond;
+    if(condexp.left->num == 1) {
+      const Exp *exp = condexp.left->exp;
+      if(!exp->have_brace && !exp->have_negative) {
+        cond.left_is_attr = exp->is_attr;
+        if(exp->is_attr) {
+          RelAttr attr;
+          relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			  cond.left_attr = attr;
+        } else {
+          cond.left_value = exp->value;
+        }
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+
+    if(condexp.right->num == 1) {
+      const Exp *exp = condexp.right->exp;
+      if(!exp->have_brace && !exp->have_negative) {
+        cond.right_is_attr = exp->is_attr;
+        if(exp->is_attr) {
+          RelAttr attr;
+          relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			  cond.right_attr = attr;
+        } else {
+          cond.right_value = exp->value;
+        }
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+
+    cond.comp = condexp.comp;
+
+    conds[i] = cond;
+  }
+
+  return false;
+}
+
+// 如果所有select中的RelAttrExp能够转换为RelAttr并且所有where中的ConditioExp能够转换为Condtion，则转换，并返回true；否则，就返回false
+bool ExecuteStage::convert_to_selects(const AdvSelects &adv_selects, Selects &selects) {
+  memset(&selects, 0, sizeof(selects));
+  bool flag = true;
+
+  // 转换select clause
+  for(int i=0; i<adv_selects.attr_num; i++) {
+    const RelAttrExp &relattrexp = adv_selects.attr_exps[i];
+    if(relattrexp.agg_type != AggType::NOTAGG) {
+      RelAttr attr;
+      attr.agg_type = relattrexp.agg_type;
+      attr.is_attr = relattrexp.is_attr;
+      attr.relation_name = relattrexp.agg_relation_name ? strdup(relattrexp.agg_relation_name) : nullptr;
+      attr.attribute_name = relattrexp.agg_attribute_name ? strdup(relattrexp.agg_attribute_name) : nullptr;
+      attr.agg_val_type = relattrexp.agg_val_type;
+      attr.agg_val = relattrexp.agg_val;
+      selects_append_attribute(&selects, &attr);
+    } else if(relattrexp.is_star) {
+      RelAttr attr;
+ 			relation_attr_init(&attr, relattrexp.relation_name, "*");
+ 			selects_append_attribute(&selects, &attr);
+    } else if(relattrexp.num == 1) {
+      const Exp *exp = relattrexp.explist->exp;
+      if(!exp->have_brace && exp->is_attr && !exp->have_negative) {
+        RelAttr attr;
+        relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			selects_append_attribute(&selects, &attr);
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+  }
+
+  // 转换where clause
+  for(int i=0; i<adv_selects.condition_num; i++) {
+    const ConditionExp &condexp = adv_selects.condition_exps[i];
+    Condition cond;
+    if(condexp.left->num == 1) {
+      const Exp *exp = condexp.left->exp;
+      if(!exp->have_brace && !exp->have_negative) {
+        cond.left_is_attr = exp->is_attr;
+        if(exp->is_attr) {
+          RelAttr attr;
+          relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			  cond.left_attr = attr;
+        } else {
+          cond.left_value = exp->value;
+        }
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+
+    if(condexp.right->num == 1) {
+      const Exp *exp = condexp.right->exp;
+      if(!exp->have_brace && !exp->have_negative) {
+        cond.right_is_attr = exp->is_attr;
+        if(exp->is_attr) {
+          RelAttr attr;
+          relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
+   			  cond.right_attr = attr;
+        } else {
+          cond.right_value = exp->value;
+        }
+      }else {
+        flag = false;
+        break;
+      }
+    }else {
+      flag = false;
+      break;
+    }
+
+    cond.comp = condexp.comp;
+
+    selects.conditions[selects.condition_num++] = cond;
+  }
+  
+  // 转换from clause
+  for(int i=0; i<adv_selects.relation_num; i++) {
+    selects.relations[selects.relation_num++] = strdup(adv_selects.relations[i]);
+  }
+
+  /* @what for: order-by*/
+  selects.order_num = adv_selects.order_num;
+  for(int i = 0; i < adv_selects.order_num; i++) {
+    selects.order_attrs[i] = adv_selects.order_attrs[i];
+  }
+
+  /* @what for: group-by*/
+  selects.group_num = adv_selects.group_num;
+  for(int i = 0; i < adv_selects.group_num; i++) {
+    selects.group_attrs[i] = adv_selects.group_attrs[i];
+  }
+  
+  return flag;
+}
+
+RC ExecuteStage::do_advselects(Trx *trx, const AdvSelects &adv_selects, const char *db, TupleSet &res_tupleset) {
+  ExpSelectExeNode *esnode = new ExpSelectExeNode(trx, adv_selects, db);
+  RC rc = RC::SUCCESS;
+
+  rc = esnode->init();
+  if(rc != RC::SUCCESS) {
+    return rc;
+  }
+  rc = esnode->execute(res_tupleset);
+  if(rc != RC::SUCCESS) {
+    LOG_ERROR("ExpSelectExeNode::execute() runs wrong \n");
+    delete esnode;
+    return rc;
+  }
+
+  delete esnode;
+  return RC::SUCCESS;
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+
 bool match_table(const Selects &selects, const char *table_name_in_condition, const char *table_name_to_match) {
   if (table_name_in_condition != nullptr) {
     return 0 == strcmp(table_name_in_condition, table_name_to_match);
@@ -968,6 +1229,8 @@ static RC schema_add_field(Table *table, const char *field_name, TupleSchema &sc
   return RC::SUCCESS;
 }
 /* -------------------------------------------------------------------------------------------------------------*/
+
+
 
 // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
 RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node) {
@@ -992,13 +1255,13 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
       if (0 == strcmp("*", attr.attribute_name)) {
         /* @author: huahui  @what for: 聚合查询 多表查询  -----------------------------------------------*/
         // 列出这张表所有字段
-        TupleSchema::from_table(table, schema, (attr.relation_name!=nullptr));
+        TupleSchema::from_table(table, schema, (selects.relation_num>1));
         /* ----------------------------------------------------------------------------------------------*/
         break; // 没有校验，给出* 之后，再写字段的错误
       } else {
         /* @author: huahui  @what for: 聚合查询 多表查询  ---------------------------------------------------*/
         // 列出这张表相关字段
-        rc = schema_add_field(table, attr.attribute_name, schema, (attr.relation_name!=nullptr));
+        rc = schema_add_field(table, attr.attribute_name, schema, (selects.relation_num>1));
         /* ---------------------------------------------------------------------------------------------------*/
         if (rc != RC::SUCCESS) {
           return rc;
@@ -1045,5 +1308,50 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
     }
   }
 
+  /* @author: huahui  @what for: order-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  // 找出与这个表相关的order-by属性
+  for(size_t i = 0; i < selects.order_num; i++) {
+    const OrderAttr &order_attr = selects.order_attrs[i];
+    if(match_table(selects, order_attr.relation_name, table_name)) {
+      schema_add_field(table, order_attr.attribute_name, schema, selects.relation_num>1);
+    }
+  }
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+  /* @author: huahui  @what for: group-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  // 找出与这个表相关的group-by属性
+  for(size_t i = 0; i < selects.group_num; i++) {
+    const GroupAttr &group_attr = selects.group_attrs[i];
+    if(match_table(selects, group_attr.relation_name, table_name)) {
+      schema_add_field(table, group_attr.attribute_name, schema, selects.relation_num>1);
+    }
+  }
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
   return select_node.init(trx, table, std::move(schema), std::move(condition_filters));
 }
+
+/* @author: huahui  @what for: group-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+// 从tuple_set中做分组，甚至在分组内做聚合，结果放在res_tupleset中
+// 已经做好了groupby的鲁棒性判断：比如选择的属性必然在groupby属性内
+// tuple_set是按照groupby的要求排序好的
+RC ExecuteStage::groupby_select_from_tupleset(Trx *trx, const char *db, const Selects &selects, TupleSet &tuple_set, TupleSet &res_tupleset) {
+  RC rc = RC::SUCCESS;
+  GroupbyExeNode *groupby_node = new GroupbyExeNode(trx, std::move(tuple_set), selects);
+  rc = groupby_node->execute(res_tupleset);
+  delete groupby_node;
+  return rc;
+}
+
+// 对于带有groupby的查询，看是否有聚合属性，与have_agg_from_tupleset的不同是，这里可以支持属性和聚合属性同时存在
+// 已经对groupby做好了鲁棒性判断
+void ExecuteStage::have_agg_from_tupleset_for_group(const Selects &selection, std::vector<const RelAttr *> &relattrs) {
+  for(int i = selection.attr_num - 1; i >= 0; i--) {
+    const RelAttr &relattr = selection.attributes[i];
+    if(relattr.agg_type != AggType::NOTAGG) {
+      relattrs.push_back(&(selection.attributes[i]));
+    }
+  }
+}
+
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/

@@ -24,8 +24,10 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/parser/parse.h"
 #include "sql/executor/value.h"
+#include "storage/common/record_manager.h"
 
 class Table;
+struct TextRecord;
 
 class Tuple {
 public:
@@ -64,6 +66,12 @@ private:
   std::vector<std::shared_ptr<TupleValue>>  values_;
 };
 
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
+ */
+void print_exp(Exp *exp, std::ostream &os);
+void print_explist(ExpList *explist, std::ostream &os);
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 class TupleField {
 public:
   TupleField(AttrType type, const char *table_name, const char *field_name) :
@@ -73,6 +81,13 @@ public:
 	   */
     aggtype_ = AggType::NOTAGG;
     /* -----------------------------------------------------------------------------------------------------------------*/
+  
+    is_explist_ = 0;  /* @author: huahui  @what for: expression */
+  }
+
+  /* @author: huahui  @what for: expression */
+  TupleField(ExpList *explist) : explist_(explist) {
+    is_explist_ = 1;
   }
 
   AttrType  type() const{
@@ -109,9 +124,17 @@ public:
   AggValType get_agg_val_type() const;
   AggVal get_agg_val() const;
   /* -----------------------------------------------------------------------------------------------------------------*/
+  
+  int get_is_explist() const;  /* @author: huahui  @what for: expression */
+  ExpList *get_explist() const; /* @author: huahui  @what for: expression */
 
   std::string to_string() const;
 private:
+  /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  int is_explist_;   // 如果is_explist_，则explist_有效，其他都无效
+  ExpList *explist_;
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
   /* @author: huahui @what for: 必做题，聚合查询 TupleField支持聚合属性了
    * have_table_name_表示这个TupleField输出时应不应该带表名 
    * aggtype_表示聚合类型，为NOTAGG表示不是聚合类型，是正常类型
@@ -143,6 +166,10 @@ public:
   void add_if_not_exists(AttrType type, const char *table_name, const char *field_name);
   void add_if_not_exists(AttrType type, const char *table_name, const char *field_name, bool have_table_name);
   /* ---------------------------------------------------------------------------------------------------------------*/
+  
+  /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  void add_explist(ExpList *explist);
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
   // void merge(const TupleSchema &other);
   void append(const TupleSchema &other);
@@ -195,6 +222,10 @@ public:
   const std::vector<Tuple> &tuples() const;
 
   void print(std::ostream &os) const;
+
+  /* @author: huahui  @what for: order-by */
+  void sortTuples(int order_num, const OrderAttr *order_attrs);
+
 public:
   const TupleSchema &schema() const {
     return schema_;
@@ -213,6 +244,7 @@ private:
   Table *table_;
   TupleSet &tuple_set_;
 };
+
 
 /* @author: huahui  @what for: 浮点数默认格式化---------------------------------------------
   */

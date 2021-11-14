@@ -21,8 +21,10 @@ class DiskBufferPool;
 class RecordFileHandler;
 class ConditionFilter;
 class DefaultConditionFilter;
+class CompositeConditionFilter;
 struct Record;
 struct RID;
+struct TextAddress;
 class Index;
 class IndexScanner;
 class RecordDeleter;
@@ -58,16 +60,17 @@ public:
   RC insert_record(Trx *trx, int value_num, const Value *values);
   RC update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num, const Condition conditions[], int *updated_count);
   RC delete_record(Trx *trx, ConditionFilter *filter, int *deleted_count);
+  RC update_text(TextAddress* text_address, char *data);
 
   RC scan_record(Trx *trx, ConditionFilter *filter, int limit, void *context, void (*record_reader)(const char *data, void *context));
-
-  RC create_index(Trx *trx, const char *index_name, const char *attribute_name,int isunique);
+  RC scan_text_record(TextAddress* text_address, char* text);
+  RC create_index(Trx *trx, const char *index_name, char *const *attribute_name,int attr_num,int isunique);
 
 public:
   const char *name() const;
 
   const TableMeta &table_meta() const;
-
+  const int  get_file_id() const{return file_id_;};
   RC sync();
 
 public:
@@ -81,10 +84,12 @@ private:
   RC scan_record_by_index(Trx *trx, IndexScanner *scanner, ConditionFilter *filter, int limit, void *context, RC (*record_reader)(Record *record, void *context));
   IndexScanner *find_index_for_scan(const ConditionFilter *filter);
   IndexScanner *find_index_for_scan(const DefaultConditionFilter &filter);
-
+  IndexScanner *find_index_for_scan (const CompositeConditionFilter &filters);
   RC insert_record(Trx *trx, Record *record);
+  RC insert_text_record(Record *record);
   RC delete_record(Trx *trx, Record *record);
   RC update_record(Record *record,const Value *value,const char *attribute_name);
+    TextAddress split_text(char* text);
 
 private:
   friend class RecordUpdater;
@@ -95,6 +100,7 @@ private:
 private:
   RC init_record_handler(const char *base_dir);
   RC make_record(int value_num, const Value values[], char * &record_out);
+  RC make_text_record(char* short_text, char * &record_out);
 
 private:
   Index *find_index(const char *index_name) const;
@@ -104,6 +110,8 @@ private:
   TableMeta               table_meta_;
   DiskBufferPool *        data_buffer_pool_; /// 数据文件关联的buffer pool
   int                     file_id_;
+  int                     hide_file_id_;               //用于text隐藏表 by:xiaoyu
+  RecordFileHandler *     text_record_handler_;
   RecordFileHandler *     record_handler_;   /// 记录操作
   std::vector<Index *>    indexes_;
 };

@@ -21,23 +21,53 @@ See the Mulan PSL v2 for more details. */
 #include "json/json.h"
 
 const static Json::StaticString FIELD_NAME("name");
-const static Json::StaticString FIELD_FIELD_NAME("field_name");
+const static Json::StaticString FIELD_FIELD_NAME("fields_name");
 const static Json::StaticString UNIQUE_FLAG("isunique");
 
-RC IndexMeta::init(const char *name, const FieldMeta &field,int isunique) {
+//fzh改，支持多列索引
+std::vector<std::string> split(std::string str, std::string pattern)
+{
+    std::string::size_type pos;
+    std::vector<std::string> result;
+    str += pattern;//扩展字符串以方便操作
+    int size = str.size();
+    for (int i = 0; i < size; i++)
+    {
+        pos = str.find(pattern, i);
+        if (pos < size)
+        {
+            std::string s = str.substr(i, pos - i);
+            result.push_back(s);
+            i = pos + pattern.size() - 1;
+        }
+    }
+    return result;
+}
+RC IndexMeta::init(const char *name, std::vector<FieldMeta> &fields_meta, int isunique) {
   if (nullptr == name || common::is_blank(name)) {
     return RC::INVALID_ARGUMENT;
   }
 
   name_ = name;
-  field_ = field.name();
+  for(auto it : fields_meta){
+      fields_.push_back(it.name());
+  }
+  field_num_ = fields_.size();
   isunique_ = isunique;
   return RC::SUCCESS;
 }
 
 void IndexMeta::to_json(Json::Value &json_value) const {
   json_value[FIELD_NAME] = name_;
-  json_value[FIELD_FIELD_NAME] = field_;
+  std::string totalstr;
+  for(int i = 0;i < field_num_ ;i++ ){
+      if (i != field_num_-1){
+          totalstr=totalstr+fields_[i]+",";
+      } else{
+          totalstr=totalstr+fields_[i];
+      }
+  }
+  json_value[FIELD_FIELD_NAME] = totalstr;
   json_value[UNIQUE_FLAG] = isunique_;
 }
 
@@ -55,22 +85,30 @@ RC IndexMeta::from_json(const TableMeta &table, const Json::Value &json_value, I
               name_value.asCString(), field_value.toStyledString().c_str());
     return RC::GENERIC_ERROR;
   }
-
-  const FieldMeta *field = table.field(field_value.asCString());
-  if (nullptr == field) {
-    LOG_ERROR("Deserialize index [%s]: no such field: %s", name_value.asCString(), field_value.asCString());
-    return RC::SCHEMA_FIELD_MISSING;
+  std::string beforesplit(field_value.asCString());
+  std::vector<std::string> fields = split(beforesplit,",");
+  std::vector<FieldMeta> fieldsmeta;
+  for (int i = 0; i < fields.size(); ++i) {
+    const FieldMeta *field = table.field(fields[i].c_str());
+    if (nullptr == field) {
+        LOG_ERROR("Deserialize index [%s]: no such field: %s", name_value.asCString(), field_value.asCString());
+        return RC::SCHEMA_FIELD_MISSING;
+    }
+    fieldsmeta.push_back(std::move(*field));
   }
 
-  return index.init(name_value.asCString(), *field,unique_value.asInt());
+  return index.init(name_value.asCString(), fieldsmeta,unique_value.asInt());
 }
 
 const char *IndexMeta::name() const {
   return name_.c_str();
 }
 
-const char *IndexMeta::field() const {
-  return field_.c_str();
+const char *IndexMeta::field(int i) const {
+  return fields_[i].c_str();
+}
+const int IndexMeta::field_num() const{
+    return field_num_;
 }
 
 const int IndexMeta::isunique() const {
@@ -79,6 +117,13 @@ const int IndexMeta::isunique() const {
 
 void IndexMeta::desc(std::ostream &os) const {
   os << "index name=" << name_
-      << ", field=" << field_
-      << ", isunique" << isunique_;
+  << ", fields=" ;
+  for(int i = 0 ; i < field_num_ ; ++i){
+      os <<  fields_[i]<<",";
+  }
+  os << " isunique=" << isunique_;
+}
+
+std::vector<std::string> IndexMeta::fields() {
+    return fields_;
 }

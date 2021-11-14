@@ -12,6 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by Wangyunlai on 2021/5/14.
 //
 
+#include <algorithm>
 #include "sql/parser/parse_defs.h"
 #include "sql/executor/tuple.h"
 #include "storage/common/table.h"
@@ -63,9 +64,54 @@ std::string TupleField::to_string() const {
   return std::string(table_name_) + "." + field_name_ + std::to_string(type_);
 }
 
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
+ */
+void print_exp(Exp *exp, std::ostream &os) {
+  if(exp->left_exp) {
+    print_exp(exp->left_exp, os);
+    os << calopToStr(exp->calop);
+  }
+  if(exp->have_brace) {
+    os << "(";
+    print_explist(exp->explist, os);
+    os << ")";
+  } else if(exp->is_attr) {
+    if(exp->relation_name) {
+      os << exp->relation_name << ".";
+    }
+    os << exp->attribute_name;
+  } else {
+    if(exp->value.type == AttrType::INTS) {
+      os << *(int *)(exp->value.data);
+    } else {
+      char *s2 = (char *)(exp->value.data);
+      os << (s2 + sizeof(float));
+    }
+  }
+}
+
+void print_explist(ExpList *explist, std::ostream &os) {
+  if(explist->left_explist) {
+    print_explist(explist->left_explist, os);
+    os << calopToStr(explist->calop);
+  }
+  if(explist->exp->have_negative) {
+    os << "-";
+  }
+  print_exp(explist->exp, os);
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 /* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------
  */
 void TupleField::print(std::ostream &os) const {
+  /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  if(is_explist_) {
+    print_explist(explist_, os);
+    return;
+  }
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
   if(!is_attr_) {
     char *s = aggtypeToStr(aggtype_);
     if(agg_val_type_ == AggValType::AGGNUMBER) {
@@ -108,6 +154,13 @@ AggVal TupleField::get_agg_val() const {
 }
 /* ---------------------------------------------------------------------------------------------*/
 
+/* @author: huahui  @what for: expression */
+int TupleField::get_is_explist() const {
+  return is_explist_;
+}
+ExpList *TupleField::get_explist() const {
+  return explist_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /* @author: huahui @what for: 聚合查询, 多表查询  -----------------------------------------------
@@ -136,6 +189,7 @@ void TupleSchema::add(AttrType type, const char *table_name, const char *field_n
   fields_.emplace_back(type, table_name, field_name);
   fields_.back().set_have_table_name(have_table_name);
   fields_.back().set_is_attr(true);
+  fields_.back().set_aggtype(AggType::NOTAGG);
 }
 void TupleSchema::add(AttrType type, const char *table_name, const char *field_name, bool have_table_name, AggType aggtype) {
   fields_.emplace_back(type, table_name, field_name);
@@ -155,6 +209,7 @@ void TupleSchema::add(bool have_table_name, AggType aggtype, bool is_attr, AggVa
 
 void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const char *field_name) {
   for (const auto &field: fields_) {
+    if(field.get_is_explist()) continue;  // @what for: expression
     if (0 == strcmp(field.table_name(), table_name) &&
         0 == strcmp(field.field_name(), field_name)) {
       return;
@@ -168,6 +223,7 @@ void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const
  */
 void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const char *field_name, bool have_table_name) {
   for (const auto &field: fields_) {
+    if(field.get_is_explist()) continue;  // @what for: expression
     if (0 == strcmp(field.table_name(), table_name) &&
         0 == strcmp(field.field_name(), field_name)) {
       return;
@@ -177,6 +233,13 @@ void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const
   add(type, table_name, field_name, have_table_name);
 }
 /* --------------------------------------------------------------------------------------------------------------------------*/
+
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+void TupleSchema::add_explist(ExpList *explist) {
+  fields_.emplace_back(explist);
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
 
 void TupleSchema::append(const TupleSchema &other) {
   fields_.reserve(fields_.size() + other.fields_.size());
@@ -189,6 +252,7 @@ int TupleSchema::index_of_field(const char *table_name, const char *field_name) 
   const int size = fields_.size();
   for (int i = 0; i < size; i++) {
     const TupleField &field = fields_[i];
+    if(field.get_is_explist()) continue;  // @what for: expression
     if (0 == strcmp(field.table_name(), table_name) && 0 == strcmp(field.field_name(), field_name)) {
       return i;
     }
@@ -199,30 +263,9 @@ int TupleSchema::index_of_field(const char *table_name, const char *field_name) 
 /* @author: huahui @what for: 聚合查询, 多表查询  
  * ------------------------------------------------------------------------------------------------*/
 void TupleSchema::print(std::ostream &os) const {
-  /*if (fields_.empty()) {
-    os << "No schema";
+  if(fields_.size() <= 0) {
     return;
   }
-
-  // 判断有多张表还是只有一张表
-  std::set<std::string> table_names;
-  for (const auto &field: fields_) {
-    table_names.insert(field.table_name());
-  }
-
-  for (std::vector<TupleField>::const_iterator iter = fields_.begin(), end = --fields_.end();
-       iter != end; ++iter) {
-    if (table_names.size() > 1) {
-      os << iter->table_name() << ".";
-    }
-    os << iter->field_name() << " | ";
-  }
-
-  if (table_names.size() > 1) {
-    os << fields_.back().table_name() << ".";
-  }
-  os << fields_.back().field_name() << std::endl;*/
-
   for (std::vector<TupleField>::const_iterator iter = fields_.begin(), end = --fields_.end();
        iter != end; ++iter) {
     iter->print(os);
@@ -280,6 +323,27 @@ void TupleSet::print(std::ostream &os) const {
     os << std::endl;
   }
 }
+
+/* @author: huahui  @what for: order-by <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+void TupleSet::sortTuples(int order_num, const OrderAttr *order_attrs) {
+  if(order_num <= 0) return;
+  auto cmp = [&](const Tuple &t1, const Tuple &t2) -> bool {
+    for(int i = order_num - 1; i >= 0; i--) {
+      const char *table_name = order_attrs[i].relation_name ? order_attrs[i].relation_name : schema_.field(0).table_name();
+      int index = schema_.index_of_field(table_name, order_attrs[i].attribute_name);
+      int flag = t1.get_pointer(index)->compare(t2.get(index));
+      if(flag != 0 || i == 0) {
+        if(order_attrs[i].order_rule == OrderRule::ASCORDER) {
+          return flag < 0;
+        } else {
+          return flag > 0;
+        }
+      }
+    }
+  };
+  std::sort(tuples_.begin(), tuples_.end(), cmp);
+}
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 void TupleSet::set_schema(const TupleSchema &schema) {
   schema_ = schema;
@@ -340,6 +404,21 @@ void TupleRecordConverter::add_record(const char *record) {
         tuple.add(s, strlen(s));
       }
       break;
+      /*
+      * @author: xiaoyu
+      * @what for: 选做题，增加text字段
+      * begin -------------------------------------------------------------------------------------------
+      */
+      case TEXT: {
+        const char *s = record + field_meta->offset();
+        TextAddress* text_address = new TextAddress(s);
+        char text[4097];
+        memset(&text, 0, sizeof(text));
+        table_->scan_text_record(text_address, text);
+        tuple.add(text, strlen(text));
+      }
+        break;
+      /*end ----------------------------------------------------------------------------------------------*/
       /*
        * @author: huahui
        * @what for: 必做题，增加date字段

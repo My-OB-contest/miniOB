@@ -89,6 +89,18 @@ protected:
   // 检查属性, 表名是否合法
   RC check_condition(int condition_num, const Condition *conditions, const Table * table);
   /* --------------------------------------------------------------------------------------------------------------*/
+
+  /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  bool convert_condexps_to_conds(int condition_num, ConditionExp condition_exps[], Condition conds[]);
+  bool convert_to_selects(const AdvSelects &adv_selects, Selects &selects);
+  RC do_advselects(Trx *trx, const AdvSelects &adv_selects, const char *db, TupleSet &res_tupleset);
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+  /* @author: huahui  @what for: group-by*/
+  // 从tuple_set中做分组，甚至在分组内做聚合，结果放在res_tupleset中
+  RC groupby_select_from_tupleset(Trx *trx, const char *db, const Selects &selects, TupleSet &tuple_set, TupleSet &res_tupleset);
+  void have_agg_from_tupleset_for_group(const Selects &selection, std::vector<const RelAttr *> &relattrs);
+
 private:
   Stage *default_storage_stage_ = nullptr;
   Stage *mem_storage_stage_ = nullptr;

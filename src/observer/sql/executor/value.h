@@ -22,6 +22,7 @@ See the Mulan PSL v2 for more details. */
 #include <ostream>
 #include <sstream>
 #include <memory>
+#include <cmath>
 
 #include "sql/parser/parse_defs.h"
 
@@ -70,10 +71,12 @@ public:
     if (result > 0) { // 浮点数没有考虑精度问题
       return 1;
     }
-    if (result < 0) {
-      return -1;
-    }
-    return 0;
+    if (abs(result) <= 1e-5) {
+      return 0;
+    } else if(result > 0.0) {
+      return 1;
+    } 
+    return -1;
   }
   double getValue() const {
     return value_;
@@ -113,6 +116,12 @@ public:
     const StringValue &string_other = (const StringValue &)other;
     return strcmp(value_.c_str(), string_other.value_.c_str());
   }
+
+  /* @what for: expression */
+  void *get_value() {
+    char *s = strdup(value_.c_str());
+    return (void *)s;
+  }
 private:
   std::string value_;
 };
@@ -129,6 +138,9 @@ public:
     year = (int)value[0]*256 + (int)value[1];
     month = (int)value[2];
     day = (int)value[3];
+    
+    value_ = malloc(4);
+    memcpy(value_, (const void *)value, 4);
   }
   void to_string(std::ostream &os) const override {
     if(year / 1000 == 0){
@@ -159,8 +171,13 @@ public:
     std::string s2 = ss.str();
     return strcmp(s1.c_str(), s2.c_str());
   }
+  /* @what for: expression*/
+  void *get_value() {
+    return value_;
+  }
 private:
   int year, month, day; // 从字节数组中解析出的year, month, day
+  void *value_;
 };
 
 /* @author: huahui  @what for: null

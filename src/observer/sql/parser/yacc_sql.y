@@ -21,7 +21,7 @@ typedef struct ParserContext {
   size_t insert_value_length[MAX_NUM];
   Value values[MAX_NUM];
   Value insert_values[MAX_NUM][MAX_NUM];
-  Condition conditions[MAX_NUM];
+  ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
   CompOp comp;
 	char id[MAX_NUM];
 } ParserContext;
@@ -68,7 +68,7 @@ ParserContext *get_context(yyscan_t scanner)
 %lex-param { yyscan_t scanner }
 %parse-param { void *scanner }
 
-//标识tokens
+// 标识tokens
 %token  SEMICOLON
         CREATE
         DROP
@@ -91,7 +91,8 @@ ParserContext *get_context(yyscan_t scanner)
         INT_T
         STRING_T
         FLOAT_T
-		DATE_T  /* @author: huahui @what for: 必做题，增加date字段 */
+		    DATE_T  /* @author: huahui @what for: 必做题，增加date字段 */
+		    TEXT_T  /* @author: xiaoyu @what for: 必做题，增加text字段 */
         HELP
         EXIT
         DOT //QUOTE
@@ -111,17 +112,24 @@ ParserContext *get_context(yyscan_t scanner)
         LE
         GE
         NE
-		COUNT /* @author: huahui @what for: 必做题，聚合查询 */
-		MAX   /* @author: huahui @what for: 必做题，聚合查询 */
-		MIN   /* @author: huahui @what for: 必做题，聚合查询 */
-		AVG   /* @author: huahui @what for: 必做题，聚合查询 */
-		INNER /* @author: fzh @what for: join */
-		JOIN  /* @author: fzh @what for: join */
-		NOT      /* @author: huahui @what for: null */
-		NULL_A     /* @author: huahui @what for: null */
-		NULLABLE /* @author: huahui @what for: null */
-		IS_A      /* @author: huahui @what for: null */
-		UNIQUE  /* @author: fzh @what for: unique index */
+        COUNT /* @author: huahui @what for: 必做题，聚合查询 */
+        MAX   /* @author: huahui @what for: 必做题，聚合查询 */
+        MIN   /* @author: huahui @what for: 必做题，聚合查询 */
+        AVG   /* @author: huahui @what for: 必做题，聚合查询 */
+        INNER /* @author: fzh @what for: join */
+        JOIN  /* @author: fzh @what for: join */
+        NOT      /* @author: huahui @what for: null */
+        NULL_A     /* @author: huahui @what for: null */
+        NULLABLE /* @author: huahui @what for: null */
+        IS_A      /* @author: huahui @what for: null */
+        UNIQUE  /* @author: fzh @what for: unique index */
+        PLUS    /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+        MINUS
+        DIVIDE   /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+        ORDER    /* @what for: order-by*/
+        BY   
+        ASC
+        GROUP    /* @what for: group-by*/
 
 
 /* @author: huahui &what for: 聚合
@@ -140,13 +148,15 @@ ParserContext *get_context(yyscan_t scanner)
     float floats;
     char *str;
   } floatsAndStr;
+  void *exp;       /* @author: huahui  @what for: expression */
+  void *exp_list;  /* @author: huahui  @what for: expression */
 }
 /* ----------------------------------------------------------------------------------------------*/
 
-%token <number> NUMBER
-/* @author: huahui @what for: 聚合 ----------------------------*/
-%token <floatsAndStr> FLOAT    
-/* -----------------------------------------------------------------------------------------------*/
+// @what for: expression  
+%token <number> NNNUMBER
+%token <floatsAndStr> NNFLOAT
+
 %token <string> ID
 /* @author: huahui @what for: 必做题，增加date字段 ------------------------------------------------*/
 %token <string> DATE
@@ -155,12 +165,22 @@ ParserContext *get_context(yyscan_t scanner)
 %token <string> SSS
 %token <string> STAR
 %token <string> STRING_V
-//非终结符
+// 非终结符
 
 %type <number> type;
-%type <condition1> condition;
+%type <number> text;
+//%type <condition1> condition;
 %type <value1> value;
 %type <number> number;
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+%type <exp> exp;
+%type <exp> exps;
+%type <exp> exps2;
+%type <exp_list> exp_list;
+%type <exp_list> exp_list2;
+%type <exp_list> exp_list3
+%type <floatsAndStr> floatnumber
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 %%
 
@@ -242,18 +262,29 @@ desc_table:
     }
     ;
 
-create_index:		/*create index 语句的语法解析树*/
-    CREATE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON 
-		{
-			CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_index";
-			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5, $7 ,0);
-		}
-	| CREATE UNIQUE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON
-	    {
-	        CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_unique_index";
-            create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6, $8 ,1);
-	    }
+ create_index:		/*create index 语句的语法解析树*/
+    CREATE INDEX ID ON ID LBRACE field_name_list RBRACE SEMICOLON
+ 		{
+ 			CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_index";
+			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5 ,0);
+ 		}
+	| CREATE UNIQUE INDEX ID ON ID LBRACE field_name_list RBRACE SEMICOLON
+ 	    {
+ 	        CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_unique_index";
+            create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6 ,1);
+ 	    }
     ;
+
+field_name_list:
+    ID
+        {
+            create_index_append_attribute(&CONTEXT->ssql->sstr.create_index,$1);
+        }
+    |ID COMMA field_name_list
+        {
+            create_index_append_attribute(&CONTEXT->ssql->sstr.create_index,$1);
+        }
+
 
 drop_index:			/*drop index 语句的语法解析树*/
     DROP INDEX ID  SEMICOLON 
@@ -300,6 +331,17 @@ attr_def:
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
 			CONTEXT->value_length++;
 		}
+        |ID_get text
+		{
+			AttrInfo attribute;
+			attr_info_init(&attribute, CONTEXT->id, $2, 16);
+			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
+			// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id);
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type=$2;
+			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
+			CONTEXT->value_length++;
+		}
 	/* @author: huahui  @what for: null
 	 * ------------------------------------------------------------------------------------------------------------------------------------------------
 	 */
@@ -315,7 +357,7 @@ attr_def:
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length = $4;
 			CONTEXT->value_length++;
 		}
-	| ID_get type LBRACE number RBRACE NULLABLE 
+	| ID_get type LBRACE number RBRACE NULLABLE
 	    {
 			AttrInfo attribute;
 			attr_info_init(&attribute, CONTEXT->id, $2, $4);
@@ -327,10 +369,22 @@ attr_def:
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length = $4;
 			CONTEXT->value_length++;
 		}
-	| ID_get type NOT NULL_A 
+	| ID_get type NOT NULL_A
+        {
+        	AttrInfo attribute;
+        	attr_info_init(&attribute, CONTEXT->id, $2, 4);
+        	attribute.nullable = 0;
+        	create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
+        	// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
+        	// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id);
+        	// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type=$2;
+        	// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
+        	CONTEXT->value_length++;
+        }
+	| ID_get text NOT NULL_A
 	    {
 			AttrInfo attribute;
-			attr_info_init(&attribute, CONTEXT->id, $2, 4);
+			attr_info_init(&attribute, CONTEXT->id, $2, 16);
 			attribute.nullable = 0;
 			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
@@ -354,8 +408,30 @@ attr_def:
 	/* --------------------------------------------------------------------------------------------------------------------------------------------*/
     ;
 number:
-		NUMBER {$$ = $1;}
+    NNNUMBER {$$ = $1;}
+    | MINUS NNNUMBER {
+      $$ = -($2); 
+    }
 		;
+
+floatnumber:
+  NNFLOAT {$$ = $1; }
+  | MINUS NNFLOAT { 
+    $$ = $2;
+    $$.floats = -($$.floats);
+    char *s = $$.str;
+    char *tmp = (char *)malloc(strlen(s)+5);
+    tmp[0] = '-';
+    strcpy(tmp+1, $$.str);
+    free($$.str);
+    $$.str = strdup(tmp);
+  }
+  ;
+
+text:
+    TEXT_T { $$=TEXT; } /* @author: xiaoyu @what for: 选做题，增加text字段 */
+    ;
+
 type:
 	INT_T { $$=INTS; }
        | STRING_T { $$=CHARS; }
@@ -418,10 +494,10 @@ value_list:
 
 insert_value:
     // insert支持多条插入,修改CONTEXT结构 by：xiaoyu
-    NUMBER{
+    number {
   		value_init_integer(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], $1);
 		}
-    |FLOAT{
+    |floatnumber {
   		value_init_float(&CONTEXT->insert_values[CONTEXT->value_list_length][CONTEXT->insert_value_length[CONTEXT->value_list_length]++], ($1).floats);
 		}
     |SSS {
@@ -442,12 +518,13 @@ insert_value:
 
 value:
     // insert支持多条插入,修改CONTEXT结构 by：xiaoyu
-    NUMBER{	
+    number {	
   		value_init_integer(&CONTEXT->values[CONTEXT->value_length++], $1);
 		}
-    |FLOAT{
-  		value_init_float(&CONTEXT->values[CONTEXT->value_length++], ($1).floats);
-		}
+    |floatnumber{
+  		// value_init_float(&CONTEXT->values[CONTEXT->value_length++], ($1).floats);
+		value_init_float2(&CONTEXT->values[CONTEXT->value_length++], ($1).floats, ($1).str);
+	}
     |SSS {
 			$1 = substr($1,1,strlen($1)-2);
   		value_init_string(&CONTEXT->values[CONTEXT->value_length++], $1);
@@ -462,6 +539,7 @@ value:
 	}
 	/* -----------------------------------------------------------------------------------------------*/
     ;
+
     
 delete:		/*  delete 语句的语法解析树*/
     DELETE FROM ID where SEMICOLON 
@@ -469,7 +547,7 @@ delete:		/*  delete 语句的语法解析树*/
 			CONTEXT->ssql->flag = SCF_DELETE;//"delete";
 			deletes_init_relation(&CONTEXT->ssql->sstr.deletion, $3);
 			deletes_set_conditions(&CONTEXT->ssql->sstr.deletion, 
-					CONTEXT->conditions, CONTEXT->condition_length);
+					CONTEXT->condition_exps, CONTEXT->condition_length);
 			CONTEXT->condition_length = 0;	
     }
     ;
@@ -479,439 +557,709 @@ update:			/*  update 语句的语法解析树*/
 			CONTEXT->ssql->flag = SCF_UPDATE;//"update";
 			Value *value = &CONTEXT->values[0];
 			updates_init(&CONTEXT->ssql->sstr.update, $2, $4, value, 
-					CONTEXT->conditions, CONTEXT->condition_length);
+					CONTEXT->condition_exps, CONTEXT->condition_length);
 			CONTEXT->condition_length = 0;
 		}
     ;
-select:				/*  select 语句的语法解析树*/
-    SELECT select_attr FROM ID rel_list where SEMICOLON
-		{
-			// CONTEXT->ssql->sstr.selection.relations[CONTEXT->from_length++]=$4;
-			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
 
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, CONTEXT->conditions, CONTEXT->condition_length);
+/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+select:
+  SELECT relattrexp FROM ID rel_list where SEMICOLON {  
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    adv_selects->relations[adv_selects->relation_num++] = strdup($4);
+    CONTEXT->ssql->flag=SCF_SELECT;
+    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+    //临时变量清零
+    CONTEXT->condition_length=0;
+    CONTEXT->from_length=0;
+    CONTEXT->select_length=0;
+    CONTEXT->value_length = 0;
+  }
+  | SELECT relattrexp FROM ID join where SEMICOLON      
+  {
+     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
+     CONTEXT->ssql->flag=SCF_SELECT;
+     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+     //临时变量清零
+     CONTEXT->condition_length=0;
+     CONTEXT->from_length=0;
+     CONTEXT->select_length=0;
+     CONTEXT->value_length = 0;
+  }
+  | SELECT relattrexp FROM ID rel_list where order SEMICOLON {  
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    adv_selects->relations[adv_selects->relation_num++] = strdup($4);
+    CONTEXT->ssql->flag=SCF_SELECT;
+    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+    //临时变量清零
+    CONTEXT->condition_length=0;
+    CONTEXT->from_length=0;
+    CONTEXT->select_length=0;
+    CONTEXT->value_length = 0;
+  }
+  | SELECT relattrexp FROM ID join where order SEMICOLON      
+  {
+     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
+     CONTEXT->ssql->flag=SCF_SELECT;
+     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+     //临时变量清零
+     CONTEXT->condition_length=0;
+     CONTEXT->from_length=0;
+     CONTEXT->select_length=0;
+     CONTEXT->value_length = 0;
+  }
+  | SELECT relattrexp FROM ID rel_list where group SEMICOLON {  
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    adv_selects->relations[adv_selects->relation_num++] = strdup($4);
+    CONTEXT->ssql->flag=SCF_SELECT;
+    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+    //临时变量清零
+    CONTEXT->condition_length=0;
+    CONTEXT->from_length=0;
+    CONTEXT->select_length=0;
+    CONTEXT->value_length = 0;
+  }
+  | SELECT relattrexp FROM ID join where group SEMICOLON      
+  {
+     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
+     CONTEXT->ssql->flag=SCF_SELECT;
+     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+     //临时变量清零
+     CONTEXT->condition_length=0;
+     CONTEXT->from_length=0;
+     CONTEXT->select_length=0;
+     CONTEXT->value_length = 0;
+  }
+  ;
+  
+relattrexp:
+  exp_list relattrexp2 {
+    RelAttrExp exp;
+    exp.agg_type = NOTAGG;
+    exp.is_star = 0;
+    exp.explist = (ExpList *)($1);
+    exp.num = exp.explist->num;
+    advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+  }
+  | MINUS exp_list relattrexp2 {
+    ExpList *explist = (ExpList *)($2);
+    while(explist->left_explist) {
+      explist = explist->left_explist;
+    }
+    explist->exp->have_negative = 1;
 
-			CONTEXT->ssql->flag=SCF_SELECT;//"select";
-			// CONTEXT->ssql->sstr.selection.attr_num = CONTEXT->select_length;
-
-			//临时变量清零
-			CONTEXT->condition_length=0;
-			CONTEXT->from_length=0;
-			CONTEXT->select_length=0;
-			CONTEXT->value_length = 0;
-	}
-	|SELECT select_attr FROM ID join where SEMICOLON
-	    {
-			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, CONTEXT->conditions, CONTEXT->condition_length);
-			CONTEXT->ssql->flag=SCF_SELECT;//"select";
-			CONTEXT->condition_length=0;
-			CONTEXT->from_length=0;
-			CONTEXT->select_length=0;
-			CONTEXT->value_length = 0;
-
-	    }
-	;
-
-select_attr:
-    STAR {  
-			RelAttr attr;
-			relation_attr_init(&attr, NULL, "*");
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-    | ID attr_list {
-			RelAttr attr;
-			relation_attr_init(&attr, NULL, $1);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-  	| ID DOT ID attr_list {
-			RelAttr attr;
-			relation_attr_init(&attr, $1, $3);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-	/* @author: fzh
-	 * @what for:  支持t.*
-	 * -----------------------------------------------------------------------------------------------------------------
-	 */
-    | ID DOT STAR attr_list {
-            RelAttr attr;
-            relation_attr_init(&attr, $1, "*");
-            selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
+    RelAttrExp exp;
+    exp.agg_type = NOTAGG;
+    exp.is_star = 0;
+    exp.explist = (ExpList *)($2);
+    exp.num = exp.explist->num;
+    advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+  }
+    /* @author: huahui 
+     * @what for: 必做题，聚合查询 
+     * -----------------------------------------------------------------------------------------------------------------
+     */
+    | COUNT LBRACE ID RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGCOUNT, NULL, $3);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
         }
-	/* @author: huahui 
-	 * @what for: 必做题，聚合查询 
-	 * -----------------------------------------------------------------------------------------------------------------
-	 */
-	| COUNT LBRACE ID RBRACE attr_list {
-            RelAttr attr;
-			relation_agg_attr_init(&attr, AGGCOUNT, NULL, $3);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-	    }
-	    | COUNT LBRACE STAR RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGCOUNT, NULL, "*");
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| COUNT LBRACE ID DOT ID RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGCOUNT, $3, $5);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| COUNT LBRACE ID DOT STAR RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGCOUNT, $3, "*");
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| COUNT LBRACE NUMBER RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGCOUNT, NULL, "*");
-			attr.is_attr = 0;
-			attr.agg_val_type = AGGNUMBER;
-			attr.agg_val.intv = $3;
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| COUNT LBRACE FLOAT RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGCOUNT, NULL, "*");
-			attr.is_attr = 0;
-			attr.agg_val_type = AGGFLOAT;
-			attr.agg_val.floatv = ($3).floats;
-			attr.agg_val.str = strdup(($3).str);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-	| MAX LBRACE ID RBRACE attr_list {
-            RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMAX, NULL, $3);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-	    }
-	    | MAX LBRACE STAR RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMAX, NULL, "*");
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| MAX LBRACE ID DOT ID RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMAX, $3, $5);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| MAX LBRACE NUMBER RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMAX, NULL, "*");
-			attr.is_attr = 0;
-			attr.agg_val_type = AGGNUMBER;
-			attr.agg_val.intv = $3;
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| MAX LBRACE FLOAT RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMAX, NULL, "*");
-			attr.is_attr = 0;
-			attr.agg_val_type = AGGFLOAT;
-			attr.agg_val.floatv = ($3).floats;
-			attr.agg_val.str = strdup(($3).str);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-	| MIN LBRACE ID RBRACE attr_list {
-            RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMIN, NULL, $3);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-	    }
-	    | MIN LBRACE STAR RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMIN, NULL, "*");
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| MIN LBRACE ID DOT ID RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMIN, $3, $5);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| MIN LBRACE NUMBER RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMIN, NULL, "*");
-			attr.is_attr = 0;
-			attr.agg_val_type = AGGNUMBER;
-			attr.agg_val.intv = $3;
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| MIN LBRACE FLOAT RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGMIN, NULL, "*");
-			attr.is_attr = 0;
-			attr.agg_val_type = AGGFLOAT;
-			attr.agg_val.floatv = ($3).floats;
-			attr.agg_val.str = strdup(($3).str);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-	| AVG LBRACE ID RBRACE attr_list {
-            RelAttr attr;
-			relation_agg_attr_init(&attr, AGGAVG, NULL, $3);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-	    }
-	    | AVG LBRACE STAR RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGAVG, NULL, "*");
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| AVG LBRACE ID DOT ID RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGAVG, $3, $5);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| AVG LBRACE NUMBER RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGAVG, NULL, "*");
-			attr.is_attr = 0;
-			attr.agg_val_type = AGGNUMBER;
-			attr.agg_val.intv = $3;
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-		| AVG LBRACE FLOAT RBRACE attr_list {
-			RelAttr attr;
-			relation_agg_attr_init(&attr, AGGAVG, NULL, "*");
-			attr.is_attr = 0;
-			attr.agg_val_type = AGGFLOAT;
-			attr.agg_val.floatv = ($3).floats;
-			attr.agg_val.str = strdup(($3).str);
-			selects_append_attribute(&CONTEXT->ssql->sstr.selection, &attr);
-		}
-	/* ------------------------------------------------------------------------------------------------------------
-	 */
+        | COUNT LBRACE STAR RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGCOUNT, NULL, "*");
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | COUNT LBRACE ID DOT ID RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGCOUNT, $3, $5);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | COUNT LBRACE ID DOT STAR RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGCOUNT, $3, "*");
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | COUNT LBRACE number RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGCOUNT, NULL, "*");
+            exp.is_attr = 0;
+            exp.agg_val_type = AGGNUMBER;
+            exp.agg_val.intv = $3;
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | COUNT LBRACE floatnumber RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGCOUNT, NULL, "*");
+            exp.is_attr = 0;
+            exp.agg_val_type = AGGFLOAT;
+            exp.agg_val.floatv = ($3).floats;
+            exp.agg_val.str = strdup(($3).str);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+    | MAX LBRACE ID RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMAX, NULL, $3);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | MAX LBRACE STAR RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMAX, NULL, "*");
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | MAX LBRACE ID DOT ID RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMAX, $3, $5);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | MAX LBRACE number RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMAX, NULL, "*");
+            exp.is_attr = 0;
+            exp.agg_val_type = AGGNUMBER;
+            exp.agg_val.intv = $3;
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | MAX LBRACE floatnumber RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMAX, NULL, "*");
+            exp.is_attr = 0;
+            exp.agg_val_type = AGGFLOAT;
+            exp.agg_val.floatv = ($3).floats;
+            exp.agg_val.str = strdup(($3).str);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+    | MIN LBRACE ID RBRACE relattrexp2 {  
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMIN, NULL, $3);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | MIN LBRACE STAR RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMIN, NULL, "*");
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | MIN LBRACE ID DOT ID RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMIN, $3, $5);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | MIN LBRACE number RBRACE relattrexp2 { 
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMIN, NULL, "*");
+            exp.is_attr = 0;
+            exp.agg_val_type = AGGNUMBER;
+            exp.agg_val.intv = $3;
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | MIN LBRACE floatnumber RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGMIN, NULL, "*");
+            exp.is_attr = 0;
+            exp.agg_val_type = AGGFLOAT;
+            exp.agg_val.floatv = ($3).floats;
+            exp.agg_val.str = strdup(($3).str);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+    | AVG LBRACE ID RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGAVG, NULL, $3);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | AVG LBRACE STAR RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGAVG, NULL, "*");
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | AVG LBRACE ID DOT ID RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGAVG, $3, $5);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | AVG LBRACE number RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGAVG, NULL, "*");
+            exp.is_attr = 0;
+            exp.agg_val_type = AGGNUMBER;
+            exp.agg_val.intv = $3;
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+        | AVG LBRACE floatnumber RBRACE relattrexp2 {
+            RelAttrExp exp;
+            relation_agg_relattrexp_init(&exp, AGGAVG, NULL, "*");
+            exp.is_attr = 0;
+            exp.agg_val_type = AGGFLOAT;
+            exp.agg_val.floatv = ($3).floats;
+            exp.agg_val.str = strdup(($3).str);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+        }
+    /* ------------------------------------------------------------------------------------------------------------
+     */
+    | STAR {
+      RelAttrExp exp;
+      exp.agg_type = NOTAGG;
+      exp.is_star = 1;
+      exp.relation_name = NULL;
+      advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+    }
+    | ID DOT STAR relattrexp2 {
+      RelAttrExp exp;
+      exp.agg_type = NOTAGG;
+      exp.is_star = 1;
+      exp.relation_name = strdup($1);
+      advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+    }
     ;
-attr_list:
-    /* empty */
-    | COMMA select_attr {
-		
-	}
-	/* ------------------------------------------------------------------------------------------------------------
-	 */
-  	;
+    
+relattrexp2:
+  /* empty*/
+  | COMMA relattrexp
+  ;
+
+/* exp_list是一个完整的支持加减乘除的表达式，它用加减将至少一个的exps连接起来
+ * 前面不带正号
+ */
+exp_list:
+  exps exp_list2 {
+    ExpList *explist_left = (ExpList *)malloc(sizeof(ExpList));
+    explist_left->exp = (Exp *)($1);
+    explist_left->left_explist = NULL;
+    explist_left->calop = STARTCALOP;
+    explist_left->num = explist_left->exp->num;
+    if($2){
+      ExpList *explist_right = (ExpList *)($2);
+      while(explist_right->left_explist) {
+        explist_right->num += explist_left->num;
+        explist_right = explist_right->left_explist;
+      }
+      explist_right->num += explist_left->num;
+      explist_right->left_explist = explist_left;
+      $$ = $2;
+    }
+    else {
+      $$ = (void *)explist_left;
+    }
+  }
+  ;
+  
+exp_list2:
+  /* empty*/ {
+    $$ = NULL;
+  }
+  | PLUS exp_list {
+    ExpList *explist_right = (ExpList *)($2);
+    while(explist_right->left_explist) {
+      explist_right = explist_right->left_explist;
+    }
+    explist_right->calop = PLUS_OP;
+    $$ = $2;
+  }
+  | MINUS exp_list {
+    ExpList *explist_right = (ExpList *)($2);
+    while(explist_right->left_explist) {
+      explist_right = explist_right->left_explist;
+    }
+    explist_right->calop = MINUS_OP;
+    $$ = $2;
+  }
+  ;
+
+exp_list3:
+  exp_list {
+    $$ = $1;
+  }
+  | MINUS exp_list {
+    ExpList *explist = (ExpList *)($2);
+    while(explist->left_explist) {
+      explist = explist->left_explist;
+    }
+    explist->exp->have_negative = 1;
+    $$ = $2;
+  }
+  ;
+
+
+/* exps是一个完整的支持乘除的表达式，它用乘除将很多exp连接起来，exp可以是属性，值或者括号括进来的东西exp_list
+ */
+exps:
+  exp exps2 {
+    if($2){
+      Exp *exp_left = (Exp *)($1);
+      Exp *exp_right = (Exp *)($2);
+      while(exp_right->left_exp) {
+        exp_right->num += exp_left->num;
+        exp_right = exp_right->left_exp;
+      }
+      exp_right->num += exp_left->num;
+      exp_right->left_exp = exp_left;
+      $$ = $2;
+    } else {
+      $$ = $1;
+    }
+  }
+  ;
+
+exps2:
+  /* empty*/ {
+    $$ = NULL;
+  }
+  | STAR exps {
+    Exp *exp_right = (Exp *)($2);
+    while(exp_right->left_exp) {
+      exp_right = exp_right->left_exp;
+    }
+    exp_right->calop = TIME_OP;
+    $$ = $2;
+  }
+  | DIVIDE exps {
+    Exp *exp_right = (Exp *)($2);
+    while(exp_right->left_exp) {
+      exp_right = exp_right->left_exp;
+    }
+    exp_right->calop = DIVIDE_OP;
+    $$ = $2;
+  }
+  ;
+
+/* exp可以是属性，值或者括号括进来的东西exp_list
+ */
+exp:
+  ID {
+    Exp *exp = (Exp *)malloc(sizeof(Exp));
+    exp->have_brace = 0;
+    exp->have_negative = 0;
+    exp->explist = NULL;
+    exp->is_attr = 1;
+    exp->relation_name = NULL;
+    exp->attribute_name = strdup($1);
+    exp->left_exp = NULL;
+    exp->calop = STARTCALOP;
+    exp->num = 1;
+    $$ = (void *)exp;
+  }
+  | ID DOT ID {
+    Exp *exp = (Exp *)malloc(sizeof(Exp));
+    exp->have_brace = 0;
+    exp->have_negative = 0;
+    exp->explist = NULL;
+    exp->is_attr = 1;
+    exp->relation_name = strdup($1);
+    exp->attribute_name = strdup($3);
+    exp->left_exp = NULL;
+    exp->calop = STARTCALOP;
+    exp->num = 1;
+    $$ = (void *)exp;
+  }
+  | NNNUMBER {
+    value_init_integer(&CONTEXT->values[CONTEXT->value_length++], $1);
+    Exp *exp = (Exp *)malloc(sizeof(Exp));
+    exp->have_brace = 0;
+    exp->have_negative = 0;
+    exp->is_attr = 0;
+    exp->explist = NULL;
+    exp->relation_name = NULL;
+    exp->attribute_name = NULL;
+    exp->value = CONTEXT->values[CONTEXT->value_length - 1];
+    exp->left_exp = NULL;
+    exp->calop = STARTCALOP;
+    exp->num = 1;
+    $$ = (void *)exp;
+  }
+  | NNFLOAT {
+    value_init_float2(&CONTEXT->values[CONTEXT->value_length++], ($1).floats, ($1).str);
+    Exp *exp = (Exp *)malloc(sizeof(Exp));
+    exp->have_brace = 0;
+    exp->have_negative = 0;
+    exp->is_attr = 0;
+    exp->explist = NULL;
+    exp->relation_name = NULL;
+    exp->attribute_name = NULL;
+    exp->value = CONTEXT->values[CONTEXT->value_length - 1];
+    exp->left_exp = NULL;
+    exp->calop = STARTCALOP;
+    exp->num = 1;
+    $$ = (void *)exp;
+  }
+  | SSS {
+    $1 = substr($1,1,strlen($1)-2);
+  	value_init_string(&CONTEXT->values[CONTEXT->value_length++], $1);
+    Exp *exp = (Exp *)malloc(sizeof(Exp));
+    exp->have_brace = 0;
+    exp->have_negative = 0;
+    exp->is_attr = 0;
+    exp->explist = NULL;
+    exp->relation_name = NULL;
+    exp->attribute_name = NULL;
+    exp->value = CONTEXT->values[CONTEXT->value_length - 1];
+    exp->left_exp = NULL;
+    exp->calop = STARTCALOP;
+    exp->num = 1;
+    $$ = (void *)exp;
+  }
+  | DATE {
+    $1 = substr($1,1,strlen($1)-2);
+  	value_init_date(&CONTEXT->values[CONTEXT->value_length++], $1);
+    Exp *exp = (Exp *)malloc(sizeof(Exp));
+    exp->have_brace = 0;
+    exp->have_negative = 0;
+    exp->is_attr = 0;
+    exp->explist = NULL;
+    exp->relation_name = NULL;
+    exp->attribute_name = NULL;
+    exp->value = CONTEXT->values[CONTEXT->value_length - 1];
+    exp->left_exp = NULL;
+    exp->calop = STARTCALOP;
+    exp->num = 1;
+    $$ = (void *)exp;
+  }
+  | NULL_A {
+    value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
+    Exp *exp = (Exp *)malloc(sizeof(Exp));
+    exp->have_brace = 0;
+    exp->have_negative = 0;
+    exp->is_attr = 0;
+    exp->explist = NULL;
+    exp->relation_name = NULL;
+    exp->attribute_name = NULL;
+    exp->value = CONTEXT->values[CONTEXT->value_length - 1];
+    exp->left_exp = NULL;
+    exp->calop = STARTCALOP;
+    exp->num = 1;
+    $$ = (void *)exp;
+  }
+  | LBRACE exp_list3 RBRACE {
+    Exp *exp = (Exp *)malloc(sizeof(Exp));
+    exp->have_brace = 1;
+    exp->have_negative = 0;
+    exp->explist = (ExpList *)($2);
+    exp->num = exp->explist->num;
+    exp->left_exp = NULL;
+    $$ = (void *)exp;
+  }
+  ;
 
 rel_list:
     /* empty */
     | COMMA ID rel_list {	
-				selects_append_relation(&CONTEXT->ssql->sstr.selection, $2);
+        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+        adv_selects->relations[adv_selects->relation_num++] = strdup($2);
 		  }
+    ;
+
+where:
+  /* empty*/
+  | WHERE condition_exps {
+  
+  }
+  ;
+  
+condition_exps:
+  | condition_exp {
+  
+  }
+  | condition_exp AND condition_exps {
+  
+  }
+  ;
+
+
+condition_exp: 
+  exp_list3 comOp exp_list3 {
+    ExpList *explist_left = (ExpList *)($1);
+    ExpList *explist_right = (ExpList *)($3);
+    ConditionExp cond_exp;
+    cond_exp.left = explist_left;
+    cond_exp.right = explist_right;
+    cond_exp.comp = CONTEXT->comp;
+    CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
+  }
+  /* @author: huahui  @what for: null ------------------------------------------------------------------------*/
+	| exp_list3 IS_A NULL_A {
+		ExpList *explist_left = (ExpList *)($1);
+		ExpList *explist_right = (ExpList *)malloc(sizeof(ExpList));
+		
+		explist_init_for_null(explist_right);
+		
+		ConditionExp cond_exp;
+		cond_exp.left = explist_left;
+		cond_exp.right = explist_right;
+		cond_exp.comp = IS;
+		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
+	}
+	| exp_list3 IS_A NOT NULL_A {
+		ExpList *explist_left = (ExpList *)($1);
+		ExpList *explist_right = (ExpList *)malloc(sizeof(ExpList));
+		
+		explist_init_for_null(explist_right);
+		
+		ConditionExp cond_exp;
+		cond_exp.left = explist_left;
+		cond_exp.right = explist_right;
+		cond_exp.comp = ISNOT;
+		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
+	}
+	/* ------------------------------------------------------------------------------------------------------------*/
     ;
 
 join:
     INNER JOIN ID onwhere {
-        selects_append_relation(&CONTEXT->ssql->sstr.selection, $3);
+        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+        adv_selects->relations[adv_selects->relation_num++] = strdup($3);
     }
     |INNER JOIN ID onwhere join {
-        selects_append_relation(&CONTEXT->ssql->sstr.selection, $3);
+        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+        adv_selects->relations[adv_selects->relation_num++] = strdup($3);
     }
     ;
 onwhere:
     /* empty */
-    | ON condition condition_list{
+    | ON condition_exps {
 
     }
     ;
-where:
-    /* empty */ 
-    | WHERE condition condition_list {	
-				// CONTEXT->conditions[CONTEXT->condition_length++]=*$2;
-			}
-    ;
-condition_list:
-    /* empty */
-    | AND condition condition_list {
-				// CONTEXT->conditions[CONTEXT->condition_length++]=*$2;
-			}
-    ;
-condition:
-    ID comOp value 
-		{
-			RelAttr left_attr;
-			relation_attr_init(&left_attr, NULL, $1);
 
-			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
+/* @author: huahui  @what for: order-by*/
+order:
+  ORDER BY ID order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = ASCORDER;
+    order_attr.relation_name = NULL;
+    order_attr.attribute_name = strdup($3);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | ORDER BY ID DOT ID order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = ASCORDER;
+    order_attr.relation_name = strdup($3);
+    order_attr.attribute_name = strdup($5);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | ORDER BY ID ASC order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = ASCORDER;
+    order_attr.relation_name = NULL;
+    order_attr.attribute_name = strdup($3);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | ORDER BY ID DOT ID ASC order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = ASCORDER;
+    order_attr.relation_name = strdup($3);
+    order_attr.attribute_name = strdup($5);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | ORDER BY ID DESC order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = DESCORDER;
+    order_attr.relation_name = NULL;
+    order_attr.attribute_name = strdup($3);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | ORDER BY ID DOT ID DESC order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = DESCORDER;
+    order_attr.relation_name = strdup($3);
+    order_attr.attribute_name = strdup($5);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  ;
 
-			Condition condition;
-			condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
-			CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-			// $$ = ( Condition *)malloc(sizeof( Condition));
-			// $$->left_is_attr = 1;
-			// $$->left_attr.relation_name = NULL;
-			// $$->left_attr.attribute_name= $1;
-			// $$->comp = CONTEXT->comp;
-			// $$->right_is_attr = 0;
-			// $$->right_attr.relation_name = NULL;
-			// $$->right_attr.attribute_name = NULL;
-			// $$->right_value = *$3;
+order2:
+  |
+  COMMA ID order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = ASCORDER;
+    order_attr.relation_name = NULL;
+    order_attr.attribute_name = strdup($2);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | COMMA ID DOT ID order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = ASCORDER;
+    order_attr.relation_name = strdup($2);
+    order_attr.attribute_name = strdup($4);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | COMMA ID ASC order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = ASCORDER;
+    order_attr.relation_name = NULL;
+    order_attr.attribute_name = strdup($2);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | COMMA ID DOT ID ASC order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = ASCORDER;
+    order_attr.relation_name = strdup($2);
+    order_attr.attribute_name = strdup($4);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | COMMA ID DESC order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = DESCORDER;
+    order_attr.relation_name = NULL;
+    order_attr.attribute_name = strdup($2);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  | COMMA ID DOT ID DESC order2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    OrderAttr order_attr;
+    order_attr.order_rule = DESCORDER;
+    order_attr.relation_name = strdup($2);
+    order_attr.attribute_name = strdup($4);
+    adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
+  }
+  ;
 
-		}
-		|value comOp value 
-		{
-			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 2];
-			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
-			Condition condition;
-			condition_init(&condition, CONTEXT->comp, 0, NULL, left_value, 0, NULL, right_value);
-			CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-			// $$ = ( Condition *)malloc(sizeof( Condition));
-			// $$->left_is_attr = 0;
-			// $$->left_attr.relation_name=NULL;
-			// $$->left_attr.attribute_name=NULL;
-			// $$->left_value = *$1;
-			// $$->comp = CONTEXT->comp;
-			// $$->right_is_attr = 0;
-			// $$->right_attr.relation_name = NULL;
-			// $$->right_attr.attribute_name = NULL;
-			// $$->right_value = *$3;
-
-		}
-		|ID comOp ID 
-		{
-			RelAttr left_attr;
-			relation_attr_init(&left_attr, NULL, $1);
-			RelAttr right_attr;
-			relation_attr_init(&right_attr, NULL, $3);
-
-			Condition condition;
-			condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 1, &right_attr, NULL);
-			CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-			// $$=( Condition *)malloc(sizeof( Condition));
-			// $$->left_is_attr = 1;
-			// $$->left_attr.relation_name=NULL;
-			// $$->left_attr.attribute_name=$1;
-			// $$->comp = CONTEXT->comp;
-			// $$->right_is_attr = 1;
-			// $$->right_attr.relation_name=NULL;
-			// $$->right_attr.attribute_name=$3;
-
-		}
-    |value comOp ID
-		{
-			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 1];
-			RelAttr right_attr;
-			relation_attr_init(&right_attr, NULL, $3);
-
-			Condition condition;
-			condition_init(&condition, CONTEXT->comp, 0, NULL, left_value, 1, &right_attr, NULL);
-			CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-
-			// $$=( Condition *)malloc(sizeof( Condition));
-			// $$->left_is_attr = 0;
-			// $$->left_attr.relation_name=NULL;
-			// $$->left_attr.attribute_name=NULL;
-			// $$->left_value = *$1;
-			// $$->comp=CONTEXT->comp;
-			
-			// $$->right_is_attr = 1;
-			// $$->right_attr.relation_name=NULL;
-			// $$->right_attr.attribute_name=$3;
-		
-		}
-    |ID DOT ID comOp value
-		{
-			RelAttr left_attr;
-			relation_attr_init(&left_attr, $1, $3);
-			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
-			Condition condition;
-			condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
-			CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-
-			// $$=( Condition *)malloc(sizeof( Condition));
-			// $$->left_is_attr = 1;
-			// $$->left_attr.relation_name=$1;
-			// $$->left_attr.attribute_name=$3;
-			// $$->comp=CONTEXT->comp;
-			// $$->right_is_attr = 0;   //属性值
-			// $$->right_attr.relation_name=NULL;
-			// $$->right_attr.attribute_name=NULL;
-			// $$->right_value =*$5;			
-							
-    }
-    |value comOp ID DOT ID
-		{
-			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
-			RelAttr right_attr;
-			relation_attr_init(&right_attr, $3, $5);
-
-			Condition condition;
-			condition_init(&condition, CONTEXT->comp, 0, NULL, left_value, 1, &right_attr, NULL);
-			CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-			// $$=( Condition *)malloc(sizeof( Condition));
-			// $$->left_is_attr = 0;//属性值
-			// $$->left_attr.relation_name=NULL;
-			// $$->left_attr.attribute_name=NULL;
-			// $$->left_value = *$1;
-			// $$->comp =CONTEXT->comp;
-			// $$->right_is_attr = 1;//属性
-			// $$->right_attr.relation_name = $3;
-			// $$->right_attr.attribute_name = $5;
-									
-    }
-    |ID DOT ID comOp ID DOT ID
-		{
-			RelAttr left_attr;
-			relation_attr_init(&left_attr, $1, $3);
-			RelAttr right_attr;
-			relation_attr_init(&right_attr, $5, $7);
-
-			Condition condition;
-			condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 1, &right_attr, NULL);
-			CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-			// $$=( Condition *)malloc(sizeof( Condition));
-			// $$->left_is_attr = 1;		//属性
-			// $$->left_attr.relation_name=$1;
-			// $$->left_attr.attribute_name=$3;
-			// $$->comp =CONTEXT->comp;
-			// $$->right_is_attr = 1;		//属性
-			// $$->right_attr.relation_name=$5;
-			// $$->right_attr.attribute_name=$7;
-    } 
-	/* @author: huahui  @what for: null ------------------------------------------------------------------------*/
-	| ID IS_A NULL_A {
-		RelAttr left_attr;
-		relation_attr_init(&left_attr, NULL, $1);
-		CONTEXT->comp = IS;
-		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
-		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
-		Condition condition;
-		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
-		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-	}
-	| ID DOT ID IS_A NULL_A {
-		RelAttr left_attr;
-		relation_attr_init(&left_attr, $1, $3);
-		CONTEXT->comp = IS;
-		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
-		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
-		Condition condition;
-		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
-		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-	}
-	| ID IS_A NOT NULL_A {
-		RelAttr left_attr;
-		relation_attr_init(&left_attr, NULL, $1);
-		CONTEXT->comp = ISNOT;
-		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
-		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
-		Condition condition;
-		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
-		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-	}
-	| ID DOT ID IS_A NOT NULL_A {
-		RelAttr left_attr;
-		relation_attr_init(&left_attr, $1, $3);
-		CONTEXT->comp = ISNOT;
-		value_init_null(&CONTEXT->values[CONTEXT->value_length++]);
-		Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
-		Condition condition;
-		condition_init(&condition, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
-		CONTEXT->conditions[CONTEXT->condition_length++] = condition;
-	}
-	/* ------------------------------------------------------------------------------------------------------------*/
-    ;
+/* @author: huahui  @what for: group-by*/
+group:
+  GROUP BY ID group2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    GroupAttr group_attr;
+    group_attr.relation_name = NULL;
+    group_attr.attribute_name = strdup($3);
+    adv_selects->group_attrs[adv_selects->group_num++] = group_attr;
+  }
+  | GROUP BY ID DOT ID group2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    GroupAttr group_attr;
+    group_attr.relation_name = strdup($3);
+    group_attr.attribute_name = strdup($5);
+    adv_selects->group_attrs[adv_selects->group_num++] = group_attr;
+  }
+  ;
+group2:
+  /* empty*/
+  | COMMA ID group2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    GroupAttr group_attr;
+    group_attr.relation_name = NULL;
+    group_attr.attribute_name = strdup($2);
+    adv_selects->group_attrs[adv_selects->group_num++] = group_attr;
+  }
+  | COMMA ID DOT ID group2 {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+    GroupAttr group_attr;
+    group_attr.relation_name = strdup($2);
+    group_attr.attribute_name = strdup($4);
+    adv_selects->group_attrs[adv_selects->group_num++] = group_attr;
+  }
+  ;
+  
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 comOp:
   	  EQ { CONTEXT->comp = EQUAL_TO; }

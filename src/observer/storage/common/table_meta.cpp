@@ -145,6 +145,17 @@ const FieldMeta * TableMeta::find_field_by_offset(int offset) const {
   }
   return nullptr;
 }
+
+const std::vector<FieldMeta> TableMeta::find_field_by_attrtype(AttrType type) const{
+  std::vector<FieldMeta> fmv;
+  for (const FieldMeta &field : fields_) {
+    if (field.type() == type) {
+      fmv.emplace_back(field);
+    }
+  }
+  return fmv;
+}
+
 int TableMeta::field_num() const {
   return fields_.size();
 }
@@ -161,14 +172,60 @@ const IndexMeta * TableMeta::index(const char *name) const {
   }
   return nullptr;
 }
-
-const IndexMeta * TableMeta::find_index_by_field(const char *field) const {
-  for (const IndexMeta &index : indexes_) {
-    if (0 == strcmp(index.field(), field)) {
-      return &index;
+const IndexMeta * TableMeta::find_index_by_field_vector(std::vector<std::string> field_name_vector) const{
+    for (const IndexMeta &index : indexes_) {
+        if (field_name_vector.size() != index.field_num()){
+            continue;
+        }
+        bool flag = true;
+        for (int i = 0; i < index.field_num(); ++i) {
+            bool flag_tmp = false;
+            for(auto it : field_name_vector){
+                if(strcmp(it.c_str(),index.field(i)) == 0){
+                    flag_tmp = true;
+                    break;
+                }
+            }
+            if (flag_tmp == false){
+                flag = false;
+                break;
+            }
+        }
+        if (flag == true) {
+            return &index;
+        }
     }
-  }
-  return nullptr;
+    return nullptr;
+}
+
+const IndexMeta * TableMeta::find_index_by_field(const char *field_name) const {
+    for (const IndexMeta &index : indexes_) {
+        if (1 != index.field_num()){
+            continue;
+        }
+        if (strcmp(index.field(0),field_name) == 0){
+            return &index;
+        }
+    }
+    return nullptr;
+}
+const IndexMeta * TableMeta::find_index_by_field_list(char *const *field_list,int num) const {
+    for (const IndexMeta &index : indexes_) {
+        if (num != index.field_num()){
+            continue;
+        }
+        bool flag = true;
+        for (int i = 0; i < num; ++i) {
+            if (0 != strcmp(index.field(i), field_list[i])) {
+                flag = false;
+                break;
+            }
+        }
+        if (flag == true) {
+            return &index;
+        }
+    }
+    return nullptr;
 }
 
 const IndexMeta * TableMeta::index(int i ) const {

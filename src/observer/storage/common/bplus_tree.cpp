@@ -37,7 +37,7 @@ RC BplusTreeHandler::sync() {
   return disk_buffer_pool_->flush_all_pages(file_id_);
 }
 
-RC BplusTreeHandler::create(const char *file_name, AttrType attr_type, int attr_length)
+RC BplusTreeHandler::create(const char *file_name, const std::vector<FieldMeta>  &fields_meta)
 {
   BPPageHandle page_handle;
   IndexNode *root;
@@ -73,11 +73,17 @@ RC BplusTreeHandler::create(const char *file_name, AttrType attr_type, int attr_
     return rc;
   }
   IndexFileHeader *file_header =(IndexFileHeader *)pdata;
-  file_header->attr_length = attr_length;
-  file_header->key_length = attr_length + sizeof(RID);
-  file_header->attr_type = attr_type;
+  int attr_sumlength=0;
+  for(int i = 0 ; i < fields_meta.size() ; ++i){
+      attr_sumlength+=fields_meta[i].len();
+      file_header->attr_length_list[i]=fields_meta[i].len();
+      file_header->attr_type[i]=fields_meta[i].type();
+  }
+  file_header->attr_length = attr_sumlength;
+  file_header->key_length = file_header->attr_length + sizeof(RID);
   file_header->node_num = 1;
-  file_header->order=((int)BP_PAGE_DATA_SIZE-sizeof(IndexFileHeader)-sizeof(IndexNode))/(attr_length+2*sizeof(RID));
+  file_header->attr_num = fields_meta.size();
+  file_header->order=((int)BP_PAGE_DATA_SIZE-sizeof(IndexFileHeader)-sizeof(IndexNode))/(file_header->attr_length+2*sizeof(RID));
   file_header->root_page = page_num;
 
   root = get_index_node(pdata);
@@ -159,60 +165,143 @@ static int CmpRid(const RID *rid1, const RID *rid2) {
     return -1;
   return 0;
 }
-int CompareKey(const char *pdata, const char *pkey,AttrType attr_type,int attr_length) { // 简化
-  int i1,i2;
-  float f1,f2;
-  const char *s1,*s2;
-  switch(attr_type){
-    case INTS: {
-      i1 = *(int *) pdata;
-      i2 = *(int *) pkey;
-      if (i1 > i2)
-        return 1;
-      if (i1 < i2)
-        return -1;
-      if (i1 == i2)
+
+//int CompareKey(const char *pdata, const char *pkey,AttrType attr_type,int attr_length) { // 简化
+//  int i1,i2;
+//  float f1,f2;
+//  const char *s1,*s2;
+//  switch(attr_type){
+//    case INTS: {
+//      i1 = *(int *) pdata;
+//      i2 = *(int *) pkey;
+//      if (i1 > i2)
+//        return 1;
+//      if (i1 < i2)
+//        return -1;
+//      if (i1 == i2)
+//        return 0;
+//    }
+//      break;
+//    case FLOATS: {
+//      f1 = *(float *) pdata;
+//      f2 = *(float *) pkey;
+//      return float_compare(f1, f2);
+//    }
+//      break;
+//    case CHARS: {
+//      s1 = pdata;
+//      s2 = pkey;
+//      return strncmp(s1, s2, attr_length);
+//    }
+//      break;
+//    /* @author: huahui @what for: date字段, 支持索引
+//     * ---------------------------------------------------------------------------------
+//     */
+//    case DATES: {
+//      const unsigned char *left_value2 = (const unsigned char *)pdata;
+//      const unsigned char *right_value2 = (const unsigned char *)pkey;
+//      DateValue left_dv = DateValue(left_value2);
+//      DateValue right_dv = DateValue(right_value2);
+//      return left_dv.compare(right_dv);
+//    }
+//      break;
+//    /* -------------------------------------------------------------------------------*/
+//    default:{
+//      LOG_PANIC("Unknown attr type: %d", attr_type);
+//    }
+//  }
+//  return -2;//This means error happens
+//}
+
+
+int CompareKey(const char *pdata, const char *pkey,AttrType *attr_type,int *attr_length_list,int attr_num,int pos) { // 简化
+    int i1,i2;
+    float f1,f2;
+    const char *s1,*s2;
+    if (pos>=attr_num){
         return 0;
     }
-      break;
-    case FLOATS: {
-      f1 = *(float *) pdata;
-      f2 = *(float *) pkey;
-      return float_compare(f1, f2);
+    char *value1 = (char*)malloc(attr_length_list[pos]);
+    memcpy(value1,pdata,attr_length_list[pos]);
+    char *value2 = (char*)malloc(attr_length_list[pos]);
+    memcpy(value2,pkey,attr_length_list[pos]);
+    switch(attr_type[pos]){
+        case INTS: {
+            i1 = *(int *) value1;
+            i2 = *(int *) value2;
+            if (i1 > i2)
+                return 1;
+            if (i1 < i2)
+                return -1;
+            if (i1 == i2)
+                free(value1);
+                free(value2);
+                return CompareKey(pdata+attr_length_list[pos],pkey+attr_length_list[pos],attr_type,attr_length_list,attr_num,pos+1);
+        }
+            break;
+        case FLOATS: {
+            f1 = *(float *) value1;
+            f2 = *(float *) value2;
+            int result = float_compare(f1,f2);
+            free(value1);
+            free(value2);
+            if (result==0){
+                return CompareKey(pdata+attr_length_list[pos],pkey+attr_length_list[pos],attr_type,attr_length_list,attr_num,pos+1);
+            }
+            return result;
+        }
+            break;
+        case CHARS: {
+            s1 = value1;
+            s2 = value2;
+            int result = strncmp(s1, s2, attr_length_list[pos]);
+            free(value1);
+            free(value2);
+            if (result==0){
+                return CompareKey(pdata+attr_length_list[pos],pkey+attr_length_list[pos],attr_type,attr_length_list,attr_num,pos+1);
+            }
+            return result;
+        }
+            break;
+            /* @author: huahui @what for: date字段, 支持索引
+             * ---------------------------------------------------------------------------------
+             */
+        case DATES: {
+            const unsigned char *left_value2 = (const unsigned char *)value1;
+            const unsigned char *right_value2 = (const unsigned char *)value2;
+            DateValue left_dv = DateValue(left_value2);
+            DateValue right_dv = DateValue(right_value2);
+            int result = left_dv.compare(right_dv);
+            free(value1);
+            free(value2);
+            if (result==0){
+                return CompareKey(pdata+attr_length_list[pos],pkey+attr_length_list[pos],attr_type,attr_length_list,attr_num,pos+1);
+            }
+            return result;
+        }
+            break;
+            /* -------------------------------------------------------------------------------*/
+        default:{
+            free(value1);
+            free(value2);
+            LOG_PANIC("Unknown attr type: %d", attr_type);
+        }
     }
-      break;
-    case CHARS: {
-      s1 = pdata;
-      s2 = pkey;
-      return strncmp(s1, s2, attr_length);
-    }
-      break;
-    /* @author: huahui @what for: date字段, 支持索引
-     * ---------------------------------------------------------------------------------
-     */
-    case DATES: {
-      const unsigned char *left_value2 = (const unsigned char *)pdata;
-      const unsigned char *right_value2 = (const unsigned char *)pkey;
-      DateValue left_dv = DateValue(left_value2);
-      DateValue right_dv = DateValue(right_value2);
-      return left_dv.compare(right_dv);
-    }
-      break;
-    /* -------------------------------------------------------------------------------*/
-    default:{
-      LOG_PANIC("Unknown attr type: %d", attr_type);
-    }
-  }
-  return -2;//This means error happens
+    return -2;//This means error happens
 }
-int CmpKey(AttrType attr_type, int attr_length, const char *pdata, const char *pkey)
+
+int CmpKey(AttrType *attr_type, int *attr_length_list, int attr_num,const char *pdata, const char *pkey)
 {
-  int result = CompareKey(pdata, pkey, attr_type, attr_length);
+  int result = CompareKey(pdata, pkey, attr_type, attr_length_list,attr_num,0);
   if (0 != result) {
     return result;
   }
-  RID *rid1 = (RID *) (pdata + attr_length);
-  RID *rid2 = (RID *) (pkey + attr_length);
+  int attr_sum_length=0;
+  for(int i = 0 ; i < attr_num ; ++i){
+      attr_sum_length+=attr_length_list[i];
+  }
+  RID *rid1 = (RID *) (pdata + attr_sum_length);
+  RID *rid2 = (RID *) (pkey + attr_sum_length);
   return CmpRid(rid1, rid2);
 }
 
@@ -234,7 +323,7 @@ RC BplusTreeHandler::find_leaf(const char *pkey,PageNum *leaf_page) {
   node = get_index_node(pdata);
   while(0 == node->is_leaf){
     for(i = 0; i < node->key_num; i++){
-      tmp = CmpKey(file_header_.attr_type, file_header_.attr_length,pkey,node->keys + i * file_header_.key_length);
+      tmp = CmpKey(file_header_.attr_type, file_header_.attr_length_list,file_header_.attr_num,pkey,node->keys + i * file_header_.key_length);
       if(tmp < 0)
         break;
     }
@@ -283,7 +372,7 @@ RC BplusTreeHandler::insert_into_leaf(PageNum leaf_page, const char *pkey, const
   node = get_index_node(pdata);
 
   for(insert_pos = 0; insert_pos < node->key_num; insert_pos++){
-    tmp = CmpKey(file_header_.attr_type, file_header_.attr_length, pkey, node->keys + insert_pos * file_header_.key_length);
+    tmp = CmpKey(file_header_.attr_type, file_header_.attr_length_list,file_header_.attr_num, pkey, node->keys + insert_pos * file_header_.key_length);
     if (tmp == 0) {
       return RC::RECORD_DUPLICATE_KEY;
     }
@@ -403,7 +492,7 @@ RC BplusTreeHandler::insert_into_leaf_after_split(PageNum leaf_page, const char 
   }
 
   for(insert_pos=0;insert_pos<leaf->key_num;insert_pos++){
-    tmp=CmpKey(file_header_.attr_type, file_header_.attr_length, pkey, leaf->keys+insert_pos*file_header_.key_length);
+    tmp=CmpKey(file_header_.attr_type, file_header_.attr_length_list,file_header_.attr_num, pkey, leaf->keys+insert_pos*file_header_.key_length);
     if(tmp<0)
       break;
   }
@@ -801,7 +890,7 @@ RC BplusTreeHandler::insert_into_new_root(PageNum left_page, const char *pkey, P
   return SUCCESS;
 }
 
-RC BplusTreeHandler::insert_entry(const char *pkey, const RID *rid) {
+RC BplusTreeHandler::insert_entry(char *pkey, const RID *rid) {
   RC rc;
   PageNum leaf_page;
   BPPageHandle page_handle;
@@ -817,6 +906,7 @@ RC BplusTreeHandler::insert_entry(const char *pkey, const RID *rid) {
   }
   memcpy(key,pkey,file_header_.attr_length);
   memcpy(key + file_header_.attr_length, rid, sizeof(*rid));
+  free(pkey);
   rc= find_leaf(key, &leaf_page);
   if(rc!=SUCCESS){
     free(key);
@@ -865,7 +955,7 @@ RC BplusTreeHandler::insert_entry(const char *pkey, const RID *rid) {
   }
 }
 
-RC BplusTreeHandler::get_entry(const char *pkey,RID *rid) {
+RC BplusTreeHandler::get_entry(char *pkey,RID *rid) {
   RC rc;
   PageNum leaf_page;
   BPPageHandle page_handle;
@@ -880,7 +970,6 @@ RC BplusTreeHandler::get_entry(const char *pkey,RID *rid) {
   }
   memcpy(key,pkey,file_header_.attr_length);
   memcpy(key+file_header_.attr_length,rid,sizeof(RID));
-
   rc=find_leaf(key,&leaf_page);
   if(rc!=SUCCESS){
     free(key);
@@ -900,7 +989,7 @@ RC BplusTreeHandler::get_entry(const char *pkey,RID *rid) {
 
   leaf = get_index_node(pdata);
   for(i=0;i<leaf->key_num;i++){
-    if(CompareKey(key,leaf->keys+(i*file_header_.key_length),file_header_.attr_type, file_header_.attr_length)==0){
+    if(CompareKey(key,leaf->keys+(i*file_header_.key_length),file_header_.attr_type, file_header_.attr_length_list,file_header_.attr_num,0)==0){
       memcpy(rid,leaf->rids+i,sizeof(RID));
       free(key);
       return SUCCESS;
@@ -930,7 +1019,7 @@ RC BplusTreeHandler::delete_entry_from_node(PageNum node_page,const char *pkey) 
   node = get_index_node(pdata);
 
   for(delete_index=0;delete_index<node->key_num;delete_index++){
-    tmp=CmpKey(file_header_.attr_type, file_header_.attr_length, pkey, node->keys+delete_index*file_header_.key_length);
+    tmp=CmpKey(file_header_.attr_type, file_header_.attr_length_list,file_header_.attr_num ,pkey, node->keys+delete_index*file_header_.key_length);
     if(tmp==0)
       break;
   }
@@ -1447,7 +1536,7 @@ RC BplusTreeHandler::delete_entry_internal(PageNum page_num,const char *pkey) {
   }
 }
 
-RC BplusTreeHandler::delete_entry(const char *data, const RID *rid) {
+RC BplusTreeHandler::delete_entry(char *data, const RID *rid) {
   RC rc;
   PageNum leaf_page;
   char *pkey;
@@ -1458,7 +1547,7 @@ RC BplusTreeHandler::delete_entry(const char *data, const RID *rid) {
   }
   memcpy(pkey,data,file_header_.attr_length);
   memcpy(pkey + file_header_.attr_length, rid ,sizeof(*rid));
-
+  free(data);
   rc=find_leaf(pkey,&leaf_page);
   if(rc!=SUCCESS){
     free(pkey);
@@ -1564,9 +1653,9 @@ RC BplusTreeHandler::find_first_index_satisfied(CompOp compop, const char *key, 
   }
   rid.page_num = -1;
   rid.slot_num = -1;
-  pkey=(char *)malloc(file_header_.key_length);
+  pkey=(char *)malloc(file_header_.attr_length_list[0]+sizeof(RID));
   if(pkey == nullptr){
-    LOG_ERROR("Failed to alloc memory for key. size=%d", file_header_.key_length);
+    LOG_ERROR("Failed to alloc memory for key. size=%d", file_header_.attr_length_list[0]+sizeof(RID));
     return RC::NOMEM;
   }
   memcpy(pkey, key, file_header_.attr_length);
@@ -1593,7 +1682,7 @@ RC BplusTreeHandler::find_first_index_satisfied(CompOp compop, const char *key, 
 
     node = get_index_node(pdata);
     for(i = 0; i < node->key_num; i++){
-      tmp=CompareKey(node->keys+i*file_header_.key_length,key,file_header_.attr_type,file_header_.attr_length);
+      tmp=CompareKey(node->keys+i*file_header_.key_length,key,file_header_.attr_type,file_header_.attr_length_list,1,0);
       if(compop == EQUAL_TO ||compop == GREAT_EQUAL){
         if(tmp>=0){
           rc = disk_buffer_pool_->get_page_num(&page_handle, page_num);
@@ -1682,6 +1771,46 @@ RC BplusTreeHandler::get_first_leaf_page(PageNum *leaf_page) {
 
 BplusTreeScanner::BplusTreeScanner(BplusTreeHandler &index_handler) : index_handler_(index_handler){
 }
+RC BplusTreeScanner::open(std::vector<CompOp> compop_list , std::vector<const char *> value_list){
+    RC rc;
+    if(opened_){
+        return RC::RECORD_OPENNED;
+    }
+
+    comp_op_list_ = compop_list;
+
+    char *value_copy =(char *)malloc(index_handler_.file_header_.attr_length);
+    if(value_copy == nullptr){
+        LOG_ERROR("Failed to alloc memory for value. size=%d", index_handler_.file_header_.attr_length);
+        return RC::NOMEM;
+    }
+    int size=0;
+    for (int i = 0; i < value_list.size(); ++i) {
+        if (value_list[i]== nullptr){
+            memset(value_copy+size,0,index_handler_.file_header_.attr_length_list[i]);
+            size=size+index_handler_.file_header_.attr_length_list[i];
+        }
+        else{
+            memcpy(value_copy+size, value_list[i], index_handler_.file_header_.attr_length_list[i]);
+            size=size+index_handler_.file_header_.attr_length_list[i];
+        }
+    }
+    value_ = value_copy; // free value_
+    rc = index_handler_.find_first_index_satisfied(compop_list[0], value_, &next_page_num_, &index_in_node_);
+    if(rc != SUCCESS){
+        if(rc == RC::RECORD_EOF){
+            next_page_num_ = -1;
+            index_in_node_ = -1;
+        }
+        else
+            return rc;
+    }
+    num_fixed_pages_ = 1;
+    next_index_of_page_handle_=0;
+    pinned_page_count_ = 0;
+    opened_ = true;
+    return SUCCESS;
+}
 
 RC BplusTreeScanner::open(CompOp comp_op,const char *value) {
   RC rc;
@@ -1689,10 +1818,17 @@ RC BplusTreeScanner::open(CompOp comp_op,const char *value) {
     return RC::RECORD_OPENNED;
   }
 
-  comp_op_ = comp_op;
+  //fzh 多列支持
+  comp_op_list_.push_back(comp_op);
+
+  char *value_copy =(char *)malloc(index_handler_.file_header_.attr_length);
+  if(value_copy == nullptr) {
+      LOG_ERROR("Failed to alloc memory for value. size=%d", index_handler_.file_header_.attr_length);
+      return RC::NOMEM;
+  }
   /* @author: huahui  @what for: null字段 -------------------------------------------------------------------*/
   // 当运算符是is not时，value_就是nullptr，表示is not null
-  if(comp_op_ == CompOp::ISNOT) {
+  if(comp_op == CompOp::ISNOT) {
     value_ = nullptr;
   }else{
     char *value_copy =(char *)malloc(index_handler_.file_header_.attr_length);
@@ -1811,7 +1947,7 @@ RC BplusTreeScanner::get_next_idx_in_memory(RID *rid) {
 
     node = index_handler_.get_index_node(pdata);
     for( ; index_in_node_ < node->key_num; index_in_node_++){
-      if(satisfy_condition(node->keys + index_in_node_ * index_handler_.file_header_.key_length)){
+      if(satisfy_condition(node->keys + index_in_node_ * index_handler_.file_header_.key_length,0)){
         memcpy(rid,node->rids+index_in_node_,sizeof(RID));
         index_in_node_++;
         return SUCCESS;
@@ -1825,162 +1961,341 @@ RC BplusTreeScanner::get_next_idx_in_memory(RID *rid) {
 /* @author: huahui  @what for: date字段支持索引
  * -----------------------------------------------------------------------------------------------
  */
-bool BplusTreeScanner::satisfy_condition(const char *pkey) {
-  /* @author: huahui  @what for: null字段 --------------------------------------*/
-  if(comp_op_ == CompOp::ISNOT) {
-    return true;
-  }
-  /* -------------------------------------------------------------------------*/
 
-  int i1=0,i2=0;
-  float f1=0,f2=0;
-  const char *s1=nullptr,*s2=nullptr;
-  const unsigned char *left_value2 = nullptr;
-  const unsigned char *right_value2 = nullptr;
-  DateValue left_dv, right_dv;
 
-  if(comp_op_ == NO_OP){
-    return true;
-  }
+//bool BplusTreeScanner::satisfy_condition(const char *pkey) {
+//  if(comp_op_ == CompOp::ISNOT) {
+//    return true;
+//  }
+//
+//
+//  int i1=0,i2=0;
+//  float f1=0,f2=0;
+//  const char *s1=nullptr,*s2=nullptr;
+//  const unsigned char *left_value2 = nullptr;
+//  const unsigned char *right_value2 = nullptr;
+//  DateValue left_dv, right_dv;
+//
+//  if(comp_op_ == NO_OP){
+//    return true;
+//  }
+//
+//  AttrType  attr_type = index_handler_.file_header_.attr_type;
+//  switch(attr_type){
+//    case INTS:
+//      i1=*(int *)pkey;
+//      i2=*(int *)value_;
+//      break;
+//    case FLOATS:
+//      f1=*(float *)pkey;
+//      f2=*(float *)value_;
+//      break;
+//    case CHARS:
+//      s1=pkey;
+//      s2=value_;
+//      break;
+//    case DATES:
+//      left_value2 = (const unsigned char *)pkey;
+//      right_value2 = (const unsigned char *)value_;
+//      left_dv = DateValue(left_value2);
+//      right_dv = DateValue(right_value2);
+//      break;
+//    default:
+//      LOG_PANIC("Unknown attr type: %d", attr_type);
+//  }
+//
+//  bool flag=false;
+//
+//  int attr_length = index_handler_.file_header_.attr_length;
+//  switch(comp_op_){
+//    case EQUAL_TO:
+//      switch(attr_type){
+//        case INTS:
+//          flag=(i1==i2);
+//          break;
+//        case FLOATS:
+//          flag= 0 == float_compare(f1, f2);
+//          break;
+//        case CHARS:
+//          flag=(strncmp(s1,s2,attr_length)==0);
+//          break;
+//        case DATES:             /* @author: huahui  @what for: date字段 --------------------------------------*/
+//          flag = (left_dv.compare(right_dv) == 0);
+//          break;
+//        default:
+//          LOG_PANIC("Unknown attr type: %d", attr_type);
+//      }
+//      break;
+//    case LESS_THAN:
+//      switch(attr_type){
+//        case INTS:
+//          flag=(i1<i2);
+//          break;
+//        case FLOATS:
+//          flag=(f1<f2);
+//          break;
+//        case CHARS:
+//          flag=(strncmp(s1,s2,attr_length)<0);
+//          break;
+//        case DATES:                   /* @author: huahui  @what for: date字段 --------------------------------------*/
+//          flag = (left_dv.compare(right_dv) < 0);
+//          break;
+//        default:
+//          LOG_PANIC("Unknown attr type: %d", attr_type);
+//      }
+//      break;
+//    case GREAT_THAN:
+//      switch(attr_type){
+//        case INTS:
+//          flag=(i1>i2);
+//          break;
+//        case FLOATS:
+//          flag=(f1>f2);
+//          break;
+//        case CHARS:
+//          flag=(strncmp(s1,s2,attr_length)>0);
+//          break;
+//        case DATES:               /* @author: huahui  @what for: date字段 --------------------------------------*/
+//          flag = (left_dv.compare(right_dv) > 0);
+//          break;
+//        default:
+//          LOG_PANIC("Unknown attr type: %d", attr_type);
+//      }
+//      break;
+//    case LESS_EQUAL:
+//      switch(attr_type){
+//        case INTS:
+//          flag=(i1<=i2);
+//          break;
+//        case FLOATS:
+//          flag=(f1<=f2);
+//          break;
+//        case CHARS:
+//          flag=(strncmp(s1,s2,attr_length)<=0);
+//          break;
+//        case DATES:                /* @author: huahui  @what for: date字段 --------------------------------------*/
+//          flag = (left_dv.compare(right_dv) <= 0);
+//          break;
+//        default:
+//          LOG_PANIC("Unknown attr type: %d", attr_type);
+//      }
+//      break;
+//    case GREAT_EQUAL:
+//      switch(attr_type){
+//        case INTS:
+//          flag=(i1>=i2);
+//          break;
+//        case FLOATS:
+//          flag=(f1>=f2);
+//          break;
+//        case CHARS:
+//          flag=(strncmp(s1,s2,attr_length)>=0);
+//          break;
+//        case DATES:                 /* @author: huahui  @what for: date字段 --------------------------------------*/
+//          flag = (left_dv.compare(right_dv) >= 0);
+//          break;
+//        default:
+//          LOG_PANIC("Unknown attr type: %d", attr_type);
+//      }
+//      break;
+//    case NOT_EQUAL:
+//      switch(attr_type){
+//        case INTS:
+//          flag=(i1!=i2);
+//          break;
+//        case FLOATS:
+//          flag= 0 != float_compare(f1, f2);
+//          break;
+//        case CHARS:
+//          flag=(strncmp(s1,s2,attr_length)!=0);
+//          break;
+//        case DATES:               /* @author: huahui  @what for: date字段 --------------------------------------*/
+//          flag = (left_dv.compare(right_dv) != 0);
+//        default:
+//          LOG_PANIC("Unknown attr type: %d", attr_type);
+//      }
+//      break;
+//    default:
+//      LOG_PANIC("Unknown comp op: %d", comp_op_);
+//  }
+//  return flag;
+//}
 
-  AttrType  attr_type = index_handler_.file_header_.attr_type;
-  switch(attr_type){
-    case INTS:
-      i1=*(int *)pkey;
-      i2=*(int *)value_;
-      break;
-    case FLOATS:
-      f1=*(float *)pkey;
-      f2=*(float *)value_;
-      break;
-    case CHARS:
-      s1=pkey;
-      s2=value_;
-      break;
-    case DATES:  /* @author: huahui  @what for: date字段 --------------------------------------*/
-      left_value2 = (const unsigned char *)pkey;
-      right_value2 = (const unsigned char *)value_;
-      left_dv = DateValue(left_value2);
-      right_dv = DateValue(right_value2);
-      break;
-    default:
-      LOG_PANIC("Unknown attr type: %d", attr_type);
-  }
 
-  bool flag=false;
 
-  int attr_length = index_handler_.file_header_.attr_length;
-  switch(comp_op_){
-    case EQUAL_TO:
-      switch(attr_type){
+/*
+ * fzh
+ * 多列索引支持多条件比较，合并zhh其他代码
+ */
+bool BplusTreeScanner::satisfy_condition(const char *pkey,int pos) {
+    int i1=0,i2=0;
+    float f1=0,f2=0;
+    const char *s1=nullptr,*s2=nullptr;
+    const unsigned char *left_value2 = nullptr;
+    const unsigned char *right_value2 = nullptr;
+    int valueoffset=0;
+    int attr_length = index_handler_.file_header_.attr_length_list[pos];
+    for(int i = 0 ; i < pos ;++i){
+        valueoffset=valueoffset+index_handler_.file_header_.attr_length_list[pos];
+    }
+    DateValue left_dv, right_dv;
+    if(comp_op_list_[pos] == NO_OP || comp_op_list_[pos] ==ISNOT){
+        if(pos == index_handler_.file_header_.attr_num-1){
+            return true;
+        }
+        else{
+            return satisfy_condition(pkey+index_handler_.file_header_.attr_length_list[pos],pos+1);
+        }
+    }
+
+    AttrType  attr_type = index_handler_.file_header_.attr_type[pos];
+    switch(attr_type){
         case INTS:
-          flag=(i1==i2);
-          break;
+            i1=*(int *)pkey;
+            i2=*(int *)(value_+valueoffset);
+            break;
         case FLOATS:
-          flag= 0 == float_compare(f1, f2);
-          break;
+            f1=*(float *)pkey;
+            f2=*(float *)(value_+valueoffset);
+            break;
         case CHARS:
-          flag=(strncmp(s1,s2,attr_length)==0);
-          break;
-        case DATES:             /* @author: huahui  @what for: date字段 --------------------------------------*/
-          flag = (left_dv.compare(right_dv) == 0);
-          break;
+            s1=pkey;
+            s2=value_+valueoffset;
+            break;
+        case DATES:
+            left_value2 = (const unsigned char *)pkey;
+            right_value2 = (const unsigned char *)(value_+valueoffset);
+            left_dv = DateValue(left_value2);
+            right_dv = DateValue(right_value2);
+            break;
         default:
-          LOG_PANIC("Unknown attr type: %d", attr_type);
-      }
-      break;
-    case LESS_THAN:
-      switch(attr_type){
-        case INTS:
-          flag=(i1<i2);
-          break;
-        case FLOATS:
-          flag=(f1<f2);
-          break;
-        case CHARS:
-          flag=(strncmp(s1,s2,attr_length)<0);
-          break;
-        case DATES:                   /* @author: huahui  @what for: date字段 --------------------------------------*/
-          flag = (left_dv.compare(right_dv) < 0);
-          break;
+            LOG_PANIC("Unknown attr type: %d", attr_type);
+    }
+    bool flag=false;
+    switch(comp_op_list_[pos]){
+        case EQUAL_TO:
+            switch(attr_type){
+                case INTS:
+                    flag=(i1==i2);
+                    break;
+                case FLOATS:
+                    flag= 0 == float_compare(f1, f2);
+                    break;
+                case CHARS:
+                    flag=(strncmp(s1,s2,attr_length)==0);
+                    break;
+                case DATES:
+                    flag = (left_dv.compare(right_dv) == 0);
+                    break;
+                default:
+                    LOG_PANIC("Unknown attr type: %d", attr_type);
+            }
+            break;
+        case LESS_THAN:
+            switch(attr_type){
+                case INTS:
+                    flag=(i1<i2);
+                    break;
+                case FLOATS:
+                    flag=(f1<f2);
+                    break;
+                case CHARS:
+                    flag=(strncmp(s1,s2,attr_length)<0);
+                    break;
+                case DATES:
+                    flag = (left_dv.compare(right_dv) < 0);
+                    break;
+                default:
+                    LOG_PANIC("Unknown attr type: %d", attr_type);
+            }
+            break;
+        case GREAT_THAN:
+            switch(attr_type){
+                case INTS:
+                    flag=(i1>i2);
+                    break;
+                case FLOATS:
+                    flag=(f1>f2);
+                    break;
+                case CHARS:
+                    flag=(strncmp(s1,s2,attr_length)>0);
+                    break;
+                case DATES:
+                    flag = (left_dv.compare(right_dv) > 0);
+                    break;
+                default:
+                    LOG_PANIC("Unknown attr type: %d", attr_type);
+            }
+            break;
+        case LESS_EQUAL:
+            switch(attr_type){
+                case INTS:
+                    flag=(i1<=i2);
+                    break;
+                case FLOATS:
+                    flag=(f1<=f2);
+                    break;
+                case CHARS:
+                    flag=(strncmp(s1,s2,attr_length)<=0);
+                    break;
+                case DATES:
+                    flag = (left_dv.compare(right_dv) <= 0);
+                    break;
+                default:
+                    LOG_PANIC("Unknown attr type: %d", attr_type);
+            }
+            break;
+        case GREAT_EQUAL:
+            switch(attr_type){
+                case INTS:
+                    flag=(i1>=i2);
+                    break;
+                case FLOATS:
+                    flag=(f1>=f2);
+                    break;
+                case CHARS:
+                    flag=(strncmp(s1,s2,attr_length)>=0);
+                    break;
+                case DATES:
+                    flag = (left_dv.compare(right_dv) >= 0);
+                    break;
+                default:
+                    LOG_PANIC("Unknown attr type: %d", attr_type);
+            }
+            break;
+        case NOT_EQUAL:
+            switch(attr_type){
+                case INTS:
+                    flag=(i1!=i2);
+                    break;
+                case FLOATS:
+                    flag= 0 != float_compare(f1, f2);
+                    break;
+                case CHARS:
+                    flag=(strncmp(s1,s2,attr_length)!=0);
+                    break;
+                case DATES:
+                    flag = (left_dv.compare(right_dv) != 0);
+                default:
+                    LOG_PANIC("Unknown attr type: %d", attr_type);
+            }
+            break;
+        case ISNOT:
+            flag = true;
+            break;
+        case NO_OP:
+            flag = true;
+            break;
         default:
-          LOG_PANIC("Unknown attr type: %d", attr_type);
-      }
-      break;
-    case GREAT_THAN:
-      switch(attr_type){
-        case INTS:
-          flag=(i1>i2);
-          break;
-        case FLOATS:
-          flag=(f1>f2);
-          break;
-        case CHARS:
-          flag=(strncmp(s1,s2,attr_length)>0);
-          break;
-        case DATES:               /* @author: huahui  @what for: date字段 --------------------------------------*/
-          flag = (left_dv.compare(right_dv) > 0);
-          break;
-        default:
-          LOG_PANIC("Unknown attr type: %d", attr_type);
-      }
-      break;
-    case LESS_EQUAL:
-      switch(attr_type){
-        case INTS:
-          flag=(i1<=i2);
-          break;
-        case FLOATS:
-          flag=(f1<=f2);
-          break;
-        case CHARS:
-          flag=(strncmp(s1,s2,attr_length)<=0);
-          break;
-        case DATES:                /* @author: huahui  @what for: date字段 --------------------------------------*/
-          flag = (left_dv.compare(right_dv) <= 0);
-          break;
-        default:
-          LOG_PANIC("Unknown attr type: %d", attr_type);
-      }
-      break;
-    case GREAT_EQUAL:
-      switch(attr_type){
-        case INTS:
-          flag=(i1>=i2);
-          break;
-        case FLOATS:
-          flag=(f1>=f2);
-          break;
-        case CHARS:
-          flag=(strncmp(s1,s2,attr_length)>=0);
-          break;
-        case DATES:                 /* @author: huahui  @what for: date字段 --------------------------------------*/
-          flag = (left_dv.compare(right_dv) >= 0);
-          break;
-        default:
-          LOG_PANIC("Unknown attr type: %d", attr_type);
-      }
-      break;
-    case NOT_EQUAL:
-      switch(attr_type){
-        case INTS:
-          flag=(i1!=i2);
-          break;
-        case FLOATS:
-          flag= 0 != float_compare(f1, f2);
-          break;
-        case CHARS:
-          flag=(strncmp(s1,s2,attr_length)!=0);
-          break;
-        case DATES:               /* @author: huahui  @what for: date字段 --------------------------------------*/
-          flag = (left_dv.compare(right_dv) != 0);
-        default:
-          LOG_PANIC("Unknown attr type: %d", attr_type);
-      }
-      break;
-    default:
-      LOG_PANIC("Unknown comp op: %d", comp_op_);
-  }
-  return flag;
+            LOG_PANIC("Unknown comp op: %d", comp_op_list_[pos]);
+    }
+    if (flag == true){
+        if(pos == index_handler_.file_header_.attr_num-1){
+            return flag;
+        }
+        else{
+            return satisfy_condition(pkey+attr_length,pos+1);
+        }
+    }
+    return flag;
 }
-/* -------------------------------------------------------------------------------------------------*/
