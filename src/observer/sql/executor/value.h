@@ -32,6 +32,7 @@ public:
 
   virtual void to_string(std::ostream &os) const = 0;
   virtual int compare(const TupleValue &other) const = 0;
+  virtual void *get_value()  = 0;
 private:
 };
 
@@ -50,6 +51,11 @@ public:
   }
   int getValue() const {
     return value_;
+  }
+  void *get_value(){
+      int *i = (int *)malloc(sizeof(int));
+      *i = value_;
+      return (void *)i;
   }
 private:
   int value_;
@@ -77,6 +83,11 @@ public:
   }
   double getValue() const {
     return value_;
+  }
+  void *get_value(){
+      int *f = (int *)malloc(sizeof(float));
+      *f = value_;
+      return (void *)f;
   }
 private:
   /* @author: huahui  @what for: 浮点数默认格式化---------------------------------------------
@@ -191,6 +202,9 @@ public:
   // 在condition的filter中要注意
   int compare(const TupleValue &other) const override {
     return 0;
+  }
+  void *get_value() {
+      return nullptr;
   }
 };
 /*end -----------------------------------------------------------------------------------------------------------------*/

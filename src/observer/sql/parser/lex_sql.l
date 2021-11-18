@@ -95,6 +95,7 @@ QUOTE            [\'\"]
 [Mm][Aa][Xx]          RETURN_TOKEN(MAX);
 [Mm][Ii][Nn]          RETURN_TOKEN(MIN);
 [Aa][Vv][Gg]          RETURN_TOKEN(AVG);
+[Ii][Nn]                RETURN_TOKEN(IN);
  /* @author: huahui  @what for: null -----------------------------------------------------------------------------*/
 [Nn][Oo][Tt]                                 RETURN_TOKEN(NOT);
 [Nn][Uu][Ll][Ll]                             RETURN_TOKEN(NULL_A);

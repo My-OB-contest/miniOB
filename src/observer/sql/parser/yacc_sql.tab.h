@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.7.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -107,17 +107,18 @@ extern int yydebug;
     NULLABLE = 308,                /* NULLABLE  */
     IS_A = 309,                    /* IS_A  */
     UNIQUE = 310,                  /* UNIQUE  */
-    PLUS = 311,                    /* PLUS  */
-    MINUS = 312,                   /* MINUS  */
-    DIVIDE = 313,                  /* DIVIDE  */
-    NNNUMBER = 314,                /* NNNUMBER  */
-    NNFLOAT = 315,                 /* NNFLOAT  */
-    ID = 316,                      /* ID  */
-    DATE = 317,                    /* DATE  */
-    PATH = 318,                    /* PATH  */
-    SSS = 319,                     /* SSS  */
-    STAR = 320,                    /* STAR  */
-    STRING_V = 321                 /* STRING_V  */
+    IN = 311,                      /* IN  */
+    PLUS = 312,                    /* PLUS  */
+    MINUS = 313,                   /* MINUS  */
+    DIVIDE = 314,                  /* DIVIDE  */
+    NNNUMBER = 315,                /* NNNUMBER  */
+    NNFLOAT = 316,                 /* NNFLOAT  */
+    ID = 317,                      /* ID  */
+    DATE = 318,                    /* DATE  */
+    PATH = 319,                    /* PATH  */
+    SSS = 320,                     /* SSS  */
+    STAR = 321,                    /* STAR  */
+    STRING_V = 322                 /* STRING_V  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -126,7 +127,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 135 "yacc_sql.y"
+#line 138 "yacc_sql.y"
 
   struct _Attr *attr;
   struct _Condition *condition1;
@@ -142,7 +143,7 @@ union YYSTYPE
   void *exp;       /* @author: huahui  @what for: expression */
   void *exp_list;  /* @author: huahui  @what for: expression */
 
-#line 146 "yacc_sql.tab.h"
+#line 147 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -152,6 +153,8 @@ typedef union YYSTYPE YYSTYPE;
 
 
 
+
 int yyparse (void *scanner);
+
 
 #endif /* !YY_YY_YACC_SQL_TAB_H_INCLUDED  */

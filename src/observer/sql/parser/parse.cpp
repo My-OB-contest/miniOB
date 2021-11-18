@@ -554,7 +554,9 @@ Query *query_create() {
 void query_reset(Query *query) {
   switch (query->flag) {
     case SCF_SELECT: {
-      advselects_destroy(&query->sstr.adv_selection);
+      for(int i = 0 ; i < query->sstr.adv_selection[0].select_num ; i++){
+          advselects_destroy(&query->sstr.adv_selection[i]);
+      }
     }
     break;
     case SCF_INSERT: {

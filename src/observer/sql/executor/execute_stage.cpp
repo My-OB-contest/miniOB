@@ -43,7 +43,7 @@ See the Mulan PSL v2 for more details. */
 
 using namespace common;
 
-RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node);
+RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node,Query *sql) ;
 
 //! Constructor
 ExecuteStage::ExecuteStage(const char *tag) : Stage(tag) {}
@@ -131,7 +131,8 @@ void ExecuteStage::handle_request(common::StageEvent *event) {
 
   switch (sql->flag) {
     case SCF_SELECT: { // select
-      RC rc = do_select(current_db, sql, exe_event->sql_event()->session_event());
+      TupleSet tmp_tupleset;
+      RC rc = do_select(current_db, sql, exe_event->sql_event()->session_event(),tmp_tupleset,0);
       if( rc != RC::SUCCESS){
           session_event->set_response("FAILURE\n");
       }
@@ -536,45 +537,71 @@ RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &sele
     TupleSchema tmpschema;
     int attrindex[40];
     int indexcount=0;
-    for (int i = selects.attr_num-1; i >=0 ; --i) {
-        for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
-            if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
-                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
-                attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
-                break;
-            }
-            if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp("*",selects.attributes[i].attribute_name) == 0){
-                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
-                attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+    if (selects.relation_num >1 ){
+        for (int i = selects.attr_num-1; i >=0 ; --i) {
+            for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
+                if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
+                    tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+                    attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+                    break;
+                }
+                if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp("*",selects.attributes[i].attribute_name) == 0){
+                    tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+                    attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+                }
             }
         }
-    }
-    tmptupset.set_schema(tmpschema);
-    for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
-        Tuple tmptuple;
-        for (int i = 0; i < indexcount; ++i) {
-            tmptuple.add(it_tuple->get_pointer(attrindex[i]));
+        tmptupset.set_schema(tmpschema);
+        for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
+            Tuple tmptuple;
+            for (int i = 0; i < indexcount; ++i) {
+                tmptuple.add(it_tuple->get_pointer(attrindex[i]));
+            }
+            tmptupset.add(std::move(tmptuple));
         }
-        tmptupset.add(std::move(tmptuple));
+    }else{
+        for (int i = selects.attr_num-1; i >=0 ; --i) {
+            for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
+                if ( strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
+                    tmpschema.add_if_not_exists(it_field->type(), it_field->table_name(), it_field->field_name(),
+                                                false);
+                    attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+                    break;
+                }
+            }
+        }
+        tmptupset.set_schema(tmpschema);
+        for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
+            Tuple tmptuple;
+            for (int i = 0; i < indexcount; ++i) {
+                tmptuple.add(it_tuple->get_pointer(attrindex[i]));
+            }
+            tmptupset.add(std::move(tmptuple));
+        }
     }
+
     tuplesets.pop_back();
     tuplesets.push_back(std::move(tmptupset));
     return rc;
 }
 
+//void sel_append_table_name(AdvSelects &adv_selects){
+//
+//}
+
 
 // 这里没有对输入的某些信息做合法性校验，比如查询的列名、where条件中的列名等，没有做必要的合法性校验
 // 需要补充上这一部分. 校验部分也可以放在resolve，不过跟execution放一起也没有关系
-RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_event) {
+RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_event,TupleSet &res_tupleset,int curpos) {
 
   RC rc = RC::SUCCESS;
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
-  const AdvSelects &adv_selects = sql->sstr.adv_selection;
+  const AdvSelects &adv_selects = sql->sstr.adv_selection[curpos];
   Selects selects;
   if(!convert_to_selects(adv_selects, selects)) {
     // 走表达式路线;
-    TupleSet res_tupleset;
+    //TupleSet res_tupleset;
     std::stringstream ss;
     rc = do_advselects(trx, adv_selects, db, res_tupleset);
     if(rc != RC::SUCCESS) {
@@ -587,17 +614,29 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     return RC::SUCCESS;
   }
 
-  rc = select_check(db,selects);
-  if ( rc != RC::SUCCESS){
-      LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
-      return rc;
+  if(sql->sstr.adv_selection[0].select_num == 1){
+      rc = select_check(db,selects);
+      if ( rc != RC::SUCCESS){
+          LOG_ERROR("select error,rc=%d:%s",rc, strrc(rc));
+          return rc;
+      }
   }
+    /* @author: fzh
+   * @what for: subselect
+   * -----------------------------------------------------------------------------------------------------------------
+   */
+   std::vector<Condition> sub_sel_conditions;
+   rc = check_sub_select(selects,sql,sub_sel_conditions);
+   if( rc != RC::SUCCESS){
+       LOG_ERROR("sub_select check error,rc=%d:%s",rc, strrc(rc));
+       return rc;
+   }
   // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
   std::vector<SelectExeNode *> select_nodes;
   for (size_t i = 0; i < selects.relation_num; i++) {
     const char *table_name = selects.relations[i];
     SelectExeNode *select_node = new SelectExeNode;
-    rc = create_selection_executor(trx, selects, db, table_name, *select_node);
+    rc = create_selection_executor(trx, selects, db, table_name, *select_node,sql);
     if (rc != RC::SUCCESS) {
       delete select_node;
       for (SelectExeNode *& tmp_node: select_nodes) {
@@ -635,7 +674,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
    * @what for: 必做题，聚合查询和多表join
    * -----------------------------------------------------------------------------------------------------------------
    */
-  TupleSet res_tupleset;
+  //TupleSet res_tupleset;
   std::stringstream ss;
   if (tuple_sets.size() > 1) {
     // 本次查询了多张表，需要做join操作
@@ -663,8 +702,58 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     // 本次查询了多张表，需要做join操作, 结果放在res_tuple_set中
   } else {
     // 当前只查询一张表，直接返回结果即可
+    //有子查询递归执行子查询再次过滤当前tuplest
+    if(sub_sel_conditions.size() > 0 && tuple_sets.front().size() > 0 ){
+        bool need_change = if_need_change(selects,tuple_sets.front(),sql);
+        std::vector<std::pair<TupleSet,TupleSet>> tupleset_pair_list;
+        TupleSet tmp_tupleset;
+        tmp_tupleset.set_schema(tuple_sets.front().get_schema());
+        if (need_change == false){
+            rc = do_sub_sel(db,sql,session_event,tupleset_pair_list,sub_sel_conditions);
+            if (rc != RC::SUCCESS){
+                LOG_ERROR("do_sub_sel error");
+                return rc;
+            }
+        }
+        for(int i = 0 ; i < tuple_sets.front().size() ; ++i){
+            if (need_change == true){
+                change_sub_select(selects,tuple_sets.front(),sql,i);
+                rc = do_sub_sel(db,sql,session_event,tupleset_pair_list,sub_sel_conditions);
+                if (rc != RC::SUCCESS){
+                    LOG_ERROR("do_sub_sel error");
+                    return rc;
+                }
+            }
+            bool final_flag = true;
+            for(int j = 0 ; j < sub_sel_conditions.size() ; ++j){
+                SubSelConditionFilter sub_sel_filter;
+                sub_sel_filter.init(&tuple_sets.front().get(i),&sub_sel_conditions[j],tuple_sets.front().schema());
+                rc = sub_sel_filter.check_subsel_tupset(tupleset_pair_list[j]);
+                if (rc != RC::SUCCESS){
+                    LOG_ERROR("check sub_sel_filter error");
+                    return rc;
+                }
+                final_flag = final_flag&&sub_sel_filter.filter(tupleset_pair_list[j]);
+                if(final_flag == false){
+                    break;
+                }
+            }
+            if (final_flag == true){
+                Tuple tmp_tuple;
+                for (int j = 0; j < tuple_sets.front().get(i).size(); ++j) {
+                    tmp_tuple.add(tuple_sets.front().get(i).get_pointer(j));
+                }
+                tmp_tupleset.add(std::move(tmp_tuple));
+            }
+        }
+        tuple_sets.clear();
+        tuple_sets.push_back(std::move(tmp_tupleset));
+       // projection(tuple_sets,selects);
+
+    }
+    projection(tuple_sets,selects);
     res_tupleset = std::move(tuple_sets.front());
-    // tuple_sets.front().print(ss);
+
   }
 
   bool hagg = false;
@@ -688,17 +777,250 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     }
     res_tupleset = std::move(agg_res);
   }
-  res_tupleset.print(ss);
-  /* ------------------------------------------------------------------------------------------------------------
-   */
-
-  for (SelectExeNode *& tmp_node: select_nodes) {
-    delete tmp_node;
+  if(curpos == 0){
+      res_tupleset.print(ss);
+      session_event->set_response(ss.str());
+      for (SelectExeNode *& tmp_node: select_nodes) {
+          delete tmp_node;
+      }
+      end_trx_if_need(session, trx, true);
+      return rc;
+  }else{
+      for (SelectExeNode *& tmp_node: select_nodes) {
+          delete tmp_node;
+      }
+      end_trx_if_need(session, trx, true);
+      return rc;
   }
-  session_event->set_response(ss.str());
-  end_trx_if_need(session, trx, true);
-  return rc;
+
+
 }
+/*
+ * @author: fzh
+ * @what for: sub_select
+ * begin -------------------------------------------------------------------------------------------
+ */
+bool ExecuteStage::if_need_change(Selects &selects,TupleSet &res_tupleset,Query *sql){
+    bool need_change = false;
+    for (size_t i = 0; i < selects.condition_num; i++) {
+        if (res_tupleset.tuples().size() == 0) {
+            break;
+        }
+        if (selects.conditions[i].left_select_index != -1) {
+            int left_select_index = selects.conditions[i].left_select_index;
+            for (int j = 0; j < res_tupleset.schema().fields().size(); ++j) {
+                for (int k = 0; k < sql->sstr.adv_selection[left_select_index].condition_num; ++k) {
+                    if ((sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->is_attr == 1)
+                    && (sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->relation_name != nullptr)) {
+                        if (strcmp(res_tupleset.schema().field(j).table_name(),
+                                   sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->relation_name) == 0
+                            && strcmp(res_tupleset.schema().field(j).field_name(),
+                                      sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->attribute_name) ==
+                               0) {
+                            need_change = true;
+                        }
+                    }
+                    if ((sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->is_attr == 1)
+                        && (sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->relation_name != nullptr) ){
+                        if (strcmp(res_tupleset.schema().field(j).table_name(),
+                                   sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->relation_name) == 0
+                            && strcmp(res_tupleset.schema().field(j).field_name(),
+                                      sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->attribute_name) ==
+                               0) {
+                            need_change = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (selects.conditions[i].right_select_index != -1) {
+            int right_select_index = selects.conditions[i].right_select_index;
+            for (int j = 0; j < res_tupleset.schema().fields().size(); ++j) {
+                for (int k = 0; k < sql->sstr.adv_selection[right_select_index].condition_num; ++k) {
+                    if ((sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->is_attr == 1)
+                        && (sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->relation_name != nullptr) ){
+                        if (strcmp(res_tupleset.schema().field(j).table_name(),
+                                   sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->relation_name) == 0
+                            && strcmp(res_tupleset.schema().field(j).field_name(),
+                                      sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->attribute_name) ==
+                               0) {
+                            need_change = true;
+                        }
+                    }
+                    if ((sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->is_attr == 1)
+                        && (sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->relation_name != nullptr) ){
+                        if (strcmp(res_tupleset.schema().field(j).table_name(),
+                                   sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->relation_name) == 0
+                            && strcmp(res_tupleset.schema().field(j).field_name(),
+                                      sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->attribute_name) ==
+                               0) {
+                            need_change = true;
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+    return need_change;
+}
+RC ExecuteStage::change_sub_select(Selects &selects,TupleSet &res_tupleset,Query *sql,int cur_tuple_pos){
+    for (size_t i = 0; i < selects.condition_num; i++) {
+        if (res_tupleset.tuples().size() == 0) {
+            break;
+        }
+        if (selects.conditions[i].left_select_index != -1) {
+            int left_select_index = selects.conditions[i].left_select_index;
+            for (int j = 0; j < res_tupleset.schema().fields().size(); ++j) {
+                for (int k = 0; k < sql->sstr.adv_selection[left_select_index].condition_num; ++k) {
+                    if (strcmp(res_tupleset.schema().field(j).table_name(),
+                               sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->relation_name) == 0
+                        && strcmp(res_tupleset.schema().field(j).field_name(),
+                                  sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->attribute_name) ==
+                           0) {
+                        sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->is_attr = 0;
+                        sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->value.type = res_tupleset.schema().field(
+                                j).type();
+                        sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->value.is_null = 0;
+                        if (sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->value.data !=
+                                nullptr){
+                            //free(sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->value.data);
+                        }
+                        sql->sstr.adv_selection[left_select_index].condition_exps[k].left->exp->value.data = res_tupleset.tuples()[cur_tuple_pos].get_pointer(
+                                j)->get_value();
+                    }
+                    if (strcmp(res_tupleset.schema().field(j).table_name(),
+                               sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->relation_name) == 0
+                        && strcmp(res_tupleset.schema().field(j).field_name(),
+                                  sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->attribute_name) ==
+                           0) {
+                        sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->is_attr = 0;
+                        sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->value.type = res_tupleset.schema().field(
+                                j).type();
+                        sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->value.is_null = 0;
+                        if(sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->value.data !=
+                                nullptr){
+                            //free(sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->value.data);
+                        }
+                        sql->sstr.adv_selection[left_select_index].condition_exps[k].right->exp->value.data = res_tupleset.tuples()[cur_tuple_pos].get_pointer(
+                                j)->get_value();
+                    }
+                }
+            }
+        }
+        if (selects.conditions[i].right_select_index != -1) {
+            int right_select_index = selects.conditions[i].right_select_index;
+            for (int j = 0; j < res_tupleset.schema().fields().size(); ++j) {
+                for (int k = 0; k < sql->sstr.adv_selection[right_select_index].condition_num; ++k) {
+                    if (strcmp(res_tupleset.schema().field(j).table_name(),
+                               sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->relation_name) == 0
+                        && strcmp(res_tupleset.schema().field(j).field_name(),
+                                  sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->attribute_name) ==
+                           0) {
+                        sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->is_attr = 0;
+                        sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->value.type = res_tupleset.schema().field(
+                                j).type();
+                        sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->value.is_null = 0;
+                        if(sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->value.data !=
+                                nullptr){
+                            //free(sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->value.data);
+                        }
+                        sql->sstr.adv_selection[right_select_index].condition_exps[k].left->exp->value.data = res_tupleset.tuples()[cur_tuple_pos].get_pointer(
+                                j)->get_value();
+                    }
+                    if (strcmp(res_tupleset.schema().field(j).table_name(),
+                               sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->relation_name) == 0
+                        && strcmp(res_tupleset.schema().field(j).field_name(),
+                                  sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->attribute_name) ==
+                           0) {
+                        sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->is_attr = 0;
+                        sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->value.type = res_tupleset.schema().field(
+                                j).type();
+                        sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->value.is_null = 0;
+                        if(sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->value.data !=
+                                nullptr){
+                            //free(sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->value.data);
+                        }
+                        sql->sstr.adv_selection[right_select_index].condition_exps[k].right->exp->value.data = res_tupleset.tuples()[cur_tuple_pos].get_pointer(
+                                j)->get_value();
+                    }
+                }
+
+            }
+        }
+    }
+    return RC::SUCCESS;
+}
+
+RC ExecuteStage::check_sub_select(Selects &selects,Query *sql,std::vector<Condition> &sub_sel_conditions){
+    RC rc = RC::SUCCESS;
+    for(int i = 0; i < selects.condition_num ;++i){
+        if (selects.conditions[i].left_select_index !=-1 || selects.conditions->right_select_index !=-1){
+            if(selects.conditions[i].left_select_index !=-1){
+                int left_select_index = selects.conditions[i].left_select_index;
+                if(selects.conditions[i].comp == IN_SUB ||  selects.conditions[i].comp == NOT_IN_SUB){
+                    LOG_ERROR("sub_select cant at left of in!");
+                    return RC::SCHEMA;
+                }
+                if(sql->sstr.adv_selection[left_select_index].attr_num != 1){
+                    LOG_ERROR("in filed too many!");
+                    return RC::SCHEMA;
+                }
+            }
+            if(selects.conditions[i].right_select_index !=-1){
+                int right_select_index = selects.conditions[i].right_select_index;
+                if(sql->sstr.adv_selection[right_select_index].attr_num != 1){
+                    LOG_ERROR("in filed too many!");
+                    return RC::SCHEMA;
+                }
+            }
+            if (selects.conditions[i].left_is_attr && selects.conditions[i].left_attr.relation_name== nullptr){
+                selects.conditions[i].left_attr.relation_name  = selects.relations[0];
+            }
+            if (selects.conditions[i].right_is_attr && selects.conditions[i].right_attr.relation_name== nullptr){
+                selects.conditions[i].right_attr.relation_name  = selects.relations[0];
+            }
+            sub_sel_conditions.push_back(selects.conditions[i]);
+        }
+    }
+    return rc;
+}
+RC ExecuteStage::do_sub_sel(const char *db, Query *sql, SessionEvent *session_event,std::vector<std::pair<TupleSet,TupleSet>> &tupleset_pair_list,std::vector<Condition> &sub_sel_conditions){
+    RC rc = RC::SUCCESS;
+    tupleset_pair_list.clear();
+    for (int i = 0; i < sub_sel_conditions.size(); ++i) {
+        std::pair<TupleSet,TupleSet> tmp_pair_set;
+        if(sub_sel_conditions[i].left_select_index != -1){
+            rc = do_select(db,sql,session_event,tmp_pair_set.first,sub_sel_conditions[i].left_select_index);
+            if (rc != RC::SUCCESS){
+                LOG_ERROR("do_sub_sel left wrong!");
+                return rc;
+            }
+            if (tmp_pair_set.first.tuples().size() !=1 && sub_sel_conditions[i].comp>=EQUAL_TO && sub_sel_conditions[i].comp <= GREAT_THAN){
+                LOG_ERROR("tuples num  wrong!");
+                return RC::RECORD;
+            }
+        }
+        if(sub_sel_conditions[i].right_select_index != -1){
+            rc = do_select(db,sql,session_event,tmp_pair_set.second,sub_sel_conditions[i].right_select_index);
+            if (rc != RC::SUCCESS){
+                LOG_ERROR("do_sub_sel right wrong!");
+                return rc;
+            }
+            if (tmp_pair_set.second.tuples().size() !=1 && sub_sel_conditions[i].comp>=EQUAL_TO && sub_sel_conditions[i].comp <= GREAT_THAN){
+                LOG_ERROR("tuples num  wrong!");
+                return RC::RECORD;
+            }
+        }
+        tupleset_pair_list.push_back(std::move(tmp_pair_set));
+    }
+    if ( tupleset_pair_list.size() != sub_sel_conditions.size() ){
+        LOG_ERROR("tupleset_pair_list.size != sub_sel_conditions.size!");
+        rc = RC::SCHEMA;
+    }
+    return rc;
+}
+
 
 /*
  * @author: huahui
@@ -1084,9 +1406,13 @@ bool ExecuteStage::convert_to_selects(const AdvSelects &adv_selects, Selects &se
         if(exp->is_attr) {
           RelAttr attr;
           relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
-   			  cond.left_attr = attr;
-        } else {
-          cond.left_value = exp->value;
+          cond.left_attr = attr;
+          cond.left_select_index = -1;
+        } else if(exp->sub_select_index == -1){
+            cond.left_value = exp->value;
+            cond.left_select_index = -1;
+        } else{
+            cond.left_select_index = exp->sub_select_index;
         }
       }else {
         flag = false;
@@ -1104,9 +1430,13 @@ bool ExecuteStage::convert_to_selects(const AdvSelects &adv_selects, Selects &se
         if(exp->is_attr) {
           RelAttr attr;
           relation_attr_init(&attr, exp->relation_name, exp->attribute_name);
-   			  cond.right_attr = attr;
-        } else {
+          cond.right_attr = attr;
+          cond.right_select_index = -1;
+        } else if(exp->sub_select_index == -1){
           cond.right_value = exp->value;
+          cond.right_select_index = -1;
+        } else{
+          cond.right_select_index = exp->sub_select_index;
         }
       }else {
         flag = false;
@@ -1175,7 +1505,7 @@ static RC schema_add_field(Table *table, const char *field_name, TupleSchema &sc
 
 
 // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
-RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node) {
+RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node,Query *sql) {
   // 列出跟这张表关联的Attr
   RC rc = RC::SUCCESS;
   TupleSchema schema;
@@ -1194,10 +1524,10 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
     /* ----------------------------------------------------------------------------------------------*/
     if (nullptr == attr.relation_name || 0 == strcmp(table_name, attr.relation_name)) {
       /* @author: huahui  @what for: 聚合查询  --------------------------------------------------------*/
-      if (0 == strcmp("*", attr.attribute_name)) {
+      if (0 == strcmp("*", attr.attribute_name) || sql->sstr.adv_selection[0].select_num > 1) {
         /* @author: huahui  @what for: 聚合查询 多表查询  -----------------------------------------------*/
         // 列出这张表所有字段
-        TupleSchema::from_table(table, schema, (selects.relation_num>1));
+        TupleSchema::from_table(table, schema, (selects.relation_num>1) );
         /* ----------------------------------------------------------------------------------------------*/
         break; // 没有校验，给出* 之后，再写字段的错误
       } else {
@@ -1231,9 +1561,9 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
   std::vector<DefaultConditionFilter *> condition_filters;
   for (size_t i = 0; i < selects.condition_num; i++) {
     const Condition &condition = selects.conditions[i];
-    if ((condition.left_is_attr == 0 && condition.right_is_attr == 0) || // 两边都是值
-        (condition.left_is_attr == 1 && condition.right_is_attr == 0 && match_table(selects, condition.left_attr.relation_name, table_name)) ||  // 左边是属性右边是值
-        (condition.left_is_attr == 0 && condition.right_is_attr == 1 && match_table(selects, condition.right_attr.relation_name, table_name)) ||  // 左边是值，右边是属性名
+    if ((condition.left_is_attr == 0 && condition.right_is_attr == 0 && condition.left_select_index == -1 && condition.right_select_index == -1) || // 两边都是值
+        (condition.left_is_attr == 1 && condition.right_is_attr == 0 && condition.right_select_index == -1 && match_table(selects, condition.left_attr.relation_name, table_name)) ||  // 左边是属性右边是值
+        (condition.left_is_attr == 0 && condition.right_is_attr == 1 && condition.left_select_index == -1 && match_table(selects, condition.right_attr.relation_name, table_name)) ||  // 左边是值，右边是属性名
         (condition.left_is_attr == 1 && condition.right_is_attr == 1 &&
             match_table(selects, condition.left_attr.relation_name, table_name) && match_table(selects, condition.right_attr.relation_name, table_name)) // 左右都是属性名，并且表名都符合
         ) {

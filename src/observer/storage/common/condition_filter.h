@@ -34,6 +34,11 @@ struct ConDesc {
   int    is_null;
   /* ----------------------------------------------------------------------------------------------------------------*/
 };
+struct SubSelConDesc {
+    bool   is_select= false;   //是否是子查询
+    std::shared_ptr<TupleValue> tupleValue_; //
+    AttrType attrtype; // 属性类型
+};
 
 class ConditionFilter {
 public:
@@ -122,6 +127,20 @@ private:
     int posr_;
     CompOp comp_op_ = NO_OP;
 };
+
+// fzh for sub_select
+class SubSelConditionFilter {
+public:
+    RC init(const Tuple *tuple, Condition *sub_sel_condition,const TupleSchema &tupleSchema);
+    RC check_subsel_tupset(std::pair<TupleSet,TupleSet> &tupleset_pair) const;
+    bool filter(std::pair<TupleSet,TupleSet> &tupleset_pair) const;
+
+private:
+    SubSelConDesc left_;
+    SubSelConDesc right_;
+    CompOp comp_op_ = NO_OP;
+};
+
 
 /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 RC cal_exp(const Exp *exp, const Tuple &tuple, const TupleSchema &tuple_schema, Value &value);

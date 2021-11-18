@@ -51,6 +51,8 @@ typedef enum {
   LESS_THAN,    //"<"     3
   GREAT_EQUAL,  //">="    4
   GREAT_THAN,   //">"     5
+  IN_SUB,                //fzh for subselect
+  NOT_IN_SUB,           //fzh for subselect
   IS,            // is 
   ISNOT,         // is not  /* @author: huahui  @what for: null */
   NO_OP                     /* @author: huahui  @what for: null */
@@ -71,11 +73,13 @@ typedef struct _Value {
 typedef struct _Condition {
   int left_is_attr;    // TRUE if left-hand side is an attribute
                        // 1时，操作符左边是属性名，0时，是属性值
+  int left_select_index;  // fzh for sub_select   记录子查询的下标，若为-1则没有子查询
   Value left_value;    // left-hand side value if left_is_attr = FALSE
   RelAttr left_attr;   // left-hand side attribute
   CompOp comp;         // comparison operator
   int right_is_attr;   // TRUE if right-hand side is an attribute
                        // 1时，操作符右边是属性名，0时，是属性值
+  int right_select_index; // fzh for sub_select   记录子查询的下标，若为-1则没有子查询
   RelAttr right_attr;  // right-hand side attribute if right_is_attr = TRUE 右边的属性
   Value right_value;   // right-hand side value if right_is_attr = FALSE
 } Condition;
@@ -115,6 +119,7 @@ typedef struct Exp {
     CalOp calop;           // 只能是乘除号
     
   int num;                  // 表达式中item的个数，这个item可以是*, id或value
+  int sub_select_index;       // 子查询的select下标，如果为-1则说明没有子查询
 } Exp;
 
 // 可以包含一个Exp，也可以用加减号将多个ExpList连接在一起
@@ -177,6 +182,7 @@ typedef struct {
   char *       relations[MAX_NUM];
   size_t       condition_num;
   ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
+  size_t       select_num;
 }AdvSelects; // advanced selects: 支持条件表达式
 /* --------------------------------------------------------------------------------------------------------------*/
 
@@ -253,8 +259,9 @@ typedef struct {
 } LoadData;
 
 union Queries {
-  Selects selection;
-  AdvSelects adv_selection; /* @author: huahui  @what for: expression -----------------------------------------*/
+  //Selects selection;
+  AdvSelects adv_selection[MAX_NUM]; /* @author: huahui  @what for: expression -----------------------------------------*/
+  // @author: fhz @what for: sub_select
   Inserts insertion;
   Deletes deletion;
   Updates update;
@@ -293,6 +300,11 @@ typedef struct Query {
   enum SqlCommandFlag flag;
   union Queries sstr;
 } Query;
+
+typedef struct {
+  int sel_lengh[MAX_NUM];
+  int top;
+}DeepStack;
 
 #ifdef __cplusplus
 extern "C" {

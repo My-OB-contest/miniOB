@@ -24,6 +24,8 @@ See the Mulan PSL v2 for more details. */
  * -----------------------------------------------------------------------------------------------------------------
  */
 #include "sql/executor/tuple.h"
+#include "execution_node.h"
+
 /* ------------------------------------------------------------------------------------------------------------
  */
 
@@ -47,10 +49,12 @@ protected:
                      common::CallbackContext *context) override;
 
   void handle_request(common::StageEvent *event);
-  RC do_select(const char *db, Query *sql, SessionEvent *session_event);
+  //fzh 改为递归结构，for 子查询
+  RC do_select(const char *db, Query *sql, SessionEvent *session_event ,TupleSet &sub_tupleset ,int curpos);
   RC select_check(const char *db, const Selects &selects);
   RC update_check(const char *db, const Updates &updates);  /* @author: huahui  @what for: 元数据校验-----------*/
   RC projection(std::vector<TupleSet> &tuplesets,const Selects &selects);
+
 protected:
   /*
    * @author: huahui
@@ -94,6 +98,12 @@ protected:
   bool convert_condexps_to_conds(int condition_num, ConditionExp condition_exps[], Condition conds[]);
   bool convert_to_selects(const AdvSelects &adv_selects, Selects &selects);
   RC do_advselects(Trx *trx, const AdvSelects &adv_selects, const char *db, TupleSet &res_tupleset);
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+  /* @author: fzh  @what for: sub_select <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+  bool if_need_change(Selects &selects,TupleSet &res_tupleset,Query *sql);
+  RC change_sub_select(Selects &selects,TupleSet &res_tupleset,Query *sql,int cur_tuple_pos);
+  RC check_sub_select(Selects &selects,Query *sql,std::vector<Condition> &sub_sel_conditions);
+  RC do_sub_sel(const char *db, Query *sql, SessionEvent *session_event,std::vector<std::pair<TupleSet,TupleSet>> &tupleset_pair_list,std::vector<Condition> &sub_sel_conditions);
   /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 private:
   Stage *default_storage_stage_ = nullptr;
