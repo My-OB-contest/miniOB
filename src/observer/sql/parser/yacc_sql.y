@@ -575,7 +575,7 @@ update:			/*  update 语句的语法解析树*/
     ;
 
 update_handle:
-    DELETE{
+    UPDATE{
         CONTEXT->comp_deep++;
     }
     ;
