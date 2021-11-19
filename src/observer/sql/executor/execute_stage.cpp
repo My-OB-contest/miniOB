@@ -1000,7 +1000,7 @@ RC ExecuteStage::change_sub_select(Selects &selects,TupleSet &res_tupleset,Query
 RC ExecuteStage::check_sub_select(Selects &selects,Query *sql,std::vector<Condition> &sub_sel_conditions){
     RC rc = RC::SUCCESS;
     for(int i = 0; i < selects.condition_num ;++i){
-        if (selects.conditions[i].left_select_index !=-1 || selects.conditions->right_select_index !=-1){
+        if (selects.conditions[i].left_select_index !=-1 || selects.conditions[i].right_select_index !=-1){
             if(selects.conditions[i].left_select_index !=-1){
                 int left_select_index = selects.conditions[i].left_select_index;
                 if(selects.conditions[i].comp == IN_SUB ||  selects.conditions[i].comp == NOT_IN_SUB){
