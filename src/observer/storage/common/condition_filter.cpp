@@ -993,28 +993,28 @@ RC SubSelConditionFilter::check_subsel_tupset(std::pair<TupleSet,TupleSet> &tupl
             LOG_ERROR("left filed too many!");
             return RC::SCHEMA;
         }
-        if (tupleset_pair.first.schema().field(0).type() != right_.attrtype){
-            LOG_ERROR("compare type not match!");
-            return RC::SCHEMA;
-        }
+//        if (tupleset_pair.first.schema().field(0).type() != right_.attrtype){
+//            LOG_ERROR("compare type not match!");
+//            return RC::SCHEMA;
+//        }
     } else if(left_.is_select == false && right_.is_select == true){
         if (tupleset_pair.second.schema().fields().size() != 1){
             LOG_ERROR("right filed too many!");
             return RC::SCHEMA;
         }
-        if (tupleset_pair.second.schema().field(0).type() != left_.attrtype){
-            LOG_ERROR("compare type not match!");
-            return RC::SCHEMA;
-        }
+//        if (tupleset_pair.second.schema().field(0).type() != left_.attrtype){
+//            LOG_ERROR("compare type not match!");
+//            return RC::SCHEMA;
+//        }
     } else if(left_.is_select == true && right_.is_select == true){
         if (tupleset_pair.first.schema().fields().size() != 1 || tupleset_pair.second.schema().fields().size() != 1){
             LOG_ERROR("left and right filed too many!");
             return RC::SCHEMA;
         }
-        if (tupleset_pair.first.schema().field(0).type() != tupleset_pair.second.schema().field(0).type()){
-            LOG_ERROR("compare type not match!");
-            return RC::SCHEMA;
-        }
+//        if (tupleset_pair.first.schema().field(0).type() != tupleset_pair.second.schema().field(0).type()){
+//            LOG_ERROR("compare type not match!");
+//            return RC::SCHEMA;
+//        }
     } else{
         LOG_ERROR("filter never go here!");
         return RC::SCHEMA;
@@ -1026,10 +1026,22 @@ bool SubSelConditionFilter::filter(std::pair<TupleSet,TupleSet> &tupleset_pair) 
     if (comp_op_ >= EQUAL_TO && comp_op_ <= GREAT_THAN){
         int cmp_result;
         if (left_.is_select == true && right_.is_select == false){
+            if (tupleset_pair.first.size() !=1 || UNDEFINED==tupleset_pair.first.get(0).get(0).get_type()){
+                return false;
+            }
             cmp_result = tupleset_pair.first.get(0).get(0).compare(*right_.tupleValue_);
-        } else if(left_.is_select == false && right_.is_select == true){
+        } else if(left_.is_select == false && right_.is_select == true ){
+            if (tupleset_pair.second.size() !=1||UNDEFINED==tupleset_pair.second.get(0).get(0).get_type()){
+                return false;
+            }
             cmp_result = left_.tupleValue_->compare(tupleset_pair.second.get(0).get(0));
         } else if(left_.is_select == true && right_.is_select == true){
+            if (tupleset_pair.first.size() !=1 || tupleset_pair.second.size() !=1){
+                return false;
+            }
+            if(UNDEFINED==tupleset_pair.first.get(0).get(0).get_type() || UNDEFINED==tupleset_pair.second.get(0).get(0).get_type()){
+                return false;
+            }
             cmp_result = tupleset_pair.first.get(0).get(0).compare(tupleset_pair.second.get(0).get(0));
         } else{
             LOG_ERROR("filter never go here!");

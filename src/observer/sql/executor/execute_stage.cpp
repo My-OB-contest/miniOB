@@ -734,11 +734,11 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
             for(int j = 0 ; j < sub_sel_conditions.size() ; ++j){
                 SubSelConditionFilter sub_sel_filter;
                 sub_sel_filter.init(&tuple_sets.front().get(i),&sub_sel_conditions[j],tuple_sets.front().schema());
-//                rc = sub_sel_filter.check_subsel_tupset(tupleset_pair_list[j]);
-//                if (rc != RC::SUCCESS){
-//                    LOG_ERROR("check sub_sel_filter error");
-//                    return rc;
-//                }
+                rc = sub_sel_filter.check_subsel_tupset(tupleset_pair_list[j]);
+                if (rc != RC::SUCCESS){
+                    LOG_ERROR("check sub_sel_filter error");
+                    return rc;
+                }
                 final_flag = final_flag&&sub_sel_filter.filter(tupleset_pair_list[j]);
                 if(final_flag == false){
                     break;
