@@ -25,7 +25,6 @@ See the Mulan PSL v2 for more details. */
 #include <cmath>
 
 #include "sql/parser/parse_defs.h"
-
 class TupleValue {
 public:
   TupleValue() = default;
@@ -33,7 +32,8 @@ public:
 
   virtual void to_string(std::ostream &os) const = 0;
   virtual int compare(const TupleValue &other) const = 0;
-  virtual void *get_value()  = 0;
+  virtual void *get_value() const  = 0;
+  virtual AttrType get_type() const = 0;
 private:
 };
 
@@ -47,70 +47,100 @@ public:
   }
 
   int compare(const TupleValue &other) const override {
+    if (other.get_type()==FLOATS){
+        float  left = (float )value_;
+        float result;
+        void *right_pr = other.get_value();
+        float  right = *(float*)right_pr;
+        result = left - right;
+        free(right_pr);
+        if (result > 0) { // 浮点数没有考虑精度问题
+            return 1;
+        }
+        if (abs(result) <= 1e-5) {
+            return 0;
+        } else if(result > 0.0) {
+            return 1;
+        }
+        return -1;
+    }
     const IntValue & int_other = (const IntValue &)other;
     return value_ - int_other.value_;
   }
   int getValue() const {
     return value_;
   }
-  void *get_value(){
+  void *get_value() const{
       int *i = (int *)malloc(sizeof(int));
       *i = value_;
       return (void *)i;
   }
+  AttrType get_type() const {
+      return INTS;
+  }
 private:
   int value_;
 };
-
 class FloatValue : public TupleValue {
 public:
-  explicit FloatValue(float value) : value_(value) {
-  }
-
-  void to_string(std::ostream &os) const override {
-    os << formatFloat(value_);
-  }
-
-  int compare(const TupleValue &other) const override {
-    const FloatValue & float_other = (const FloatValue &)other;
-    float result = value_ - float_other.value_;
-    if (result > 0) { // 浮点数没有考虑精度问题
-      return 1;
+    explicit FloatValue(float value) : value_(value) {
     }
-    if (abs(result) <= 1e-5) {
-      return 0;
-    } else if(result > 0.0) {
-      return 1;
-    } 
-    return -1;
-  }
-  double getValue() const {
-    return value_;
-  }
-  void *get_value(){
-      int *f = (int *)malloc(sizeof(float));
-      *f = value_;
-      return (void *)f;
-  }
+
+    void to_string(std::ostream &os) const override {
+        os << formatFloat(value_);
+    }
+
+    int compare(const TupleValue &other) const override {
+        float result;
+        if (other.get_type()==INTS){
+            const IntValue & int_other = (const IntValue &)other;
+            int int_value = int_other.getValue();
+            result = value_ - (float)int_value;
+        }else{
+            const FloatValue & float_other = (const FloatValue &)other;
+            result = value_ - float_other.value_;
+        }
+        if (result > 0) { // 浮点数没有考虑精度问题
+            return 1;
+        }
+        if (abs(result) <= 1e-5) {
+            return 0;
+        } else if(result > 0.0) {
+            return 1;
+        }
+        return -1;
+    }
+    double getValue() const {
+        return value_;
+    }
+    void *get_value() const {
+        int *f = (int *)malloc(sizeof(float));
+        *f = value_;
+        return (void *)f;
+    }
+    AttrType get_type() const {
+        return FLOATS;
+    }
 private:
-  /* @author: huahui  @what for: 浮点数默认格式化---------------------------------------------
-   */
-  std::string formatFloat(float f) const {
-    char s[100];
-    sprintf(s, "%.2f", f);
-    for(int i=strlen(s)-1; s[i]!='.'; i--) {
-      if(s[i]=='0') {
-        s[i] = '\0';
-      }
+    /* @author: huahui  @what for: 浮点数默认格式化---------------------------------------------
+     */
+    std::string formatFloat(float f) const {
+        char s[100];
+        sprintf(s, "%.2f", f);
+        for(int i=strlen(s)-1; s[i]!='.'; i--) {
+            if(s[i]=='0') {
+                s[i] = '\0';
+            }
+        }
+        if(s[strlen(s)-1] == '.') {
+            s[strlen(s)-1] = '\0';
+        }
+        return std::string(s);
     }
-    if(s[strlen(s)-1] == '.') {
-      s[strlen(s)-1] = '\0';
-    }
-    return std::string(s);
-  }
-  /* -------------------------------------------------------------------------------------*/
-  float value_;
+    /* -------------------------------------------------------------------------------------*/
+    float value_;
 };
+
 
 class StringValue : public TupleValue {
 public:
@@ -129,9 +159,12 @@ public:
   }
 
   /* @what for: expression */
-  void *get_value() {
+  void *get_value() const {
     char *s = strdup(value_.c_str());
     return (void *)s;
+  }
+  AttrType get_type() const {
+    return CHARS;
   }
 private:
   std::string value_;
@@ -149,7 +182,7 @@ public:
     year = (int)value[0]*256 + (int)value[1];
     month = (int)value[2];
     day = (int)value[3];
-    
+
     value_ = malloc(4);
     memcpy(value_, (const void *)value, 4);
   }
@@ -183,8 +216,11 @@ public:
     return strcmp(s1.c_str(), s2.c_str());
   }
   /* @what for: expression*/
-  void *get_value() {
+  void *get_value() const {
     return value_;
+  }
+  AttrType get_type() const {
+        return DATES;
   }
 private:
   int year, month, day; // 从字节数组中解析出的year, month, day
@@ -206,8 +242,11 @@ public:
   int compare(const TupleValue &other) const override {
     return 0;
   }
-  void *get_value() {
+  void *get_value() const {
       return nullptr;
+  }
+  AttrType get_type() const {
+      return UNDEFINED;
   }
 };
 /*end -----------------------------------------------------------------------------------------------------------------*/
