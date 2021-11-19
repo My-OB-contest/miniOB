@@ -54,13 +54,10 @@ public:
         float  right = *(float *)(right_pr);
         result = left - right;
         free(right_pr);
-        if (result > 0) { // 浮点数没有考虑精度问题
-            return 1;
+        if (result < 1e-6 && result > -1e-6) {
+            return 0;
         }
-        if (result < 0){
-            return -1;
-        }
-        return 0;
+        return result > 0 ? 1: -1;
     }
     const IntValue & int_other = (const IntValue &)other;
     return value_ - int_other.value_;
@@ -98,13 +95,10 @@ public:
             const FloatValue & float_other = (const FloatValue &)other;
             result = value_ - float_other.value_;
         }
-        if (result > 0) { // 浮点数没有考虑精度问题
-            return 1;
+        if (result < 1e-6 && result > -1e-6) {
+            return 0;
         }
-        if (result < 0) {
-            return -1;
-        }
-        return 0;
+        return result > 0 ? 1: -1;
     }
     double getValue() const {
         return value_;
