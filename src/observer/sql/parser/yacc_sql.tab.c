@@ -694,10 +694,10 @@ static const yytype_int16 yyrline[] =
      785,   794,   799,   804,   809,   817,   828,   835,   844,   846,
      853,   876,   879,   887,   898,   901,   915,   933,   936,   944,
      957,   971,   985,  1001,  1017,  1034,  1051,  1067,  1077,  1093,
-    1095,  1101,  1103,  1108,  1109,  1112,  1119,  1130,  1142,  1158,
-    1162,  1167,  1169,  1176,  1184,  1192,  1200,  1208,  1216,  1226,
-    1228,  1236,  1244,  1252,  1260,  1268,  1280,  1287,  1295,  1297,
-    1304,  1316,  1317,  1318,  1319,  1320,  1321,  1322,  1325,  1329
+    1095,  1101,  1103,  1108,  1109,  1112,  1119,  1130,  1141,  1157,
+    1161,  1166,  1168,  1175,  1183,  1191,  1199,  1207,  1215,  1225,
+    1227,  1235,  1243,  1251,  1259,  1267,  1279,  1286,  1294,  1296,
+    1303,  1315,  1316,  1317,  1318,  1319,  1320,  1321,  1324,  1328
 };
 #endif
 
@@ -2780,18 +2780,17 @@ yyreduce:
 		ExpList *explist_right = (ExpList *)malloc(sizeof(ExpList));
 		
 		explist_init_for_null(explist_right);
-		
 		ConditionExp cond_exp;
 		cond_exp.left = explist_left;
 		cond_exp.right = explist_right;
 		cond_exp.comp = IS;
 		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
 	}
-#line 2791 "yacc_sql.tab.c"
+#line 2790 "yacc_sql.tab.c"
     break;
 
   case 138: /* condition_exp: exp_list3 IS_A NOT NULL_A  */
-#line 1142 "yacc_sql.y"
+#line 1141 "yacc_sql.y"
                                     {
 		ExpList *explist_left = (ExpList *)((yyvsp[-3].exp_list));
 		ExpList *explist_right = (ExpList *)malloc(sizeof(ExpList));
@@ -2804,37 +2803,37 @@ yyreduce:
 		cond_exp.comp = ISNOT;
 		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
 	}
-#line 2808 "yacc_sql.tab.c"
+#line 2807 "yacc_sql.tab.c"
     break;
 
   case 139: /* join: INNER JOIN ID onwhere  */
-#line 1158 "yacc_sql.y"
+#line 1157 "yacc_sql.y"
                           {
         AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
         adv_selects->relations[adv_selects->relation_num++] = strdup((yyvsp[-1].string));
     }
-#line 2817 "yacc_sql.tab.c"
+#line 2816 "yacc_sql.tab.c"
     break;
 
   case 140: /* join: INNER JOIN ID onwhere join  */
-#line 1162 "yacc_sql.y"
+#line 1161 "yacc_sql.y"
                                 {
         AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
         adv_selects->relations[adv_selects->relation_num++] = strdup((yyvsp[-2].string));
     }
-#line 2826 "yacc_sql.tab.c"
+#line 2825 "yacc_sql.tab.c"
     break;
 
   case 142: /* onwhere: ON condition_exps  */
-#line 1169 "yacc_sql.y"
+#line 1168 "yacc_sql.y"
                         {
 
     }
-#line 2834 "yacc_sql.tab.c"
+#line 2833 "yacc_sql.tab.c"
     break;
 
   case 143: /* order: ORDER BY ID order2  */
-#line 1176 "yacc_sql.y"
+#line 1175 "yacc_sql.y"
                      {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2843,11 +2842,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-1].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2847 "yacc_sql.tab.c"
+#line 2846 "yacc_sql.tab.c"
     break;
 
   case 144: /* order: ORDER BY ID DOT ID order2  */
-#line 1184 "yacc_sql.y"
+#line 1183 "yacc_sql.y"
                               {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2856,11 +2855,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-1].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2860 "yacc_sql.tab.c"
+#line 2859 "yacc_sql.tab.c"
     break;
 
   case 145: /* order: ORDER BY ID ASC order2  */
-#line 1192 "yacc_sql.y"
+#line 1191 "yacc_sql.y"
                            {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2869,11 +2868,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-2].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2873 "yacc_sql.tab.c"
+#line 2872 "yacc_sql.tab.c"
     break;
 
   case 146: /* order: ORDER BY ID DOT ID ASC order2  */
-#line 1200 "yacc_sql.y"
+#line 1199 "yacc_sql.y"
                                   {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2882,11 +2881,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-2].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2886 "yacc_sql.tab.c"
+#line 2885 "yacc_sql.tab.c"
     break;
 
   case 147: /* order: ORDER BY ID DESC order2  */
-#line 1208 "yacc_sql.y"
+#line 1207 "yacc_sql.y"
                             {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2895,11 +2894,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-2].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2899 "yacc_sql.tab.c"
+#line 2898 "yacc_sql.tab.c"
     break;
 
   case 148: /* order: ORDER BY ID DOT ID DESC order2  */
-#line 1216 "yacc_sql.y"
+#line 1215 "yacc_sql.y"
                                    {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2908,11 +2907,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-2].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2912 "yacc_sql.tab.c"
+#line 2911 "yacc_sql.tab.c"
     break;
 
   case 150: /* order2: COMMA ID order2  */
-#line 1228 "yacc_sql.y"
+#line 1227 "yacc_sql.y"
                   {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2921,11 +2920,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-1].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2925 "yacc_sql.tab.c"
+#line 2924 "yacc_sql.tab.c"
     break;
 
   case 151: /* order2: COMMA ID DOT ID order2  */
-#line 1236 "yacc_sql.y"
+#line 1235 "yacc_sql.y"
                            {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2934,11 +2933,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-1].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2938 "yacc_sql.tab.c"
+#line 2937 "yacc_sql.tab.c"
     break;
 
   case 152: /* order2: COMMA ID ASC order2  */
-#line 1244 "yacc_sql.y"
+#line 1243 "yacc_sql.y"
                         {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2947,11 +2946,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-2].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2951 "yacc_sql.tab.c"
+#line 2950 "yacc_sql.tab.c"
     break;
 
   case 153: /* order2: COMMA ID DOT ID ASC order2  */
-#line 1252 "yacc_sql.y"
+#line 1251 "yacc_sql.y"
                                {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2960,11 +2959,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-2].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2964 "yacc_sql.tab.c"
+#line 2963 "yacc_sql.tab.c"
     break;
 
   case 154: /* order2: COMMA ID DESC order2  */
-#line 1260 "yacc_sql.y"
+#line 1259 "yacc_sql.y"
                          {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2973,11 +2972,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-2].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2977 "yacc_sql.tab.c"
+#line 2976 "yacc_sql.tab.c"
     break;
 
   case 155: /* order2: COMMA ID DOT ID DESC order2  */
-#line 1268 "yacc_sql.y"
+#line 1267 "yacc_sql.y"
                                 {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     OrderAttr order_attr;
@@ -2986,11 +2985,11 @@ yyreduce:
     order_attr.attribute_name = strdup((yyvsp[-2].string));
     adv_selects->order_attrs[adv_selects->order_num++] = order_attr;
   }
-#line 2990 "yacc_sql.tab.c"
+#line 2989 "yacc_sql.tab.c"
     break;
 
   case 156: /* group: GROUP BY ID group2  */
-#line 1280 "yacc_sql.y"
+#line 1279 "yacc_sql.y"
                      {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     GroupAttr group_attr;
@@ -2998,11 +2997,11 @@ yyreduce:
     group_attr.attribute_name = strdup((yyvsp[-1].string));
     adv_selects->group_attrs[adv_selects->group_num++] = group_attr;
   }
-#line 3002 "yacc_sql.tab.c"
+#line 3001 "yacc_sql.tab.c"
     break;
 
   case 157: /* group: GROUP BY ID DOT ID group2  */
-#line 1287 "yacc_sql.y"
+#line 1286 "yacc_sql.y"
                               {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     GroupAttr group_attr;
@@ -3010,11 +3009,11 @@ yyreduce:
     group_attr.attribute_name = strdup((yyvsp[-1].string));
     adv_selects->group_attrs[adv_selects->group_num++] = group_attr;
   }
-#line 3014 "yacc_sql.tab.c"
+#line 3013 "yacc_sql.tab.c"
     break;
 
   case 159: /* group2: COMMA ID group2  */
-#line 1297 "yacc_sql.y"
+#line 1296 "yacc_sql.y"
                     {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     GroupAttr group_attr;
@@ -3022,11 +3021,11 @@ yyreduce:
     group_attr.attribute_name = strdup((yyvsp[-1].string));
     adv_selects->group_attrs[adv_selects->group_num++] = group_attr;
   }
-#line 3026 "yacc_sql.tab.c"
+#line 3025 "yacc_sql.tab.c"
     break;
 
   case 160: /* group2: COMMA ID DOT ID group2  */
-#line 1304 "yacc_sql.y"
+#line 1303 "yacc_sql.y"
                            {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
     GroupAttr group_attr;
@@ -3034,70 +3033,70 @@ yyreduce:
     group_attr.attribute_name = strdup((yyvsp[-1].string));
     adv_selects->group_attrs[adv_selects->group_num++] = group_attr;
   }
-#line 3038 "yacc_sql.tab.c"
+#line 3037 "yacc_sql.tab.c"
     break;
 
   case 161: /* comOp: EQ  */
-#line 1316 "yacc_sql.y"
+#line 1315 "yacc_sql.y"
              { CONTEXT->comp[CONTEXT->comp_deep-1] = EQUAL_TO; }
-#line 3044 "yacc_sql.tab.c"
+#line 3043 "yacc_sql.tab.c"
     break;
 
   case 162: /* comOp: LT  */
-#line 1317 "yacc_sql.y"
+#line 1316 "yacc_sql.y"
          { CONTEXT->comp[CONTEXT->comp_deep-1] = LESS_THAN; }
-#line 3050 "yacc_sql.tab.c"
+#line 3049 "yacc_sql.tab.c"
     break;
 
   case 163: /* comOp: GT  */
-#line 1318 "yacc_sql.y"
+#line 1317 "yacc_sql.y"
          { CONTEXT->comp[CONTEXT->comp_deep-1] = GREAT_THAN; }
-#line 3056 "yacc_sql.tab.c"
+#line 3055 "yacc_sql.tab.c"
     break;
 
   case 164: /* comOp: LE  */
-#line 1319 "yacc_sql.y"
+#line 1318 "yacc_sql.y"
          { CONTEXT->comp[CONTEXT->comp_deep-1] = LESS_EQUAL; }
-#line 3062 "yacc_sql.tab.c"
+#line 3061 "yacc_sql.tab.c"
     break;
 
   case 165: /* comOp: GE  */
-#line 1320 "yacc_sql.y"
+#line 1319 "yacc_sql.y"
          { CONTEXT->comp[CONTEXT->comp_deep-1] = GREAT_EQUAL; }
-#line 3068 "yacc_sql.tab.c"
+#line 3067 "yacc_sql.tab.c"
     break;
 
   case 166: /* comOp: NE  */
-#line 1321 "yacc_sql.y"
+#line 1320 "yacc_sql.y"
          { CONTEXT->comp[CONTEXT->comp_deep-1] = NOT_EQUAL; }
-#line 3074 "yacc_sql.tab.c"
+#line 3073 "yacc_sql.tab.c"
     break;
 
   case 167: /* comOp: IN  */
-#line 1322 "yacc_sql.y"
+#line 1321 "yacc_sql.y"
          { CONTEXT->comp[CONTEXT->comp_deep-1] = IN_SUB;
             printf("%d\n\n",CONTEXT->comp[CONTEXT->comp_deep-1]);
             }
-#line 3082 "yacc_sql.tab.c"
+#line 3081 "yacc_sql.tab.c"
     break;
 
   case 168: /* comOp: NOT IN  */
-#line 1325 "yacc_sql.y"
+#line 1324 "yacc_sql.y"
              { CONTEXT->comp[CONTEXT->comp_deep-1] = NOT_IN_SUB;}
-#line 3088 "yacc_sql.tab.c"
+#line 3087 "yacc_sql.tab.c"
     break;
 
   case 169: /* load_data: LOAD DATA INFILE SSS INTO TABLE ID SEMICOLON  */
-#line 1330 "yacc_sql.y"
+#line 1329 "yacc_sql.y"
                 {
 		  CONTEXT->ssql->flag = SCF_LOAD_DATA;
 			load_data_init(&CONTEXT->ssql->sstr.load_data, (yyvsp[-1].string), (yyvsp[-4].string));
 		}
-#line 3097 "yacc_sql.tab.c"
+#line 3096 "yacc_sql.tab.c"
     break;
 
 
-#line 3101 "yacc_sql.tab.c"
+#line 3100 "yacc_sql.tab.c"
 
       default: break;
     }
@@ -3290,7 +3289,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1335 "yacc_sql.y"
+#line 1334 "yacc_sql.y"
 
 //_____________________________________________________________________
 extern void scan_string(const char *str, yyscan_t scanner);

@@ -1132,7 +1132,6 @@ condition_exp:
 		ExpList *explist_right = (ExpList *)malloc(sizeof(ExpList));
 		
 		explist_init_for_null(explist_right);
-		
 		ConditionExp cond_exp;
 		cond_exp.left = explist_left;
 		cond_exp.right = explist_right;

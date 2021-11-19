@@ -84,7 +84,9 @@ void explist_init_for_null(ExpList *explist) {
   exp->left_exp = NULL;
   exp->calop = STARTCALOP;
   exp->num = 1;
-  
+
+  exp->sub_select_index = -1;
+
   explist->exp = exp;
   explist->left_explist = NULL;
   explist->calop = STARTCALOP;
