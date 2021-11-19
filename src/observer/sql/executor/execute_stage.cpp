@@ -544,26 +544,47 @@ RC ExecuteStage::projection(std::vector<TupleSet> &tuplesets,const Selects &sele
     TupleSchema tmpschema;
     int attrindex[40];
     int indexcount=0;
-    for (int i = selects.attr_num-1; i >=0 ; --i) {
-        for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
-            if ((!selects.attributes[i].relation_name || strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0) && strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
-                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), selects.relation_num>1);
-                attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
-                break;
-            }
-            if ((!selects.attributes[i].relation_name || strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0) && strcmp("*",selects.attributes[i].attribute_name) == 0){
-                tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), selects.relation_num>1);
-                attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+    if (selects.relation_num >1 ){
+        for (int i = selects.attr_num-1; i >=0 ; --i) {
+            for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
+                if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
+                    tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+                    attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+                    break;
+                }
+                if (strcmp(it_field->table_name(),selects.attributes[i].relation_name) == 0 && strcmp("*",selects.attributes[i].attribute_name) == 0){
+                    tmpschema.add_if_not_exists(static_cast<AttrType>(it_field->getAggtype()), it_field->table_name(), it_field->field_name(), true);
+                    attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+                }
             }
         }
-    }
-    tmptupset.set_schema(tmpschema);
-    for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
-        Tuple tmptuple;
-        for (int i = 0; i < indexcount; ++i) {
-            tmptuple.add(it_tuple->get_pointer(attrindex[i]));
+        tmptupset.set_schema(tmpschema);
+        for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
+            Tuple tmptuple;
+            for (int i = 0; i < indexcount; ++i) {
+                tmptuple.add(it_tuple->get_pointer(attrindex[i]));
+            }
+            tmptupset.add(std::move(tmptuple));
         }
-        tmptupset.add(std::move(tmptuple));
+    }else{
+        for (int i = selects.attr_num-1; i >=0 ; --i) {
+            for(auto it_field = tuplesets[0].get_schema().fields().begin();it_field != tuplesets[0].get_schema().fields().end() ; ++it_field){
+                if ( strcmp(it_field->field_name(),selects.attributes[i].attribute_name) == 0){
+                    tmpschema.add_if_not_exists(it_field->type(), it_field->table_name(), it_field->field_name(),
+                                                false);
+                    attrindex[indexcount++]=it_field-tuplesets[0].get_schema().fields().begin();
+                    break;
+                }
+            }
+        }
+        tmptupset.set_schema(tmpschema);
+        for(auto it_tuple = tuplesets[0].tuples().begin();it_tuple != tuplesets[0].tuples().end();++it_tuple){
+            Tuple tmptuple;
+            for (int i = 0; i < indexcount; ++i) {
+                tmptuple.add(it_tuple->get_pointer(attrindex[i]));
+            }
+            tmptupset.add(std::move(tmptuple));
+        }
     }
     tuplesets.pop_back();
     tuplesets.push_back(std::move(tmptupset));
