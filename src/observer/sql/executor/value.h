@@ -51,7 +51,7 @@ public:
         float  left = (float )value_;
         float result;
         void *right_pr = other.get_value();
-        float  right = *(float*)right_pr;
+        float  right = *(float *)(right_pr);
         result = left - right;
         free(right_pr);
         if (result > 0) { // 浮点数没有考虑精度问题
@@ -114,7 +114,7 @@ public:
         return value_;
     }
     void *get_value() const {
-        int *f = (int *)malloc(sizeof(float));
+        float *f = (float *)malloc(sizeof(float));
         *f = value_;
         return (void *)f;
     }
