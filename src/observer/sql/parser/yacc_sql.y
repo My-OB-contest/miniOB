@@ -547,7 +547,7 @@ value:
 
     
 delete:		/*  delete 语句的语法解析树*/
-    DELETE FROM ID where SEMICOLON 
+    delete_handle FROM ID where SEMICOLON
 		{
 			CONTEXT->ssql->flag = SCF_DELETE;//"delete";
 			deletes_init_relation(&CONTEXT->ssql->sstr.deletion, $3);
@@ -556,8 +556,15 @@ delete:		/*  delete 语句的语法解析树*/
 			CONTEXT->condition_length[0] = 0;
     }
     ;
+delete_handle:
+    DELETE{
+        CONTEXT->comp_deep++;
+    }
+    ;
+
+
 update:			/*  update 语句的语法解析树*/
-    UPDATE ID SET ID EQ value where SEMICOLON
+    update_handle ID SET ID EQ value where SEMICOLON
 		{
 			CONTEXT->ssql->flag = SCF_UPDATE;//"update";
 			Value *value = &CONTEXT->values[0];
@@ -567,7 +574,11 @@ update:			/*  update 语句的语法解析树*/
 		}
     ;
 
-
+update_handle:
+    DELETE{
+        CONTEXT->comp_deep++;
+    }
+    ;
 
 select_clasue:
     select SEMICOLON{
