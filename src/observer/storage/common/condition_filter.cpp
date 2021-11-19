@@ -876,3 +876,207 @@ AttrType ConditionExpsFilter::getType(const char *table_name, const char *attrib
   return tuple_schema_.field(index).type();
 }
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+
+RC SubSelConditionFilter::init(const Tuple *tuple, Condition *sub_sel_condition,const TupleSchema &tupleSchema){
+    comp_op_ = sub_sel_condition->comp;
+    if (sub_sel_condition->left_select_index != -1){
+        left_.is_select = true;
+    }
+    if (sub_sel_condition->right_select_index != -1){
+        right_.is_select = true;
+    }
+    if(sub_sel_condition->left_is_attr){
+        int index = tupleSchema.index_of_field(sub_sel_condition->left_attr.relation_name,sub_sel_condition->left_attr.attribute_name);
+        left_.is_select = false;
+        left_.tupleValue_ = tuple->get_pointer(index);
+        left_.attrtype = tupleSchema.field(index).type();
+    }
+    if(sub_sel_condition->right_is_attr){
+        int index = tupleSchema.index_of_field(sub_sel_condition->right_attr.relation_name,sub_sel_condition->right_attr.attribute_name);
+        right_.is_select = false;
+        right_.tupleValue_ = tuple->get_pointer(index);
+        right_.attrtype = tupleSchema.field(index).type();
+    }
+    if (sub_sel_condition->left_is_attr == 0 && sub_sel_condition->left_select_index == -1){
+        switch (sub_sel_condition->left_value.type) {
+            case INTS: {
+                int i = *(int *)sub_sel_condition->left_value.data;
+                std::shared_ptr<IntValue> p(new IntValue(i));
+                left_.is_select = false;
+                left_.tupleValue_ = p;
+                left_.attrtype = INTS;
+            }
+                break;
+            case FLOATS: {
+                float f = *(float *)sub_sel_condition->left_value.data;
+                std::shared_ptr<FloatValue> p(new FloatValue(f));
+                left_.is_select = false;
+                left_.tupleValue_ = p;
+                left_.attrtype = FLOATS;
+            }
+                break;
+            case CHARS: {
+                char *s = (char *)sub_sel_condition->left_value.data;
+                std::shared_ptr<StringValue> p(new StringValue(s));
+                left_.is_select = false;
+                left_.tupleValue_ = p;
+                left_.attrtype = CHARS;
+            }
+                break;
+
+            case DATES: {
+                const unsigned char *s = (const unsigned char *)(sub_sel_condition->left_value.data);
+                std::shared_ptr<DateValue> p(new DateValue(s));
+                left_.is_select = false;
+                left_.tupleValue_ = p;
+                left_.attrtype = DATES;
+            }
+                break;
+                /*end ----------------------------------------------------------------------------------------------*/
+            default: {
+                LOG_PANIC("Unsupported field type. type=%d", sub_sel_condition->left_value.type);
+            }
+        }
+    }
+    if (sub_sel_condition->right_is_attr == 0 && sub_sel_condition->right_select_index == -1){
+        switch (sub_sel_condition->right_value.type) {
+            case INTS: {
+                int i = *(int *)sub_sel_condition->right_value.data;
+                std::shared_ptr<IntValue> p(new IntValue(i));
+                right_.is_select = false;
+                right_.tupleValue_ = p;
+                right_.attrtype = INTS;
+            }
+                break;
+            case FLOATS: {
+                float f = *(float *)sub_sel_condition->right_value.data;
+                std::shared_ptr<FloatValue> p(new FloatValue(f));
+                right_.is_select = false;
+                right_.tupleValue_ = p;
+                right_.attrtype = FLOATS;
+            }
+                break;
+            case CHARS: {
+                char *s = (char *)sub_sel_condition->right_value.data;
+                std::shared_ptr<StringValue> p(new StringValue(s));
+                right_.is_select = false;
+                right_.tupleValue_ = p;
+                right_.attrtype = CHARS;
+            }
+                break;
+
+            case DATES: {
+                const unsigned char *s = (const unsigned char *)(sub_sel_condition->right_value.data);
+                std::shared_ptr<DateValue> p(new DateValue(s));
+                right_.is_select = false;
+                right_.tupleValue_ = p;
+                right_.attrtype = DATES;
+            }
+                break;
+                /*end ----------------------------------------------------------------------------------------------*/
+            default: {
+                LOG_PANIC("Unsupported field type. type=%d", sub_sel_condition->right_value.type);
+            }
+        }
+    }
+    return RC::SUCCESS;
+}
+
+RC SubSelConditionFilter::check_subsel_tupset(std::pair<TupleSet,TupleSet> &tupleset_pair) const{
+    if (left_.is_select == true && right_.is_select == false){
+        if (comp_op_ == IN_SUB || comp_op_ == NOT_IN_SUB){
+            LOG_ERROR("left of in cant be sub_select!");
+            return RC::SCHEMA;
+        }
+        if (tupleset_pair.first.schema().fields().size() != 1){
+            LOG_ERROR("left filed too many!");
+            return RC::SCHEMA;
+        }
+        if (tupleset_pair.first.schema().field(0).type() != right_.attrtype){
+            LOG_ERROR("compare type not match!");
+            return RC::SCHEMA;
+        }
+    } else if(left_.is_select == false && right_.is_select == true){
+        if (tupleset_pair.second.schema().fields().size() != 1){
+            LOG_ERROR("right filed too many!");
+            return RC::SCHEMA;
+        }
+        if (tupleset_pair.second.schema().field(0).type() != left_.attrtype){
+            LOG_ERROR("compare type not match!");
+            return RC::SCHEMA;
+        }
+    } else if(left_.is_select == true && right_.is_select == true){
+        if (tupleset_pair.first.schema().fields().size() != 1 || tupleset_pair.second.schema().fields().size() != 1){
+            LOG_ERROR("left and right filed too many!");
+            return RC::SCHEMA;
+        }
+        if (tupleset_pair.first.schema().field(0).type() != tupleset_pair.second.schema().field(0).type()){
+            LOG_ERROR("compare type not match!");
+            return RC::SCHEMA;
+        }
+    } else{
+        LOG_ERROR("filter never go here!");
+        return RC::SCHEMA;
+    }
+    return RC::SUCCESS;
+}
+
+bool SubSelConditionFilter::filter(std::pair<TupleSet,TupleSet> &tupleset_pair) const {
+    if (comp_op_ >= EQUAL_TO && comp_op_ <= GREAT_THAN){
+        int cmp_result;
+        if (left_.is_select == true && right_.is_select == false){
+            cmp_result = tupleset_pair.first.get(0).get(0).compare(*right_.tupleValue_);
+        } else if(left_.is_select == false && right_.is_select == true){
+            cmp_result = left_.tupleValue_->compare(tupleset_pair.second.get(0).get(0));
+        } else if(left_.is_select == true && right_.is_select == true){
+            cmp_result = tupleset_pair.first.get(0).get(0).compare(tupleset_pair.second.get(0).get(0));
+        } else{
+            LOG_ERROR("filter never go here!");
+        }
+        switch (comp_op_) {
+            case EQUAL_TO:
+                return 0 == cmp_result;
+            case LESS_EQUAL:
+                return cmp_result <= 0;
+            case NOT_EQUAL:
+                return cmp_result != 0;
+            case LESS_THAN:
+                return cmp_result < 0;
+            case GREAT_EQUAL:
+                return cmp_result >= 0;
+            case GREAT_THAN:
+                return cmp_result > 0;
+            default:
+                return false;
+        }
+        LOG_ERROR("should never go here!");
+        return false;
+    } else if(comp_op_ == IN_SUB ){
+        if ( tupleset_pair.second.size() == 0){
+            return false;
+        }
+        for (int i = 0; i < tupleset_pair.second.size(); ++i) {
+            if (left_.tupleValue_->compare(tupleset_pair.second.get(i).get(0)) == 0){
+                return true;
+            }
+        }
+        return false;
+    } else if( comp_op_ == NOT_IN_SUB ){
+        if ( tupleset_pair.second.size() == 0){
+            return true;
+        }
+        for (int i = 0; i < tupleset_pair.second.size(); ++i) {
+            if (left_.tupleValue_->compare(tupleset_pair.second.get(i).get(0)) != 0){
+                continue;
+            } else{
+                return false;
+            }
+        }
+        return true;
+    } else{
+        LOG_ERROR("not support null error");
+        return false;
+    }
+}
+

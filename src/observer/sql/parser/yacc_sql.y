@@ -22,8 +22,10 @@ typedef struct ParserContext {
   Value values[MAX_NUM];
   Value insert_values[MAX_NUM][MAX_NUM];
   ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
-  CompOp comp;
-	char id[MAX_NUM];
+  CompOp comp[MAX_NUM];
+  size_t comp_deep;
+    char id[MAX_NUM];
+    DeepStack deep_stack;
 } ParserContext;
 
 //获取子串
@@ -123,6 +125,7 @@ ParserContext *get_context(yyscan_t scanner)
         NULLABLE /* @author: huahui @what for: null */
         IS_A      /* @author: huahui @what for: null */
         UNIQUE  /* @author: fzh @what for: unique index */
+        IN      /* @author: fzh @what for: sub_select */
         PLUS    /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
         MINUS
         DIVIDE   /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
@@ -130,6 +133,7 @@ ParserContext *get_context(yyscan_t scanner)
         BY   
         ASC
         GROUP    /* @what for: group-by*/
+
 
 
 /* @author: huahui &what for: 聚合
@@ -167,11 +171,13 @@ ParserContext *get_context(yyscan_t scanner)
 %token <string> STRING_V
 // 非终结符
 
+%type <number> select;
 %type <number> type;
 %type <number> text;
 //%type <condition1> condition;
 %type <value1> value;
 %type <number> number;
+
 /* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 %type <exp> exp;
 %type <exp> exps;
@@ -190,7 +196,7 @@ commands:		//commands or sqls. parser starts here.
     ;
 
 command:
-	  select  
+	  select_clasue
 	| insert
 	| update
 	| delete
@@ -562,79 +568,101 @@ update:			/*  update 语句的语法解析树*/
 		}
     ;
 
-/* @author: huahui  @what for: expression <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+
+
+select_clasue:
+    select SEMICOLON{
+        CONTEXT->ssql->flag=SCF_SELECT;
+    }
+
 select:
-  SELECT relattrexp FROM ID rel_list where SEMICOLON {  
-    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+  select_handle relattrexp FROM ID rel_list where  {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-    CONTEXT->ssql->flag=SCF_SELECT;
     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
     //临时变量清零
-    CONTEXT->condition_length=0;
-    CONTEXT->from_length=0;
-    CONTEXT->select_length=0;
-    CONTEXT->value_length = 0;
+     CONTEXT->condition_length=0;
+     CONTEXT->from_length=0;
+     int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
+     CONTEXT->deep_stack.top--;
+     CONTEXT->comp_deep--;
+     $$=tmp;
   }
-  | SELECT relattrexp FROM ID join where SEMICOLON      
+  | select_handle relattrexp FROM ID join where
   {
-     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
      adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-     CONTEXT->ssql->flag=SCF_SELECT;
      advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
      //临时变量清零
      CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
-     CONTEXT->select_length=0;
-     CONTEXT->value_length = 0;
+     int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
+     CONTEXT->deep_stack.top--;
+     CONTEXT->comp_deep--;
+     $$=tmp;
   }
-  | SELECT relattrexp FROM ID rel_list where order SEMICOLON {  
-    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+  | select_handle relattrexp FROM ID rel_list where order  {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-    CONTEXT->ssql->flag=SCF_SELECT;
     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
     //临时变量清零
-    CONTEXT->condition_length=0;
-    CONTEXT->from_length=0;
-    CONTEXT->select_length=0;
-    CONTEXT->value_length = 0;
+     CONTEXT->condition_length=0;
+     CONTEXT->from_length=0;
+     int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
+     CONTEXT->deep_stack.top--;
+     CONTEXT->comp_deep--;
+     $$=tmp;
   }
-  | SELECT relattrexp FROM ID join where order SEMICOLON      
+  | select_handle relattrexp FROM ID join where order
   {
-     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
      adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-     CONTEXT->ssql->flag=SCF_SELECT;
      advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
      //临时变量清零
      CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
-     CONTEXT->select_length=0;
-     CONTEXT->value_length = 0;
+     int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
+     CONTEXT->deep_stack.top--;
+     CONTEXT->comp_deep--;
+     $$=tmp;
   }
-  | SELECT relattrexp FROM ID rel_list where group SEMICOLON {  
-    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+  | select_handle relattrexp FROM ID rel_list where group  {
+    AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-    CONTEXT->ssql->flag=SCF_SELECT;
     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
     //临时变量清零
-    CONTEXT->condition_length=0;
-    CONTEXT->from_length=0;
-    CONTEXT->select_length=0;
-    CONTEXT->value_length = 0;
+     CONTEXT->condition_length=0;
+     CONTEXT->from_length=0;
+     int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
+     CONTEXT->deep_stack.top--;
+     CONTEXT->comp_deep--;
+     $$=tmp;
   }
-  | SELECT relattrexp FROM ID join where group SEMICOLON      
+  | select_handle relattrexp FROM ID join where group
   {
-     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
      adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-     CONTEXT->ssql->flag=SCF_SELECT;
      advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
      //临时变量清零
      CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
-     CONTEXT->select_length=0;
-     CONTEXT->value_length = 0;
+     int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
+     CONTEXT->deep_stack.top--;
+     CONTEXT->comp_deep--;
+     $$=tmp;
   }
   ;
-  
+
+  select_handle:
+  SELECT
+  {
+     CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top] = CONTEXT->select_length;
+     CONTEXT->deep_stack.top++;
+     CONTEXT->comp_deep++;
+     CONTEXT->select_length++;
+     CONTEXT->ssql->sstr.adv_selection[0].select_num=CONTEXT->select_length;
+  }
+
 relattrexp:
   exp_list relattrexp2 {
     RelAttrExp exp;
@@ -642,7 +670,7 @@ relattrexp:
     exp.is_star = 0;
     exp.explist = (ExpList *)($1);
     exp.num = exp.explist->num;
-    advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+    advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
   }
   | MINUS exp_list relattrexp2 {
     ExpList *explist = (ExpList *)($2);
@@ -656,7 +684,7 @@ relattrexp:
     exp.is_star = 0;
     exp.explist = (ExpList *)($2);
     exp.num = exp.explist->num;
-    advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+    advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
   }
     /* @author: huahui 
      * @what for: 必做题，聚合查询 
@@ -665,22 +693,22 @@ relattrexp:
     | COUNT LBRACE ID RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGCOUNT, NULL, $3);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | COUNT LBRACE STAR RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGCOUNT, NULL, "*");
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | COUNT LBRACE ID DOT ID RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGCOUNT, $3, $5);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | COUNT LBRACE ID DOT STAR RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGCOUNT, $3, "*");
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | COUNT LBRACE number RBRACE relattrexp2 {
             RelAttrExp exp;
@@ -688,7 +716,7 @@ relattrexp:
             exp.is_attr = 0;
             exp.agg_val_type = AGGNUMBER;
             exp.agg_val.intv = $3;
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | COUNT LBRACE floatnumber RBRACE relattrexp2 {
             RelAttrExp exp;
@@ -697,22 +725,22 @@ relattrexp:
             exp.agg_val_type = AGGFLOAT;
             exp.agg_val.floatv = ($3).floats;
             exp.agg_val.str = strdup(($3).str);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
     | MAX LBRACE ID RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGMAX, NULL, $3);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | MAX LBRACE STAR RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGMAX, NULL, "*");
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | MAX LBRACE ID DOT ID RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGMAX, $3, $5);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | MAX LBRACE number RBRACE relattrexp2 {
             RelAttrExp exp;
@@ -720,7 +748,7 @@ relattrexp:
             exp.is_attr = 0;
             exp.agg_val_type = AGGNUMBER;
             exp.agg_val.intv = $3;
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | MAX LBRACE floatnumber RBRACE relattrexp2 {
             RelAttrExp exp;
@@ -729,22 +757,22 @@ relattrexp:
             exp.agg_val_type = AGGFLOAT;
             exp.agg_val.floatv = ($3).floats;
             exp.agg_val.str = strdup(($3).str);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
     | MIN LBRACE ID RBRACE relattrexp2 {  
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGMIN, NULL, $3);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | MIN LBRACE STAR RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGMIN, NULL, "*");
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | MIN LBRACE ID DOT ID RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGMIN, $3, $5);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | MIN LBRACE number RBRACE relattrexp2 { 
             RelAttrExp exp;
@@ -752,7 +780,7 @@ relattrexp:
             exp.is_attr = 0;
             exp.agg_val_type = AGGNUMBER;
             exp.agg_val.intv = $3;
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | MIN LBRACE floatnumber RBRACE relattrexp2 {
             RelAttrExp exp;
@@ -761,22 +789,22 @@ relattrexp:
             exp.agg_val_type = AGGFLOAT;
             exp.agg_val.floatv = ($3).floats;
             exp.agg_val.str = strdup(($3).str);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
     | AVG LBRACE ID RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGAVG, NULL, $3);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | AVG LBRACE STAR RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGAVG, NULL, "*");
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | AVG LBRACE ID DOT ID RBRACE relattrexp2 {
             RelAttrExp exp;
             relation_agg_relattrexp_init(&exp, AGGAVG, $3, $5);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | AVG LBRACE number RBRACE relattrexp2 {
             RelAttrExp exp;
@@ -784,7 +812,7 @@ relattrexp:
             exp.is_attr = 0;
             exp.agg_val_type = AGGNUMBER;
             exp.agg_val.intv = $3;
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
         | AVG LBRACE floatnumber RBRACE relattrexp2 {
             RelAttrExp exp;
@@ -793,7 +821,7 @@ relattrexp:
             exp.agg_val_type = AGGFLOAT;
             exp.agg_val.floatv = ($3).floats;
             exp.agg_val.str = strdup(($3).str);
-            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+            advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
         }
     /* ------------------------------------------------------------------------------------------------------------
      */
@@ -802,14 +830,14 @@ relattrexp:
       exp.agg_type = NOTAGG;
       exp.is_star = 1;
       exp.relation_name = NULL;
-      advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+      advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
     }
     | ID DOT STAR relattrexp2 {
       RelAttrExp exp;
       exp.agg_type = NOTAGG;
       exp.is_star = 1;
       exp.relation_name = strdup($1);
-      advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection, &exp);
+      advselects_append_relattrexp(&CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]], &exp);
     }
     ;
     
@@ -937,6 +965,7 @@ exp:
     exp->left_exp = NULL;
     exp->calop = STARTCALOP;
     exp->num = 1;
+    exp->sub_select_index=-1;
     $$ = (void *)exp;
   }
   | ID DOT ID {
@@ -950,6 +979,7 @@ exp:
     exp->left_exp = NULL;
     exp->calop = STARTCALOP;
     exp->num = 1;
+    exp->sub_select_index=-1;
     $$ = (void *)exp;
   }
   | NNNUMBER {
@@ -965,6 +995,7 @@ exp:
     exp->left_exp = NULL;
     exp->calop = STARTCALOP;
     exp->num = 1;
+    exp->sub_select_index=-1;
     $$ = (void *)exp;
   }
   | NNFLOAT {
@@ -980,6 +1011,7 @@ exp:
     exp->left_exp = NULL;
     exp->calop = STARTCALOP;
     exp->num = 1;
+    exp->sub_select_index=-1;
     $$ = (void *)exp;
   }
   | SSS {
@@ -996,6 +1028,7 @@ exp:
     exp->left_exp = NULL;
     exp->calop = STARTCALOP;
     exp->num = 1;
+    exp->sub_select_index=-1;
     $$ = (void *)exp;
   }
   | DATE {
@@ -1012,6 +1045,7 @@ exp:
     exp->left_exp = NULL;
     exp->calop = STARTCALOP;
     exp->num = 1;
+    exp->sub_select_index=-1;
     $$ = (void *)exp;
   }
   | NULL_A {
@@ -1027,6 +1061,7 @@ exp:
     exp->left_exp = NULL;
     exp->calop = STARTCALOP;
     exp->num = 1;
+    exp->sub_select_index=-1;
     $$ = (void *)exp;
   }
   | LBRACE exp_list3 RBRACE {
@@ -1036,14 +1071,29 @@ exp:
     exp->explist = (ExpList *)($2);
     exp->num = exp->explist->num;
     exp->left_exp = NULL;
+    exp->sub_select_index=-1;
     $$ = (void *)exp;
+  }
+  | LBRACE select RBRACE {
+      Exp *exp = (Exp *)malloc(sizeof(Exp));
+      exp->have_brace = 0;
+      exp->have_negative = 0;
+      exp->explist = NULL;
+      exp->is_attr = 0;
+      exp->relation_name = NULL;
+      exp->attribute_name = NULL;
+      exp->left_exp = NULL;
+      exp->calop = STARTCALOP;
+      exp->num = 1;
+      exp->sub_select_index=$2;
+      $$ = (void *)exp;
   }
   ;
 
 rel_list:
     /* empty */
     | COMMA ID rel_list {	
-        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
         adv_selects->relations[adv_selects->relation_num++] = strdup($2);
 		  }
     ;
@@ -1065,14 +1115,15 @@ condition_exps:
   ;
 
 
-condition_exp: 
+condition_exp:
   exp_list3 comOp exp_list3 {
     ExpList *explist_left = (ExpList *)($1);
     ExpList *explist_right = (ExpList *)($3);
     ConditionExp cond_exp;
     cond_exp.left = explist_left;
     cond_exp.right = explist_right;
-    cond_exp.comp = CONTEXT->comp;
+    cond_exp.comp = CONTEXT->comp[CONTEXT->comp_deep-1];
+    printf("%d\n\n",CONTEXT->comp[CONTEXT->comp_deep-1]);
     CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
   }
   /* @author: huahui  @what for: null ------------------------------------------------------------------------*/
@@ -1105,11 +1156,11 @@ condition_exp:
 
 join:
     INNER JOIN ID onwhere {
-        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
         adv_selects->relations[adv_selects->relation_num++] = strdup($3);
     }
     |INNER JOIN ID onwhere join {
-        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection;
+        AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
         adv_selects->relations[adv_selects->relation_num++] = strdup($3);
     }
     ;
@@ -1262,12 +1313,16 @@ group2:
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 comOp:
-  	  EQ { CONTEXT->comp = EQUAL_TO; }
-    | LT { CONTEXT->comp = LESS_THAN; }
-    | GT { CONTEXT->comp = GREAT_THAN; }
-    | LE { CONTEXT->comp = LESS_EQUAL; }
-    | GE { CONTEXT->comp = GREAT_EQUAL; }
-    | NE { CONTEXT->comp = NOT_EQUAL; }
+  	  EQ { CONTEXT->comp[CONTEXT->comp_deep-1] = EQUAL_TO; }
+    | LT { CONTEXT->comp[CONTEXT->comp_deep-1] = LESS_THAN; }
+    | GT { CONTEXT->comp[CONTEXT->comp_deep-1] = GREAT_THAN; }
+    | LE { CONTEXT->comp[CONTEXT->comp_deep-1] = LESS_EQUAL; }
+    | GE { CONTEXT->comp[CONTEXT->comp_deep-1] = GREAT_EQUAL; }
+    | NE { CONTEXT->comp[CONTEXT->comp_deep-1] = NOT_EQUAL; }
+    | IN { CONTEXT->comp[CONTEXT->comp_deep-1] = IN_SUB;
+            printf("%d\n\n",CONTEXT->comp[CONTEXT->comp_deep-1]);
+            }
+    | NOT IN { CONTEXT->comp[CONTEXT->comp_deep-1] = NOT_IN_SUB;}
     ;
 
 load_data:
