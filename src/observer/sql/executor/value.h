@@ -54,7 +54,7 @@ public:
         float  right = *(float *)(right_pr);
         result = left - right;
         free(right_pr);
-        if (result < 1e-6 && result > -1e-6) {
+        if (result < 1e-4 && result > -1e-4) {
             return 0;
         }
         return result > 0 ? 1: -1;
@@ -95,7 +95,7 @@ public:
             const FloatValue & float_other = (const FloatValue &)other;
             result = value_ - float_other.value_;
         }
-        if (result < 1e-6 && result > -1e-6) {
+        if (result < 1e-4 && result > -1e-4) {
             return 0;
         }
         return result > 0 ? 1: -1;
