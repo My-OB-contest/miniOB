@@ -106,7 +106,9 @@ protected:
 
   /* @author: fzh  @what for: sub_select <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
   bool if_need_change(Selects &selects,TupleSet &res_tupleset,Query *sql);
+  bool if_need_change(TupleSet &res_tupleset,Query *sql,int curpos);
   RC change_sub_select(Selects &selects,TupleSet &res_tupleset,Query *sql,int cur_tuple_pos);
+  RC change_sub_select(TupleSet &res_tupleset,Query *sql,int cur_tuple_pos,int sel_pos);
   RC check_sub_select(Selects &selects,Query *sql,std::vector<Condition> &sub_sel_conditions);
   RC do_sub_sel(const char *db, Query *sql, SessionEvent *session_event,std::vector<std::pair<TupleSet,TupleSet>> &tupleset_pair_list,std::vector<Condition> &sub_sel_conditions);
   /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
