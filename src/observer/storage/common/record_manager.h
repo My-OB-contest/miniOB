@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_COMMON_RECORD_MANAGER_H_
 #define __OBSERVER_STORAGE_COMMON_RECORD_MANAGER_H_
 
+#include <sstream>
 #include "storage/default/disk_buffer_pool.h"
 
 typedef int SlotNum;
@@ -104,7 +105,9 @@ public:
 
 private:
     char* transToString(int num){
-      std::string str = std::to_string(num);
+      std::stringstream ss;
+      ss << num;
+      std::string str = ss.str();
       while (str.size() < 4) str = "0" + str;
       return (char*)(str.data());
    }
