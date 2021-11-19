@@ -14,14 +14,14 @@
 typedef struct ParserContext {
   Query * ssql;
   size_t select_length;
-  size_t condition_length;
+  size_t condition_length[MAX_NUM];
   size_t from_length;
   size_t value_length;
   size_t value_list_length;
   size_t insert_value_length[MAX_NUM];
   Value values[MAX_NUM];
   Value insert_values[MAX_NUM][MAX_NUM];
-  ConditionExp condition_exps[MAX_NUM]; // 删掉Condition，增加ConditionExp
+  ConditionExp condition_exps[MAX_NUM][MAX_NUM]; // 删掉Condition，增加ConditionExp
   CompOp comp[MAX_NUM];
   size_t comp_deep;
     char id[MAX_NUM];
@@ -45,7 +45,6 @@ void yyerror(yyscan_t scanner, const char *str)
   ParserContext *context = (ParserContext *)(yyget_extra(scanner));
   query_reset(context->ssql);
   context->ssql->flag = SCF_ERROR;
-  context->condition_length = 0;
   context->from_length = 0;
   context->select_length = 0;
   context->value_length = 0;
@@ -553,8 +552,8 @@ delete:		/*  delete 语句的语法解析树*/
 			CONTEXT->ssql->flag = SCF_DELETE;//"delete";
 			deletes_init_relation(&CONTEXT->ssql->sstr.deletion, $3);
 			deletes_set_conditions(&CONTEXT->ssql->sstr.deletion, 
-					CONTEXT->condition_exps, CONTEXT->condition_length);
-			CONTEXT->condition_length = 0;	
+					CONTEXT->condition_exps[0], CONTEXT->condition_length[0]);
+			CONTEXT->condition_length[0] = 0;
     }
     ;
 update:			/*  update 语句的语法解析树*/
@@ -563,8 +562,8 @@ update:			/*  update 语句的语法解析树*/
 			CONTEXT->ssql->flag = SCF_UPDATE;//"update";
 			Value *value = &CONTEXT->values[0];
 			updates_init(&CONTEXT->ssql->sstr.update, $2, $4, value, 
-					CONTEXT->condition_exps, CONTEXT->condition_length);
-			CONTEXT->condition_length = 0;
+					CONTEXT->condition_exps[0], CONTEXT->condition_length[0]);
+			CONTEXT->condition_length[0] = 0;
 		}
     ;
 
@@ -579,9 +578,8 @@ select:
   select_handle relattrexp FROM ID rel_list where  {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps[CONTEXT->comp_deep-1], CONTEXT->condition_length[CONTEXT->comp_deep-1]);
     //临时变量清零
-     CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
      int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
      CONTEXT->deep_stack.top--;
@@ -592,9 +590,8 @@ select:
   {
      AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
      adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps[CONTEXT->comp_deep-1], CONTEXT->condition_length[CONTEXT->comp_deep-1]);
      //临时变量清零
-     CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
      int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
      CONTEXT->deep_stack.top--;
@@ -604,9 +601,8 @@ select:
   | select_handle relattrexp FROM ID rel_list where order  {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps[CONTEXT->comp_deep-1], CONTEXT->condition_length[CONTEXT->comp_deep-1]);
     //临时变量清零
-     CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
      int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
      CONTEXT->deep_stack.top--;
@@ -617,9 +613,8 @@ select:
   {
      AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
      adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps[CONTEXT->comp_deep-1], CONTEXT->condition_length[CONTEXT->comp_deep-1]);
      //临时变量清零
-     CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
      int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
      CONTEXT->deep_stack.top--;
@@ -629,9 +624,8 @@ select:
   | select_handle relattrexp FROM ID rel_list where group  {
     AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
     adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+    advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps[CONTEXT->comp_deep-1], CONTEXT->condition_length[CONTEXT->comp_deep-1]);
     //临时变量清零
-     CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
      int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
      CONTEXT->deep_stack.top--;
@@ -642,9 +636,8 @@ select:
   {
      AdvSelects *adv_selects = &CONTEXT->ssql->sstr.adv_selection[CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1]];
      adv_selects->relations[adv_selects->relation_num++] = strdup($4);
-     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps, CONTEXT->condition_length);
+     advselects_append_conditionexps(adv_selects, CONTEXT->condition_exps[CONTEXT->comp_deep-1], CONTEXT->condition_length[CONTEXT->comp_deep-1]);
      //临时变量清零
-     CONTEXT->condition_length=0;
      CONTEXT->from_length=0;
      int tmp = CONTEXT->deep_stack.sel_lengh[CONTEXT->deep_stack.top-1];
      CONTEXT->deep_stack.top--;
@@ -1123,8 +1116,8 @@ condition_exp:
     cond_exp.left = explist_left;
     cond_exp.right = explist_right;
     cond_exp.comp = CONTEXT->comp[CONTEXT->comp_deep-1];
-    printf("%d\n\n",CONTEXT->comp[CONTEXT->comp_deep-1]);
-    CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
+    //printf("%d\n\n",CONTEXT->comp[CONTEXT->comp_deep-1]);
+    CONTEXT->condition_exps[CONTEXT->comp_deep-1][CONTEXT->condition_length[CONTEXT->comp_deep-1]++] = cond_exp;
   }
   /* @author: huahui  @what for: null ------------------------------------------------------------------------*/
 	| exp_list3 IS_A NULL_A {
@@ -1136,7 +1129,7 @@ condition_exp:
 		cond_exp.left = explist_left;
 		cond_exp.right = explist_right;
 		cond_exp.comp = IS;
-		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
+		CONTEXT->condition_exps[CONTEXT->comp_deep-1][CONTEXT->condition_length[CONTEXT->comp_deep-1]++] = cond_exp;
 	}
 	| exp_list3 IS_A NOT NULL_A {
 		ExpList *explist_left = (ExpList *)($1);
@@ -1148,7 +1141,7 @@ condition_exp:
 		cond_exp.left = explist_left;
 		cond_exp.right = explist_right;
 		cond_exp.comp = ISNOT;
-		CONTEXT->condition_exps[CONTEXT->condition_length++] = cond_exp;
+		CONTEXT->condition_exps[CONTEXT->comp_deep-1][CONTEXT->condition_length[CONTEXT->comp_deep-1]++] = cond_exp;
 	}
 	/* ------------------------------------------------------------------------------------------------------------*/
     ;
