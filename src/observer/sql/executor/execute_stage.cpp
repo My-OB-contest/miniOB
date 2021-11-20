@@ -947,8 +947,7 @@ RC ExecuteStage::change_sub_select(TupleSet &res_tupleset,Query *sql,int cur_tup
     for (int i = 0; i < res_tupleset.schema().fields().size(); ++i) {
         for (int j = sel_pos+1; j < sql->sstr.adv_selection[0].select_num; ++j) {
             for (int k = 0; k < sql->sstr.adv_selection[j].condition_num; ++k) {
-                if ((sql->sstr.adv_selection[j].condition_exps[k].left->exp->is_attr == 1)
-                    && (sql->sstr.adv_selection[j].condition_exps[k].left->exp->relation_name != nullptr)){
+                if ( (sql->sstr.adv_selection[j].condition_exps[k].left->exp->relation_name != nullptr)){
                     if (strcmp(res_tupleset.schema().field(i).table_name(),
                                sql->sstr.adv_selection[j].condition_exps[k].left->exp->relation_name) == 0
                         && strcmp(res_tupleset.schema().field(i).field_name(),
@@ -966,8 +965,7 @@ RC ExecuteStage::change_sub_select(TupleSet &res_tupleset,Query *sql,int cur_tup
                                 i)->get_value();
                     }
                 }
-                if ((sql->sstr.adv_selection[j].condition_exps[k].right->exp->is_attr == 1)
-                    && (sql->sstr.adv_selection[j].condition_exps[k].right->exp->relation_name != nullptr) ){
+                if ( (sql->sstr.adv_selection[j].condition_exps[k].right->exp->relation_name != nullptr) ){
                     if (strcmp(res_tupleset.schema().field(i).table_name(),
                                sql->sstr.adv_selection[j].condition_exps[k].right->exp->relation_name) == 0
                         && strcmp(res_tupleset.schema().field(i).field_name(),
